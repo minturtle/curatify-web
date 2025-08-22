@@ -14,6 +14,4 @@ export interface Paper {
 
 export interface PaperListProps {
   papers: Paper[];
-  currentPage: number;
-  totalPages: number;
 }

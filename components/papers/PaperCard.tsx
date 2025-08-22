@@ -26,7 +26,7 @@ export default function PaperCard({ paper }: PaperCardProps) {
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader
-        className="pb-2 cursor-pointer"
+        className="cursor-pointer"
         onClick={handleToggle}
         role="button"
         tabIndex={0}
@@ -48,10 +48,9 @@ export default function PaperCard({ paper }: PaperCardProps) {
       </CardHeader>
 
       {isExpanded && (
-        <CardContent className="pt-0 space-y-4">
+        <CardContent className="space-y-2">
           {/* Abstract */}
-          <div className="space-y-2">
-            <h4 className="font-semibold text-gray-900">Abstract</h4>
+          <div>
             <div className="prose prose-sm max-w-none text-gray-700">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{paper.abstract}</ReactMarkdown>
             </div>
