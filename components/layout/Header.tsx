@@ -8,7 +8,13 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
 import { Menu } from 'lucide-react';
 
 export default function Header() {
@@ -45,8 +51,11 @@ export default function Header() {
             </Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-80 p-6" data-testid="sidebar">
-            <div className="flex flex-col space-y-4 mt-8">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">메뉴</h2>
+            <SheetTitle className="text-lg font-semibold text-gray-900 mb-2">메뉴</SheetTitle>
+            <SheetDescription className="text-sm text-gray-600">
+              AI 기반 연구 정보 큐레이션
+            </SheetDescription>
+            <div className="flex flex-col space-y-4 mt-2">
               <hr />
               <Button
                 variant="ghost"
