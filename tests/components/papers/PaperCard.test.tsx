@@ -3,11 +3,12 @@
  * @author Minseok kim
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '../../utils';
 import userEvent from '@testing-library/user-event';
 import PaperCard from '@/components/papers/PaperCard';
 import { Paper } from '@/lib/types/paper';
+import * as paperService from '@/lib/services/paperService';
 
 const mockPaper: Paper = {
   id: '1',
@@ -142,5 +143,51 @@ describe('PaperCard 컴포넌트', () => {
     // 메타 정보 컨테이너가 수직 배치되어야 함 (기본값)
     const metaContainer = screen.getByTestId('paper-meta');
     expect(metaContainer).toHaveClass('flex', 'flex-col', 'space-y-2');
+  });
+
+  describe('심층 분석 버튼', () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it('심층 분석 버튼 클릭 시 registerPaper 함수가 호출되어야 한다', async () => {
+      const user = userEvent.setup();
+      const mockRegisterPaper = vi.spyOn(paperService, 'registerPaper').mockResolvedValue(true);
+
+      render(<PaperCard {...defaultProps} />);
+
+      // 논문 확장
+      const paperTitle = screen.getByText('AI와 머신러닝의 발전');
+      await user.click(paperTitle);
+
+      // 심층 분석 버튼 클릭
+      const deepAnalysisButton = screen.getByTestId('deep-analysis-button');
+      await user.click(deepAnalysisButton);
+
+      // registerPaper 함수가 올바른 인자로 호출되어야 함
+      expect(mockRegisterPaper).toHaveBeenCalledWith('1');
+      expect(mockRegisterPaper).toHaveBeenCalledTimes(1);
+    });
+
+    it('심층 분석 등록 중에는 버튼이 비활성화되어야 한다', async () => {
+      const user = userEvent.setup();
+      vi.spyOn(paperService, 'registerPaper').mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve(true), 100))
+      );
+
+      render(<PaperCard {...defaultProps} />);
+
+      // 논문 확장
+      const paperTitle = screen.getByText('AI와 머신러닝의 발전');
+      await user.click(paperTitle);
+
+      // 심층 분석 버튼 클릭
+      const deepAnalysisButton = screen.getByTestId('deep-analysis-button');
+      await user.click(deepAnalysisButton);
+
+      // 버튼이 비활성화되어야 함
+      expect(deepAnalysisButton).toBeDisabled();
+      expect(screen.getByText('등록 중...')).toBeInTheDocument();
+    });
   });
 });

@@ -4,8 +4,8 @@
  * @author Minseok kim
  */
 
-import { describe, it, expect } from 'vitest';
-import { getPapers } from '@/lib/services/paperService';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { getPapers, registerPaper } from '@/lib/services/paperService';
 
 describe('paperService', () => {
   describe('getPapers', () => {

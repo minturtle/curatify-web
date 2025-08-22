@@ -86,3 +86,22 @@ export async function getPapers(
     totalCount,
   };
 }
+
+/**
+ * 논문을 심층 분석을 위해 등록하는 함수
+ * @param paperId 등록할 논문의 ID
+ * @returns 등록 성공 여부
+ */
+export async function registerPaper(paperId: string): Promise<boolean> {
+  try {
+    // 실제 API 호출을 시뮬레이션하기 위한 지연
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // 임시로 성공 응답 반환 (나중에 실제 API로 교체 예정)
+    console.log(`논문 ${paperId}가 심층 분석을 위해 등록되었습니다.`);
+    return true;
+  } catch (error) {
+    console.error('논문 등록 중 오류 발생:', error);
+    return false;
+  }
+}

@@ -7,10 +7,12 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Paper } from '@/lib/types/paper';
-import { ChevronDown, ChevronUp, ExternalLink, Calendar, Users } from 'lucide-react';
+import { registerPaper } from '@/lib/services/paperService';
+import { ChevronDown, ChevronUp, ExternalLink, Calendar, Users, Brain } from 'lucide-react';
 
 interface PaperCardProps {
   paper: Paper;
@@ -18,9 +20,27 @@ interface PaperCardProps {
 
 export default function PaperCard({ paper }: PaperCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
 
   const handleToggle = () => {
     setIsExpanded(!isExpanded);
+  };
+
+  const handleDeepAnalysis = async () => {
+    setIsRegistering(true);
+    try {
+      const success = await registerPaper(paper.id);
+      if (success) {
+        alert('심층 분석이 등록되었습니다.');
+      } else {
+        alert('심층 분석 등록에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('심층 분석 등록 중 오류:', error);
+      alert('심층 분석 등록 중 오류가 발생했습니다.');
+    } finally {
+      setIsRegistering(false);
+    }
   };
 
   return (
@@ -89,6 +109,19 @@ export default function PaperCard({ paper }: PaperCardProps) {
                 View Paper
               </a>
             </div>
+          </div>
+
+          {/* 심층 분석 버튼 */}
+          <div className="pt-4">
+            <Button
+              onClick={handleDeepAnalysis}
+              disabled={isRegistering}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              data-testid="deep-analysis-button"
+            >
+              <Brain className="h-4 w-4 mr-2" />
+              {isRegistering ? '등록 중...' : '심층 분석'}
+            </Button>
           </div>
         </CardContent>
       )}

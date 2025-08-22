@@ -18,11 +18,12 @@ export default async function Home({ searchParams }: HomePageProps) {
     <div>
       <Header isLoggedIn={true} />
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">AI가 추천하는 논문</h2>
+        <div className="mb-8 px-10 mx-auto">
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">AI가 추천하는 논문</h2>
+          </div>
+          <PaperList papers={papers} />
         </div>
-
-        <PaperList papers={papers} />
         <PaginationSSR currentPage={currentPage} totalPages={totalPages} />
       </main>
     </div>
