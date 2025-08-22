@@ -1,4 +1,3 @@
-import Header from '@/components/layout/Header';
 import PaperList from '@/components/papers/PaperList';
 import PaginationSSR from '@/components/ui/pagination-ssr';
 import { getPapers } from '@/lib/services/paperService';
@@ -16,7 +15,6 @@ export default async function Home({ searchParams }: HomePageProps) {
 
   return (
     <div>
-      <Header isLoggedIn={true} />
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8 md:px-10">
           <div className="mb-8">
