@@ -7,7 +7,7 @@ import RSSUrlForm from '@/components/rss/RSSUrlForm';
 import RSSFeedList from '@/components/rss/RSSFeedList';
 import PaginationSSR from '@/components/ui/pagination-ssr';
 import { getRSSFeeds } from '@/lib/services/rssService';
-
+import { Info } from 'lucide-react';
 interface RSSPageProps {
   searchParams: { page?: string };
 }
@@ -31,8 +31,9 @@ export default async function RSSPage({ searchParams }: RSSPageProps) {
         {/* 메인 콘텐츠 */}
         <div className="mb-8 md:px-10">
           {/* 업데이트 안내 문구 */}
-          <div className="mb-6 text-center">
-            <p className="text-sm text-gray-500">매일 새벽 2시에 RSS 피드가 업데이트됩니다.</p>
+          <div className="mb-6 flex gap-2 justify-end">
+            <Info className="w-4 h-4 text-gray-500" />
+            <p className="text-sm text-gray-500">매일 오전/오후 2시에 RSS 피드가 업데이트됩니다.</p>
           </div>
 
           {/* RSS 아이템 목록 */}
