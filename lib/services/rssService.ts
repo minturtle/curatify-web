@@ -5,25 +5,24 @@
  * @author Minseok kim
  */
 
-import { RSSFeed, RSSUrl, RSSUrlFormData } from '@/lib/types/rss';
+import { RSSFeed, RSSUrl, RSSUrlFormData, RSSType } from '@/lib/types/rss';
 
 // Mock 데이터 - RSS 피드 목록
 const mockUrls: RSSUrl[] = [
   {
     id: '1',
     url: 'https://techcrunch.com/feed',
-    title: 'TechCrunch',
-    description: '최신 기술 뉴스와 스타트업 정보',
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-15'),
+    type: 'rss',
   },
   {
     id: '2',
     url: 'https://www.theverge.com/rss/index.xml',
-    title: 'The Verge',
-    description: '기술, 과학, 문화 뉴스',
-    createdAt: new Date('2024-01-02'),
-    updatedAt: new Date('2024-01-14'),
+    type: 'rss',
+  },
+  {
+    id: '3',
+    url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC_x5XG1OV2P6uZZ5FSM9Ttw',
+    type: 'youtube',
   },
 ];
 
@@ -93,6 +92,19 @@ export async function addRSSUrl(formData: RSSUrlFormData) {
   if (!formData.url || !isValidURL(formData.url)) {
     throw new Error('유효하지 않은 URL입니다.');
   }
+
+  // 타입 유효성 검사
+  if (!formData.type || !['rss', 'youtube'].includes(formData.type)) {
+    throw new Error('유효하지 않은 RSS 타입입니다.');
+  }
+
+  // YouTube URL 검증 (YouTube 타입인 경우)
+  if (formData.type === 'youtube' && !isValidYouTubeURL(formData.url)) {
+    throw new Error('유효하지 않은 YouTube URL입니다.');
+  }
+
+  // 실제 구현에서는 데이터베이스에 저장
+  console.log('RSS URL 등록:', formData);
 }
 
 /**
@@ -139,6 +151,18 @@ function isValidURL(url: string): boolean {
   try {
     new URL(url);
     return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * YouTube URL 유효성 검사
+ */
+function isValidYouTubeURL(url: string): boolean {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be');
   } catch {
     return false;
   }

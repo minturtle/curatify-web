@@ -5,6 +5,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import RSSUrlForm from '@/components/rss/RSSUrlForm';
 
 // Server Action 모킹
@@ -29,5 +30,12 @@ describe('RSSUrlForm', () => {
 
     const input = screen.getByPlaceholderText(/RSS URL을 입력하세요/);
     expect(input).toHaveAttribute('required');
+  });
+
+  it('기본값으로 일반 RSS가 선택되어 있다', () => {
+    render(<RSSUrlForm />);
+
+    const select = screen.getByRole('combobox');
+    expect(select).toHaveTextContent('일반 RSS');
   });
 });

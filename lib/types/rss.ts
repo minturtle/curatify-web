@@ -3,13 +3,12 @@
  * @author Minseok kim
  */
 
+export type RSSType = 'rss' | 'youtube';
+
 export interface RSSUrl {
   id: string;
   url: string;
-  title: string;
-  description?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  type: RSSType;
 }
 
 export interface RSSFeed {
@@ -25,4 +24,5 @@ export interface RSSFeed {
 
 export interface RSSUrlFormData {
   url: string;
+  type: RSSType;
 }
