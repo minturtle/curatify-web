@@ -4,7 +4,7 @@
  */
 
 import RSSUrlForm from '@/components/rss/RSSUrlForm';
-import RSSItemList from '@/components/rss/RSSItemList';
+import RSSFeedList from '@/components/rss/RSSFeedList';
 import PaginationSSR from '@/components/ui/pagination-ssr';
 import { getRSSFeeds } from '@/lib/services/rssService';
 
@@ -14,10 +14,10 @@ interface RSSPageProps {
 
 export default async function RSSPage({ searchParams }: RSSPageProps) {
   // URL 파라미터에서 페이지 번호 추출 (기본값: 1)
-  const currentPage = parseInt((await searchParams).page ?? '1', 1);
+  const currentPage = parseInt((await searchParams).page ?? '1');
 
   // RSS 아이템 데이터 가져오기
-  const { items, totalPages } = await getRSSFeeds(currentPage, 5);
+  const { items, totalPages } = await getRSSFeeds(currentPage, 3);
 
   return (
     <div>
@@ -36,7 +36,7 @@ export default async function RSSPage({ searchParams }: RSSPageProps) {
           </div>
 
           {/* RSS 아이템 목록 */}
-          <RSSItemList items={items} />
+          <RSSFeedList items={items} />
         </div>
 
         {/* 페이지네이션 */}

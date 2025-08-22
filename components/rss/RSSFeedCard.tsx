@@ -4,13 +4,13 @@
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { RSSItem } from '@/lib/types/rss';
+import { RSSFeed } from '@/lib/types/rss';
 
-interface RSSItemCardProps {
-  item: RSSItem;
+interface RSSFeedCardProps {
+  item: RSSFeed;
 }
 
-export default function RSSItemCard({ item }: RSSItemCardProps) {
+export default function RSSFeedCard({ item }: RSSFeedCardProps) {
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('ko-KR', {
       year: 'numeric',
@@ -37,7 +37,6 @@ export default function RSSItemCard({ item }: RSSItemCardProps) {
         <div className="flex items-center gap-4 text-sm text-gray-500">
           <span>{formatDate(item.pubDate)}</span>
           {item.author && <span>작성자: {item.author}</span>}
-          {item.category && <span>카테고리: {item.category}</span>}
         </div>
       </CardHeader>
       {item.description && (

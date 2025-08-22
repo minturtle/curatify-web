@@ -38,7 +38,6 @@ const mockFeeds: RSSFeed[] = [
     link: 'https://techcrunch.com/2024/01/15/ai-gpt5-release',
     pubDate: new Date('2024-01-15T10:00:00Z'),
     author: 'John Smith',
-    category: 'AI',
     createdAt: new Date('2024-01-15'),
   },
   {
@@ -50,7 +49,6 @@ const mockFeeds: RSSFeed[] = [
     link: 'https://techcrunch.com/2024/01-14/metaverse-future',
     pubDate: new Date('2024-01-14T15:30:00Z'),
     author: 'Jane Doe',
-    category: '메타버스',
     createdAt: new Date('2024-01-14'),
   },
   {
@@ -61,7 +59,6 @@ const mockFeeds: RSSFeed[] = [
     link: 'https://www.theverge.com/2024/01/13/smartphone-trends',
     pubDate: new Date('2024-01-13T09:15:00Z'),
     author: 'Mike Johnson',
-    category: '모바일',
     createdAt: new Date('2024-01-13'),
   },
   {
@@ -73,7 +70,6 @@ const mockFeeds: RSSFeed[] = [
     link: 'https://www.theverge.com/2024/01/12/cloud-computing-paradigm',
     pubDate: new Date('2024-01-12T14:20:00Z'),
     author: 'Sarah Wilson',
-    category: '클라우드',
     createdAt: new Date('2024-01-12'),
   },
   {
@@ -85,7 +81,6 @@ const mockFeeds: RSSFeed[] = [
     link: 'https://techcrunch.com/2024/01/11/blockchain-use-cases',
     pubDate: new Date('2024-01-11T11:45:00Z'),
     author: 'David Brown',
-    category: '블록체인',
     createdAt: new Date('2024-01-11'),
   },
 ];

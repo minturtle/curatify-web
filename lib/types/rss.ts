@@ -20,7 +20,6 @@ export interface RSSFeed {
   link: string;
   pubDate: Date;
   author?: string;
-  category?: string;
   createdAt: Date;
 }
 

@@ -3,14 +3,14 @@
  * @author Minseok kim
  */
 
-import { RSSItem } from '@/lib/types/rss';
-import RSSItemCard from './RSSItemCard';
+import { RSSFeed } from '@/lib/types/rss';
+import RSSFeedCard from './RSSFeedCard';
 
-interface RSSItemListProps {
-  items: RSSItem[];
+interface RSSFeedListProps {
+  items: RSSFeed[];
 }
 
-export default function RSSItemList({ items }: RSSItemListProps) {
+export default function RSSFeedList({ items }: RSSFeedListProps) {
   if (items.length === 0) {
     return (
       <div className="text-center py-12">
@@ -23,7 +23,7 @@ export default function RSSItemList({ items }: RSSItemListProps) {
   return (
     <div className="space-y-4">
       {items.map((item) => (
-        <RSSItemCard key={item.id} item={item} />
+        <RSSFeedCard key={item.id} item={item} />
       ))}
     </div>
   );
