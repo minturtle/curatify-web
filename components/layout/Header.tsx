@@ -32,30 +32,38 @@ export default function Header({ isLoggedIn }: HeaderProps) {
     >
       {/* 로고 */}
       <div className="flex items-center">
-        <Image src="/logo.png" alt="Curatify 로고" width={120} height={40} className="h-8 w-auto" />
+        <Link href="/">
+          <Image
+            src="/logo.png"
+            alt="Curatify 로고"
+            width={120}
+            height={40}
+            className="h-8 w-auto"
+          />
+        </Link>
       </div>
 
       {/* 데스크톱 네비게이션 */}
       {isLoggedIn && (
         <nav className="hidden md:flex items-center space-x-8">
-          <a
+          <Link
             href="/library"
             className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
           >
             라이브러리
-          </a>
-          <a
+          </Link>
+          <Link
             href="/trends"
             className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
           >
             산업 동향
-          </a>
-          <a
+          </Link>
+          <Link
             href="/rss"
             className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
           >
             RSS
-          </a>
+          </Link>
         </nav>
       )}
 
@@ -94,27 +102,27 @@ export default function Header({ isLoggedIn }: HeaderProps) {
               <hr />
               {isLoggedIn ? (
                 <>
-                  <a
+                  <Link
                     href="/library"
                     className="text-gray-700 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-md transition-colors"
                     onClick={() => setIsSidebarOpen(false)}
                   >
                     라이브러리
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/trends"
                     className="text-gray-700 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-md transition-colors"
                     onClick={() => setIsSidebarOpen(false)}
                   >
                     산업 동향
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/rss"
                     className="text-gray-700 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-md transition-colors"
                     onClick={() => setIsSidebarOpen(false)}
                   >
                     RSS
-                  </a>
+                  </Link>
                   <hr />
                   <Link
                     href="/mypage"
