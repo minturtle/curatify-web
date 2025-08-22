@@ -5,6 +5,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RSSFeed } from '@/lib/types/rss';
+import ReactMarkdown from 'react-markdown';
 
 interface RSSFeedCardProps {
   item: RSSFeed;
@@ -41,7 +42,9 @@ export default function RSSFeedCard({ item }: RSSFeedCardProps) {
       </CardHeader>
       {item.description && (
         <CardContent className="pt-0">
-          <p className="text-gray-700 line-clamp-3">{item.description}</p>
+          <div className="text-gray-700 line-clamp-3 prose prose-sm max-w-none">
+            <ReactMarkdown>{item.description}</ReactMarkdown>
+          </div>
         </CardContent>
       )}
     </Card>
