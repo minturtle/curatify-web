@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getPapers, registerPaper } from '@/lib/services/paperService';
+import { getPapers, registerPaper } from '@/lib/paper/paperService';
 
 describe('paperService', () => {
   describe('getPapers', () => {

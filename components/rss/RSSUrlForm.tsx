@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { addRSSUrlAction } from '@/app/rss/actions';
+import { addRSSUrlAction } from '@/lib/rss/actions';
 import { RSSType } from '@/lib/types/rss';
 
 export default function RSSUrlForm() {
@@ -34,7 +34,7 @@ export default function RSSUrlForm() {
   }, [state]);
 
   return (
-    <form action={formAction} className="w-full max-w-md mx-auto space-y-4 flex gap-2">
+    <form action={formAction} className="w-full max-w-md md:max-w-2xl lg:max-w-4xl mx-auto space-y-4 flex gap-2">
       <Select
         name="type"
         value={rssType}

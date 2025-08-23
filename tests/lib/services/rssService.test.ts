@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { addRSSUrl, getRSSFeeds, getRSSUrls } from '@/lib/services/rssService';
+import { addRSSUrl, getRSSFeeds, getRSSUrls } from '@/lib/rss/rssService';
 import { RSSUrlFormData } from '@/lib/types/rss';
 
 describe('RSS Service', () => {

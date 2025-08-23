@@ -1,6 +1,6 @@
 import PaperList from '@/components/papers/PaperList';
 import PaginationSSR from '@/components/ui/pagination-ssr';
-import { getPapers } from '@/lib/services/paperService';
+import { getPapers } from '@/lib/paper/paperService';
 
 interface HomePageProps {
   searchParams: { page?: string };

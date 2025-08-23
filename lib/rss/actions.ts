@@ -5,7 +5,7 @@
 
 'use server';
 
-import { addRSSUrl } from '@/lib/services/rssService';
+import { addRSSUrl } from '@/lib/rss/rssService';
 import { RSSType } from '@/lib/types/rss';
 import { revalidatePath } from 'next/cache';
 

@@ -6,7 +6,7 @@
 import RSSUrlForm from '@/components/rss/RSSUrlForm';
 import RSSFeedList from '@/components/rss/RSSFeedList';
 import PaginationSSR from '@/components/ui/pagination-ssr';
-import { getRSSFeeds } from '@/lib/services/rssService';
+import { getRSSFeeds } from '@/lib/rss/rssService';
 import { Info } from 'lucide-react';
 interface RSSPageProps {
   searchParams: { page?: string };

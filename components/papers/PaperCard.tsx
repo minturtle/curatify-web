@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Paper } from '@/lib/types/paper';
-import { registerPaper } from '@/lib/services/paperService';
+import { registerPaper } from '@/lib/paper/paperService';
 import { ChevronDown, ChevronUp, ExternalLink, Calendar, Users, Brain } from 'lucide-react';
 
 interface PaperCardProps {

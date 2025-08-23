@@ -8,7 +8,7 @@ import { render, screen } from '../../utils';
 import userEvent from '@testing-library/user-event';
 import PaperCard from '@/components/papers/PaperCard';
 import { Paper } from '@/lib/types/paper';
-import * as paperService from '@/lib/services/paperService';
+import * as paperService from '@/lib/paper/paperService';
 
 const mockPaper: Paper = {
   id: '1',
