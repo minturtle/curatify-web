@@ -43,6 +43,7 @@ describe('Auth Actions', () => {
                 email: 'test@example.com',
                 name: 'Test User',
                 password: 'password123',
+                isVerified: false,
             }
             const mockSession: SessionData = {
                 userId: '123',
@@ -91,6 +92,7 @@ describe('Auth Actions', () => {
                 id: '123',
                 email: 'test@example.com',
                 name: 'Test User',
+                isVerified: false,
             }
 
             vi.mocked(getSession).mockResolvedValue(null)
@@ -134,6 +136,7 @@ describe('Auth Actions', () => {
                 email: 'existing@example.com',
                 name: 'Existing User',
                 password: 'password123',
+                isVerified: false,
             }
 
             vi.mocked(getSession).mockResolvedValue(null)

@@ -44,6 +44,7 @@ export async function findUserByEmail(email: string): Promise<UserWithPassword |
             email: user.email,
             name: user.name,
             password: user.password,
+            isVerified: user.isVerified,
         }
     } catch (error) {
         console.error('사용자 검색 중 오류 발생:', error)
@@ -79,6 +80,7 @@ export async function findUserById(id: string): Promise<UserData | null> {
             id: user.id.toString(),
             email: user.email,
             name: user.name,
+            isVerified: user.isVerified,
         }
     } catch (error) {
         console.error('사용자 검색 중 오류 발생:', error)
@@ -132,6 +134,7 @@ export async function createUser(userData: Omit<UserData, 'id'> & { password: st
             id: savedUser.id.toString(),
             email: savedUser.email,
             name: savedUser.name,
+            isVerified: savedUser.isVerified,
         }
     } catch (error) {
         console.error('사용자 생성 중 오류 발생:', error)

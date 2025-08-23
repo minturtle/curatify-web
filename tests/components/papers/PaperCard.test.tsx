@@ -8,6 +8,12 @@ import { render, screen } from '../../utils';
 import userEvent from '@testing-library/user-event';
 import PaperCard from '@/components/papers/PaperCard';
 import { Paper } from '@/lib/types/paper';
+
+// paperService 모킹
+vi.mock('@/lib/paper/paperService', () => ({
+  registerPaper: vi.fn(),
+}));
+
 import * as paperService from '@/lib/paper/paperService';
 
 const mockPaper: Paper = {
@@ -17,6 +23,7 @@ const mockPaper: Paper = {
   authors: ['김철수', '이영희'],
   link: 'https://example.com/paper1',
   lastUpdate: '2024-01-15',
+  categories: ['AI', '머신러닝'],
 };
 
 describe('PaperCard 컴포넌트', () => {

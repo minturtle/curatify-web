@@ -55,13 +55,25 @@ export const getRedisConfig = () => {
 
 // 환경별 설정 검증
 export const validateConfig = () => {
+    const currentEnv = process.env.NODE_ENV || 'development';
+
+    // 테스트 환경에서는 환경 변수 검증을 건너뜀
+    if (currentEnv === 'test') {
+        return;
+    }
+
     const requiredEnvVars = {
         development: ['DB_HOST', 'DB_USERNAME', 'DB_PASSWORD', 'DB_NAME'],
         production: ['DB_HOST', 'DB_USERNAME', 'DB_PASSWORD', 'DB_SID', 'REDIS_URL'],
     };
 
-    const currentEnv = process.env.NODE_ENV || 'development';
     const required = requiredEnvVars[currentEnv as keyof typeof requiredEnvVars];
+
+    // 지원되지 않는 환경인 경우 검증 건너뜀
+    if (!required) {
+        console.warn(`환경 변수 검증이 지원되지 않는 환경입니다: ${currentEnv}`);
+        return;
+    }
 
     const missing = required.filter(envVar => !process.env[envVar]);
 
