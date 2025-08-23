@@ -11,15 +11,15 @@ export class RSSUrl {
     @Column({ type: 'varchar', length: 500 })
     url!: string;
 
-    @CreateDateColumn()
+    @CreateDateColumn({ name: 'created_at' })
     createdAt!: Date;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ name: 'updated_at' })
     updatedAt!: Date;
 
     // 관계 설정 - 문자열로 참조하여 순환 참조 방지
     @ManyToOne('User', 'rssUrls')
-    @JoinColumn({ name: 'userId' })
+    @JoinColumn({ name: 'user_id' })
     user!: any;
 
     @Column({ type: 'int' })
