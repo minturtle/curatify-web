@@ -71,7 +71,7 @@ export default function PaperCard({ paper }: PaperCardProps) {
           {/* Abstract */}
           <div>
             <div className="prose prose-sm max-w-none text-gray-700">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{paper.abstract}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{paper.summary}</ReactMarkdown>
             </div>
           </div>
 

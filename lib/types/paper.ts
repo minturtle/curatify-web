@@ -6,7 +6,7 @@
 export interface Paper {
   id: string;
   title: string;
-  abstract: string;
+  summary: string;
   authors: string[];
   link: string;
   lastUpdate: string;

@@ -76,7 +76,7 @@ describe('paperService', () => {
 
       expect(Array.isArray(paper.authors)).toBe(true);
       expect(typeof paper.title).toBe('string');
-      expect(typeof paper.abstract).toBe('string');
+      expect(typeof paper.summary).toBe('string');
     });
   });
 });
