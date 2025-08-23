@@ -17,10 +17,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { addRSSUrlAction } from '@/lib/rss/actions';
-import { RSSType } from '@/lib/types/rss';
+import { RSSType, AddRSSUrlActionResult } from '@/lib/types/rss';
 
 export default function RSSUrlForm() {
-  const [state, formAction] = useActionState(addRSSUrlAction, null);
+  const [state, formAction, pending] = useActionState<AddRSSUrlActionResult, FormData>(addRSSUrlAction, null);
   const [rssType, setRssType] = useState<RSSType>('rss');
 
   useEffect(() => {
@@ -40,6 +40,7 @@ export default function RSSUrlForm() {
         value={rssType}
         onValueChange={(value) => setRssType(value as RSSType)}
         required
+        disabled={pending}
       >
         <SelectTrigger>
           <SelectValue placeholder="RSS 타입을 선택하세요" />
@@ -56,9 +57,10 @@ export default function RSSUrlForm() {
         placeholder="RSS URL을 입력하세요 (예: https://example.com/rss)"
         required
         className="flex-1 w-full"
+        disabled={pending}
       />
-      <Button type="submit" className="px-6">
-        등록
+      <Button type="submit" className="px-6" disabled={pending}>
+        {pending ? '등록 중...' : '등록'}
       </Button>
     </form>
   );
