@@ -1,5 +1,4 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
-import { RSSUrl } from './RSSUrl';
 
 @Entity('users')
 export class User {
@@ -24,7 +23,7 @@ export class User {
     @UpdateDateColumn()
     updatedAt!: Date;
 
-    // 관계 설정
-    @OneToMany(() => RSSUrl, rssUrl => rssUrl.user)
-    rssUrls!: RSSUrl[];
+    // 관계 설정 - 문자열로 참조하여 순환 참조 방지
+    @OneToMany('RSSUrl', 'user')
+    rssUrls!: any[];
 }

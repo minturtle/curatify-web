@@ -1,7 +1,19 @@
 import { UserData, UserWithPassword } from '@/lib/types/auth'
+import { AppDataSource } from '@/lib/database/ormconfig'
+import { User } from '@/lib/database/entities/User'
+import { Repository } from 'typeorm'
+import bcrypt from 'bcrypt'
+import { ensureDatabaseConnection } from '@/lib/database/connection'
 
-// 임시 사용자 저장소 (실제로는 데이터베이스를 사용해야 함)
-const users: Map<string, UserWithPassword> = new Map()
+/**
+ * User Repository를 가져오는 private method
+ * 
+ * @returns {Repository<User>} User 엔티티의 Repository
+ * @private
+ */
+function getUserRepository(): Repository<User> {
+    return AppDataSource.getRepository(User)
+}
 
 /**
  * 이메일 주소로 사용자를 검색합니다.
@@ -9,7 +21,6 @@ const users: Map<string, UserWithPassword> = new Map()
  * @param {string} email - 검색할 사용자의 이메일 주소
  * @returns {Promise<UserWithPassword | null>} 찾은 사용자 정보(비밀번호 포함) 또는 null
  * @description 로그인 시 사용자 인증을 위해 비밀번호가 포함된 사용자 정보를 반환합니다.
- *              실제 운영 환경에서는 데이터베이스 쿼리로 대체해야 합니다.
  * 
  * @example
  * ```typescript
@@ -20,13 +31,24 @@ const users: Map<string, UserWithPassword> = new Map()
  * ```
  */
 export async function findUserByEmail(email: string): Promise<UserWithPassword | null> {
-    // 실제로는 데이터베이스 쿼리를 사용해야 함
-    for (const user of users.values()) {
-        if (user.email === email) {
-            return user
+    try {
+        await ensureDatabaseConnection()
+        const userRepository = getUserRepository()
+        const user = await userRepository.findOne({ where: { email } })
+
+        if (!user) return null
+
+        // User 엔티티를 UserWithPassword 타입으로 변환
+        return {
+            id: user.id.toString(),
+            email: user.email,
+            name: user.name,
+            password: user.password,
         }
+    } catch (error) {
+        console.error('사용자 검색 중 오류 발생:', error)
+        throw new Error('사용자 검색에 실패했습니다')
     }
-    return null
 }
 
 /**
@@ -45,12 +67,23 @@ export async function findUserByEmail(email: string): Promise<UserWithPassword |
  * ```
  */
 export async function findUserById(id: string): Promise<UserData | null> {
-    const user = users.get(id)
-    if (!user) return null
+    try {
+        await ensureDatabaseConnection()
+        const userRepository = getUserRepository()
+        const user = await userRepository.findOne({ where: { id: parseInt(id) } })
 
-    // 비밀번호는 제외하고 반환
-    const { password, ...userData } = user
-    return userData
+        if (!user) return null
+
+        // 비밀번호는 제외하고 반환
+        return {
+            id: user.id.toString(),
+            email: user.email,
+            name: user.name,
+        }
+    } catch (error) {
+        console.error('사용자 검색 중 오류 발생:', error)
+        throw new Error('사용자 검색에 실패했습니다')
+    }
 }
 
 /**
@@ -58,7 +91,7 @@ export async function findUserById(id: string): Promise<UserData | null> {
  * 
  * @param {Omit<UserData, 'id'> & { password: string }} userData - 생성할 사용자 정보 (ID 제외, 비밀번호 포함)
  * @returns {Promise<UserData>} 생성된 사용자 정보 (비밀번호 제외)
- * @description 회원가입 시 새로운 사용자를 생성합니다. UUID를 사용하여 고유한 ID를 자동 생성합니다.
+ * @description 회원가입 시 새로운 사용자를 생성합니다. 데이터베이스에서 자동으로 ID를 생성합니다.
  *              반환 시에는 보안상 비밀번호를 제외합니다.
  * 
  * @example
@@ -73,14 +106,40 @@ export async function findUserById(id: string): Promise<UserData | null> {
  * ```
  */
 export async function createUser(userData: Omit<UserData, 'id'> & { password: string }): Promise<UserData> {
-    const id = crypto.randomUUID()
-    const newUser = { ...userData, id }
+    try {
+        await ensureDatabaseConnection()
+        const userRepository = getUserRepository()
 
-    users.set(id, newUser)
+        // 이메일 중복 확인
+        const existingUser = await userRepository.findOne({ where: { email: userData.email } })
+        if (existingUser) {
+            throw new Error('이미 존재하는 이메일입니다')
+        }
 
-    // 비밀번호는 제외하고 반환
-    const { password, ...userWithoutPassword } = newUser
-    return userWithoutPassword
+        // 새 사용자 엔티티 생성
+        const newUser = userRepository.create({
+            email: userData.email,
+            name: userData.name,
+            password: userData.password, // 이미 해시된 비밀번호
+            isVerified: false,
+        })
+
+        // 데이터베이스에 저장
+        const savedUser = await userRepository.save(newUser)
+
+        // 비밀번호는 제외하고 반환
+        return {
+            id: savedUser.id.toString(),
+            email: savedUser.email,
+            name: savedUser.name,
+        }
+    } catch (error) {
+        console.error('사용자 생성 중 오류 발생:', error)
+        if (error instanceof Error && error.message === '이미 존재하는 이메일입니다') {
+            throw error
+        }
+        throw new Error('사용자 생성에 실패했습니다')
+    }
 }
 
 /**
@@ -90,7 +149,7 @@ export async function createUser(userData: Omit<UserData, 'id'> & { password: st
  * @param {string} hashedPassword - 데이터베이스에 저장된 해시된 비밀번호
  * @returns {Promise<boolean>} 비밀번호 일치 여부
  * @description 로그인 시 사용자가 입력한 비밀번호를 검증합니다.
- *              현재는 평문 비교이지만, 실제로는 bcrypt 등의 해시 라이브러리를 사용해야 합니다.
+ *              bcrypt를 사용하여 안전한 비밀번호 검증을 수행합니다.
  * 
  * @example
  * ```typescript
@@ -101,9 +160,12 @@ export async function createUser(userData: Omit<UserData, 'id'> & { password: st
  * ```
  */
 export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
-    // 실제로는 bcrypt 등을 사용해야 함
-    // 여기서는 간단히 평문 비교
-    return password === hashedPassword
+    try {
+        return await bcrypt.compare(password, hashedPassword)
+    } catch (error) {
+        console.error('비밀번호 검증 중 오류 발생:', error)
+        return false
+    }
 }
 
 /**
@@ -112,7 +174,7 @@ export async function verifyPassword(password: string, hashedPassword: string): 
  * @param {string} password - 해시할 평문 비밀번호
  * @returns {Promise<string>} 해시된 비밀번호
  * @description 사용자 비밀번호를 데이터베이스에 저장하기 전에 해시 처리합니다.
- *              현재는 평문을 그대로 반환하지만, 실제로는 bcrypt 등의 해시 라이브러리를 사용해야 합니다.
+ *              bcrypt를 사용하여 안전한 해시를 생성합니다.
  * 
  * @example
  * ```typescript
@@ -121,7 +183,11 @@ export async function verifyPassword(password: string, hashedPassword: string): 
  * ```
  */
 export async function hashPassword(password: string): Promise<string> {
-    // 실제로는 bcrypt 등을 사용해야 함
-    // 여기서는 간단히 평문 반환
-    return password
+    try {
+        const saltRounds = 12
+        return await bcrypt.hash(password, saltRounds)
+    } catch (error) {
+        console.error('비밀번호 해시 중 오류 발생:', error)
+        throw new Error('비밀번호 해시에 실패했습니다')
+    }
 }
