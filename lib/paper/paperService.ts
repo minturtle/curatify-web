@@ -4,6 +4,51 @@
  */
 
 import { Paper } from '@/lib/types/paper';
+import { AppDataSource } from '@/lib/database/ormconfig';
+import { Paper as PaperEntity } from '@/lib/database/entities/Paper';
+import { Repository } from 'typeorm';
+import { ensureDatabaseConnection } from '@/lib/database/connection';
+
+/**
+ * Paper Repository를 가져오는 private method
+ * 
+ * @returns {Repository<PaperEntity>} Paper 엔티티의 Repository
+ * @private
+ */
+function getPaperRepository(): Repository<PaperEntity> {
+  return AppDataSource.getRepository(PaperEntity);
+}
+
+/**
+ * PaperEntity를 Paper 타입으로 변환하는 함수
+ * 
+ * @param {PaperEntity} entity - 변환할 Paper 엔티티
+ * @returns {Paper} 변환된 Paper 타입
+ * @private
+ */
+function entityToDto(entity: PaperEntity): Paper {
+  // allCategories를 categories 배열로 파싱
+  const categories = entity.allCategories ? entity.allCategories.split(' ').filter(Boolean) : [];
+
+  // authors를 배열로 파싱 (콤마 구분 또는 JSON 형태로 저장되어 있다고 가정)
+  let authors: string[] = [];
+  try {
+    authors = entity.authors ? JSON.parse(entity.authors) : [];
+  } catch {
+    // JSON 파싱 실패 시 콤마로 분리
+    authors = entity.authors ? entity.authors.split(',').map(a => a.trim()) : [];
+  }
+
+  return {
+    id: entity.id.toString(),
+    title: entity.title,
+    summary: entity.summary || entity.abstract || '',
+    authors,
+    link: entity.url || '',
+    lastUpdate: entity.updateDate ? entity.updateDate.toISOString().split('T')[0] : entity.createdAt.toISOString().split('T')[0],
+    categories,
+  };
+}
 
 /**
  * 논문 목록을 가져오는 함수 (SSR용)
@@ -20,71 +65,39 @@ export async function getPapers(
   totalPages: number;
   totalCount: number;
 }> {
-  // 임시 데이터 (나중에 실제 API로 교체 예정)
-  const allPapers: Paper[] = [
-    {
-      id: '1',
-      title: 'AI와 머신러닝의 발전',
-      summary:
-        '이 논문은 **AI**와 머신러닝의 최신 발전 동향을 다룹니다. 특히 딥러닝 모델의 성능 향상과 실제 응용 사례에 대해 자세히 분석합니다.',
-      authors: ['김철수', '이영희'],
-      link: 'https://example.com/paper1',
-      lastUpdate: '2024-01-15',
-    },
-    {
-      id: '2',
-      title: '딥러닝을 활용한 자연어 처리',
-      summary:
-        '자연어 처리를 위한 **딥러닝** 모델의 성능 향상에 대한 연구입니다. Transformer 아키텍처의 발전과 BERT, GPT 모델들의 비교 분석을 포함합니다.',
-      authors: ['박민수'],
-      link: 'https://example.com/paper2',
-      lastUpdate: '2024-01-20',
-    },
-    {
-      id: '3',
-      title: '컴퓨터 비전의 최신 동향',
-      summary:
-        '컴퓨터 비전 분야에서 **CNN**과 **Vision Transformer**의 발전 과정을 다룹니다. 이미지 분류, 객체 탐지, 세그멘테이션 등의 태스크에서의 성능 비교를 포함합니다.',
-      authors: ['최지영', '정현우', '김태호'],
-      link: 'https://example.com/paper3',
-      lastUpdate: '2024-01-25',
-    },
-    {
-      id: '4',
-      title: '강화학습의 응용 사례',
-      summary:
-        '강화학습을 활용한 **게임 AI**와 **로봇 제어** 시스템의 실제 응용 사례를 다룹니다. AlphaGo, DQN 등의 성공 사례와 향후 발전 방향을 분석합니다.',
-      authors: ['이민수', '박지영'],
-      link: 'https://example.com/paper4',
-      lastUpdate: '2024-01-30',
-    },
-    {
-      id: '5',
-      title: '생성형 AI의 윤리적 고려사항',
-      summary:
-        '**생성형 AI**의 발전에 따른 윤리적 문제와 사회적 영향을 분석합니다. 편향성, 저작권, 프라이버시 등의 문제점과 해결 방안을 제시합니다.',
-      authors: ['정철수', '김영희', '박민수'],
-      link: 'https://example.com/paper5',
-      lastUpdate: '2024-02-05',
-    },
-  ];
+  try {
+    await ensureDatabaseConnection();
+    const paperRepository = getPaperRepository();
 
-  // 페이지네이션 계산
-  const startIndex = (page - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const papers = allPapers.slice(startIndex, endIndex);
-  const totalCount = allPapers.length;
-  const totalPages = Math.ceil(totalCount / pageSize);
+    // 전체 개수 조회
+    const totalCount = await paperRepository.count();
 
-  // 실제 API 호출을 시뮬레이션하기 위한 지연
-  await new Promise((resolve) => setTimeout(resolve, 100));
+    // 페이지네이션 계산
+    const skip = (page - 1) * pageSize;
+    const totalPages = Math.ceil(totalCount / pageSize);
 
-  return {
-    papers,
-    currentPage: page,
-    totalPages,
-    totalCount,
-  };
+    // 논문 목록 조회 (최신순으로 정렬)
+    const entities = await paperRepository.find({
+      skip,
+      take: pageSize,
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+
+    // 엔티티를 DTO로 변환
+    const papers = entities.map(entityToDto);
+
+    return {
+      papers,
+      currentPage: page,
+      totalPages,
+      totalCount,
+    };
+  } catch (error) {
+    console.error('논문 목록 조회 중 오류 발생:', error);
+    throw new Error('논문 목록 조회에 실패했습니다');
+  }
 }
 
 /**
@@ -94,12 +107,23 @@ export async function getPapers(
  */
 export async function registerPaper(paperId: string): Promise<boolean> {
   try {
-    // 실제 API 호출을 시뮬레이션하기 위한 지연
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await ensureDatabaseConnection();
+    const paperRepository = getPaperRepository();
 
-    // 임시로 성공 응답 반환 (나중에 실제 API로 교체 예정)
+    // 논문 존재 여부 확인
+    const paper = await paperRepository.findOne({ where: { id: parseInt(paperId) } });
+    if (!paper) {
+      console.error(`논문을 찾을 수 없습니다: ${paperId}`);
+      return false;
+    }
+
+    // 여기서는 논문이 존재한다는 것만 확인하고 성공 반환
+    // 실제로는 심층 분석 요청을 위한 별도 테이블이나 상태 업데이트가 필요할 수 있음
+    console.log(`논문 심층 분석 등록: ${paperId} - ${paper.title}`);
+
     return true;
-  } catch {
+  } catch (error) {
+    console.error('논문 등록 중 오류 발생:', error);
     return false;
   }
 }

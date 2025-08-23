@@ -8,7 +8,7 @@ export class RSSUrl {
     @Column({ type: 'enum', enum: ['youtube', 'normal'] })
     type!: 'youtube' | 'normal';
 
-    @Column()
+    @Column({ type: 'varchar', length: 500 })
     url!: string;
 
     @CreateDateColumn()
@@ -22,7 +22,7 @@ export class RSSUrl {
     @JoinColumn({ name: 'userId' })
     user!: any;
 
-    @Column()
+    @Column({ type: 'int' })
     userId!: number;
 
     @OneToMany('RSSFeed', 'rssUrl')

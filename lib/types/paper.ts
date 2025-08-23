@@ -10,6 +10,7 @@ export interface Paper {
   authors: string[];
   link: string;
   lastUpdate: string;
+  categories: string[];
 }
 
 export interface PaperListProps {

@@ -5,16 +5,16 @@ export class RSSFeed {
     @PrimaryGeneratedColumn()
     id!: number;
 
-    @Column()
+    @Column({ type: 'varchar', length: 500 })
     title!: string;
 
-    @Column({ nullable: true })
+    @Column({ type: 'text', nullable: true })
     summary!: string;
 
     @Column({ type: 'timestamp' })
     writedAt!: Date;
 
-    @Column({ nullable: true })
+    @Column({ type: 'varchar', length: 500, nullable: true })
     originalUrl!: string;
 
     @CreateDateColumn()
@@ -28,6 +28,6 @@ export class RSSFeed {
     @JoinColumn({ name: 'rssUrlId' })
     rssUrl!: any;
 
-    @Column()
+    @Column({ type: 'int' })
     rssUrlId!: number;
 }

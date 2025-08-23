@@ -8,25 +8,25 @@ export class Paper {
     @PrimaryGeneratedColumn()
     id!: number;
 
-    @Column({ length: 500 })
+    @Column({ type: 'varchar', length: 500 })
     title!: string;
 
-    @Column({ length: 200, nullable: true })
+    @Column({ type: 'varchar', length: 200, nullable: true })
     allCategories!: string;
 
-    @Column({ nullable: true })
+    @Column({ type: 'text', nullable: true })
     authors!: string;
 
-    @Column({ nullable: true })
+    @Column({ type: 'timestamp', nullable: true })
     updateDate!: Date;
 
-    @Column({ length: 500, nullable: true })
+    @Column({ type: 'varchar', length: 500, nullable: true })
     url!: string;
 
-    @Column()
+    @Column({ type: 'text' })
     abstract!: string;
 
-    @Column({ nullable: true })
+    @Column({ type: 'text', nullable: true })
     summary!: string;
 
     @CreateDateColumn()
