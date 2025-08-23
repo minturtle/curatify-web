@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { createSession, destroySession } from './session'
-import { findUserByEmail, createUser, verifyPassword, hashPassword } from './user'
+import { findUserByEmail, createUser, verifyPassword, hashPassword } from './userService'
 import { getSession } from './session'
 import { loginSchema, signupSchema, ActionError } from '@/lib/types/auth'
 

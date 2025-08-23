@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { loginAction, signupAction, logoutAction } from '@/lib/auth/actions'
 import { createSession, destroySession } from '@/lib/auth/session'
-import { findUserByEmail, createUser, verifyPassword, hashPassword } from '@/lib/auth/user'
+import { findUserByEmail, createUser, verifyPassword, hashPassword } from '@/lib/auth/userService'
 import { getSession } from '@/lib/auth/session'
 import { SessionData, UserData, UserWithPassword, ActionError } from '@/lib/types/auth'
 
@@ -12,7 +12,7 @@ vi.mock('@/lib/auth/session', () => ({
     destroySession: vi.fn(),
 }))
 
-vi.mock('@/lib/auth/user', () => ({
+vi.mock('@/lib/auth/userService', () => ({
     findUserByEmail: vi.fn(),
     createUser: vi.fn(),
     verifyPassword: vi.fn(),
