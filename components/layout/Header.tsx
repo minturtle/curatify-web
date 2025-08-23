@@ -8,7 +8,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -17,14 +17,15 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
-import { Menu, User, LogOut } from 'lucide-react';
-import { logoutAction } from '@/lib/auth/actions';
+import { Menu, User } from 'lucide-react';
+
 
 export default function Header() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   // 인증 상태 확인
   useEffect(() => {
@@ -42,18 +43,9 @@ export default function Header() {
     };
 
     checkAuthStatus();
-  }, []);
+  }, [pathname]); // pathname이 변경될 때마다 인증 상태를 다시 확인
 
-  const handleLogout = async () => {
-    try {
-      await logoutAction();
-      setIsLoggedIn(false);
-      router.push('/');
-      router.refresh();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
+
 
   if (isLoading) {
     return (
@@ -110,20 +102,9 @@ export default function Header() {
       {/* 데스크톱 우측 영역 */}
       <div className="hidden md:flex items-center space-x-4">
         {isLoggedIn ? (
-          <>
-            <Link href="/mypage" className="p-2 text-gray-700 hover:text-gray-900 transition-colors">
-              <User className="w-6 h-6" data-testid="user-avatar" />
-            </Link>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              className="text-gray-700 hover:text-gray-900"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              로그아웃
-            </Button>
-          </>
+          <Link href="/mypage" className="p-2 text-gray-700 hover:text-gray-900 transition-colors">
+            <User className="w-6 h-6" data-testid="user-avatar" />
+          </Link>
         ) : (
           <Link href="/auth">
             <Button variant="default" className="bg-blue-600 hover:bg-blue-700 text-white">
@@ -185,17 +166,6 @@ export default function Header() {
                     <User className="w-5 h-5 mr-2" />
                     마이페이지
                   </Link>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-                    onClick={() => {
-                      handleLogout();
-                      setIsSidebarOpen(false);
-                    }}
-                  >
-                    <LogOut className="w-5 h-5 mr-2" />
-                    로그아웃
-                  </Button>
                 </>
               ) : (
                 <Link href="/auth">

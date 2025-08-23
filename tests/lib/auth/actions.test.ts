@@ -92,27 +92,20 @@ describe('Auth Actions', () => {
                 email: 'test@example.com',
                 name: 'Test User',
             }
-            const mockSession: SessionData = {
-                userId: '123',
-                email: 'test@example.com',
-                role: 'not_approved',
-            }
 
             vi.mocked(getSession).mockResolvedValue(null)
             vi.mocked(findUserByEmail).mockResolvedValue(null)
             vi.mocked(createUser).mockResolvedValue(mockNewUser)
-            vi.mocked(createSession).mockResolvedValue(mockSession)
             vi.mocked(hashPassword).mockResolvedValue('hashedPassword123')
 
             // redirect가 호출되므로 예외가 발생할 것
-            await expect(signupAction(null, mockFormData)).rejects.toThrow('NEXT_REDIRECT')
+            await expect(signupAction(null, mockFormData)).rejects.toThrow('NEXT_REDIRECT: /auth')
 
             expect(createUser).toHaveBeenCalledWith({
                 email: 'test@example.com',
                 name: 'Test User',
                 password: 'hashedPassword123',
             })
-            expect(createSession).toHaveBeenCalledWith(mockNewUser)
         })
 
         it('비밀번호가 일치하지 않으면 에러를 반환해야 한다', async () => {

@@ -144,15 +144,13 @@ export async function signupAction(_: any, formData: FormData): Promise<ActionEr
         const hashedPassword = await hashPassword(validatedPassword)
 
         // 사용자 생성
-        const newUser = await createUser({
+        await createUser({
             email: validatedEmail,
             name: validatedName,
             password: hashedPassword,
         })
 
-        // 세션 생성
-        await createSession(newUser)
-
+        // 회원가입 성공 시 로그인 페이지로 리다이렉트
         redirect('/auth')
     } catch (error) {
         // redirect는 그대로 throw

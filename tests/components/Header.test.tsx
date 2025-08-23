@@ -17,12 +17,10 @@ vi.mock('next/navigation', () => ({
     push: mockPush,
     refresh: mockRefresh,
   }),
+  usePathname: () => '/',
 }));
 
-// Mock logoutAction
-vi.mock('@/lib/auth/actions', () => ({
-  logoutAction: vi.fn().mockResolvedValue({ success: true }),
-}));
+
 
 describe('Header 컴포넌트', () => {
   // Mock fetch API
