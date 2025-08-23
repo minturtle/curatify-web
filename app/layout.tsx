@@ -35,9 +35,9 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body
-        className={`${inter.variable} ${poppins.variable} ${jetbrainsMono.variable} antialiased`}
+        className={`${inter.variable} ${poppins.variable} ${jetbrainsMono.variable} antialiased bg-gray-50`}
       >
-        <Header isLoggedIn={true} />
+        <Header />
         {children}
       </body>
     </html>

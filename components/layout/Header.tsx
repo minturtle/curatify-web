@@ -5,9 +5,10 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -18,12 +19,43 @@ import {
 } from '@/components/ui/sheet';
 import { Menu, User } from 'lucide-react';
 
-interface HeaderProps {
-  isLoggedIn: boolean;
-}
 
-export default function Header({ isLoggedIn }: HeaderProps) {
+export default function Header() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // 인증 상태 확인
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const response = await fetch('/api/auth/status');
+        const data = await response.json();
+        setIsLoggedIn(data.isAuthenticated);
+      } catch (error) {
+        console.error('Auth status check failed:', error);
+        setIsLoggedIn(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuthStatus();
+  }, [pathname]); // pathname이 변경될 때마다 인증 상태를 다시 확인
+
+
+
+  if (isLoading) {
+    return (
+      <header className="flex justify-between items-center px-4 py-3 bg-white shadow-sm border-b">
+        <div className="flex items-center">
+          <div className="w-32 h-8 bg-gray-200 animate-pulse rounded"></div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header
@@ -68,15 +100,17 @@ export default function Header({ isLoggedIn }: HeaderProps) {
       )}
 
       {/* 데스크톱 우측 영역 */}
-      <div className="hidden md:flex items-center">
+      <div className="hidden md:flex items-center space-x-4">
         {isLoggedIn ? (
           <Link href="/mypage" className="p-2 text-gray-700 hover:text-gray-900 transition-colors">
             <User className="w-6 h-6" data-testid="user-avatar" />
           </Link>
         ) : (
-          <Button variant="default" className="bg-blue-600 hover:bg-blue-700 text-white">
-            로그인/회원가입
-          </Button>
+          <Link href="/auth">
+            <Button variant="default" className="bg-blue-600 hover:bg-blue-700 text-white">
+              로그인/회원가입
+            </Button>
+          </Link>
         )}
       </div>
 
@@ -134,13 +168,15 @@ export default function Header({ isLoggedIn }: HeaderProps) {
                   </Link>
                 </>
               ) : (
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-                  onClick={() => setIsSidebarOpen(false)}
-                >
-                  로그인/회원가입
-                </Button>
+                <Link href="/auth">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    로그인/회원가입
+                  </Button>
+                </Link>
               )}
             </div>
           </SheetContent>
