@@ -5,9 +5,10 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -16,14 +17,57 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
-import { Menu, User } from 'lucide-react';
+import { Menu, User, LogOut } from 'lucide-react';
+import { logoutAction } from '@/lib/auth/actions';
 
-interface HeaderProps {
-  isLoggedIn: boolean;
-}
-
-export default function Header({ isLoggedIn }: HeaderProps) {
+export default function Header() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+
+  // 인증 상태 확인
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const response = await fetch('/api/auth/status');
+        const data = await response.json();
+        setIsLoggedIn(data.isAuthenticated);
+      } catch (error) {
+        console.error('Auth status check failed:', error);
+        setIsLoggedIn(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuthStatus();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      const result = await logoutAction();
+      if (result.success) {
+        setIsLoggedIn(false);
+        router.push('/');
+        router.refresh();
+      } else {
+        console.error('Logout failed:', result.error);
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <header className="flex justify-between items-center px-4 py-3 bg-white shadow-sm border-b">
+        <div className="flex items-center">
+          <div className="w-32 h-8 bg-gray-200 animate-pulse rounded"></div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header
@@ -68,15 +112,28 @@ export default function Header({ isLoggedIn }: HeaderProps) {
       )}
 
       {/* 데스크톱 우측 영역 */}
-      <div className="hidden md:flex items-center">
+      <div className="hidden md:flex items-center space-x-4">
         {isLoggedIn ? (
-          <Link href="/mypage" className="p-2 text-gray-700 hover:text-gray-900 transition-colors">
-            <User className="w-6 h-6" data-testid="user-avatar" />
-          </Link>
+          <>
+            <Link href="/mypage" className="p-2 text-gray-700 hover:text-gray-900 transition-colors">
+              <User className="w-6 h-6" data-testid="user-avatar" />
+            </Link>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="text-gray-700 hover:text-gray-900"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              로그아웃
+            </Button>
+          </>
         ) : (
-          <Button variant="default" className="bg-blue-600 hover:bg-blue-700 text-white">
-            로그인/회원가입
-          </Button>
+          <Link href="/auth">
+            <Button variant="default" className="bg-blue-600 hover:bg-blue-700 text-white">
+              로그인/회원가입
+            </Button>
+          </Link>
         )}
       </div>
 
@@ -132,15 +189,28 @@ export default function Header({ isLoggedIn }: HeaderProps) {
                     <User className="w-5 h-5 mr-2" />
                     마이페이지
                   </Link>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                    onClick={() => {
+                      handleLogout();
+                      setIsSidebarOpen(false);
+                    }}
+                  >
+                    <LogOut className="w-5 h-5 mr-2" />
+                    로그아웃
+                  </Button>
                 </>
               ) : (
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-                  onClick={() => setIsSidebarOpen(false)}
-                >
-                  로그인/회원가입
-                </Button>
+                <Link href="/auth">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    로그인/회원가입
+                  </Button>
+                </Link>
               )}
             </div>
           </SheetContent>

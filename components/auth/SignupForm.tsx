@@ -4,21 +4,32 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { signupAction } from "@/lib/auth/actions"
+import { useRouter } from "next/navigation"
 
 export default function SignupForm() {
     const [isLoading, setIsLoading] = useState(false)
-    const [name, setName] = useState("")
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
-    const [confirmPassword, setConfirmPassword] = useState("")
+    const [error, setError] = useState<string | null>(null)
+    const router = useRouter()
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         setIsLoading(true)
+        setError(null)
+
         try {
-            // TODO: Server Action 호출
-            console.log("회원가입 시도:", { name, email, password, confirmPassword })
-            await new Promise(resolve => setTimeout(resolve, 1000))
+            const formData = new FormData(e.currentTarget)
+            const result = await signupAction(formData)
+
+            if (result.success) {
+                // 회원가입 성공 시 홈페이지로 리다이렉트
+                router.push('/')
+                router.refresh()
+            } else {
+                setError(result.error || 'Signup failed')
+            }
+        } catch (error) {
+            setError('An unexpected error occurred')
         } finally {
             setIsLoading(false)
         }
@@ -38,16 +49,21 @@ export default function SignupForm() {
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {error && (
+                        <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                            {error}
+                        </div>
+                    )}
+
                     <div className="space-y-2">
                         <label htmlFor="name" className="text-sm font-medium">
                             이름
                         </label>
                         <Input
                             id="name"
+                            name="name"
                             type="text"
                             placeholder="홍길동"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
                             required
                             disabled={isLoading}
                         />
@@ -59,10 +75,9 @@ export default function SignupForm() {
                         </label>
                         <Input
                             id="signupEmail"
+                            name="email"
                             type="email"
                             placeholder="example@email.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
                             required
                             disabled={isLoading}
                         />
@@ -74,10 +89,9 @@ export default function SignupForm() {
                         </label>
                         <Input
                             id="signupPassword"
+                            name="password"
                             type="password"
                             placeholder="8자 이상 입력하세요"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
                             required
                             disabled={isLoading}
                             minLength={8}
@@ -90,10 +104,9 @@ export default function SignupForm() {
                         </label>
                         <Input
                             id="confirmPassword"
+                            name="confirmPassword"
                             type="password"
                             placeholder="비밀번호를 다시 입력하세요"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
                             required
                             disabled={isLoading}
                         />

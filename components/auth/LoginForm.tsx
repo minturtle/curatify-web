@@ -4,19 +4,32 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { loginAction } from "@/lib/auth/actions"
+import { useRouter } from "next/navigation"
 
 export default function LoginForm() {
     const [isLoading, setIsLoading] = useState(false)
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
+    const [error, setError] = useState<string | null>(null)
+    const router = useRouter()
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         setIsLoading(true)
+        setError(null)
+
         try {
-            // TODO: Server Action 호출
-            console.log("로그인 시도:", { email, password })
-            await new Promise(resolve => setTimeout(resolve, 1000))
+            const formData = new FormData(e.currentTarget)
+            const result = await loginAction(formData)
+
+            if (result.success) {
+                // 로그인 성공 시 홈페이지로 리다이렉트
+                router.push('/')
+                router.refresh()
+            } else {
+                setError(result.error || 'Login failed')
+            }
+        } catch (error) {
+            setError('An unexpected error occurred')
         } finally {
             setIsLoading(false)
         }
@@ -36,16 +49,21 @@ export default function LoginForm() {
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {error && (
+                        <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                            {error}
+                        </div>
+                    )}
+
                     <div className="space-y-2">
                         <label htmlFor="email" className="text-sm font-medium">
                             이메일
                         </label>
                         <Input
                             id="email"
+                            name="email"
                             type="email"
                             placeholder="example@email.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
                             required
                             disabled={isLoading}
                         />
@@ -57,10 +75,9 @@ export default function LoginForm() {
                         </label>
                         <Input
                             id="password"
+                            name="password"
                             type="password"
                             placeholder="비밀번호를 입력하세요"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
                             required
                             disabled={isLoading}
                         />
