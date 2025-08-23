@@ -36,8 +36,7 @@ export default function PaperCard({ paper }: PaperCardProps) {
         alert('심층 분석 등록에 실패했습니다.');
       }
     } catch (error) {
-      console.error('심층 분석 등록 중 오류:', error);
-      alert('심층 분석 등록 중 오류가 발생했습니다.');
+      alert(`심층 분석 등록 중 오류가 발생했습니다. ${error}`);
     } finally {
       setIsRegistering(false);
     }

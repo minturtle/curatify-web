@@ -98,10 +98,8 @@ export async function registerPaper(paperId: string): Promise<boolean> {
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     // 임시로 성공 응답 반환 (나중에 실제 API로 교체 예정)
-    console.log(`논문 ${paperId}가 심층 분석을 위해 등록되었습니다.`);
     return true;
-  } catch (error) {
-    console.error('논문 등록 중 오류 발생:', error);
+  } catch {
     return false;
   }
 }

@@ -5,7 +5,7 @@
  * @author Minseok kim
  */
 
-import { RSSFeed, RSSUrl, RSSUrlFormData, RSSType } from '@/lib/types/rss';
+import { RSSFeed, RSSUrl, RSSUrlFormData } from '@/lib/types/rss';
 
 // Mock 데이터 - RSS 피드 목록
 const mockUrls: RSSUrl[] = [
@@ -102,9 +102,6 @@ export async function addRSSUrl(formData: RSSUrlFormData) {
   if (formData.type === 'youtube' && !isValidYouTubeURL(formData.url)) {
     throw new Error('유효하지 않은 YouTube URL입니다.');
   }
-
-  // 실제 구현에서는 데이터베이스에 저장
-  console.log('RSS URL 등록:', formData);
 }
 
 /**
