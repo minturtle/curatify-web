@@ -1,39 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useActionState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { signupAction } from "@/lib/auth/actions"
-import { useRouter } from "next/navigation"
+import { ActionError } from "@/lib/types/auth"
 
 export default function SignupForm() {
-    const [isLoading, setIsLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
-    const router = useRouter()
-
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
-        setIsLoading(true)
-        setError(null)
-
-        try {
-            const formData = new FormData(e.currentTarget)
-            const result = await signupAction(formData)
-
-            if (result.success) {
-                // 회원가입 성공 시 홈페이지로 리다이렉트
-                router.push('/')
-                router.refresh()
-            } else {
-                setError(result.error || 'Signup failed')
-            }
-        } catch (error) {
-            setError('An unexpected error occurred')
-        } finally {
-            setIsLoading(false)
-        }
-    }
+    const [state, formAction, isPending] = useActionState<ActionError | null, FormData>(
+        signupAction,
+        null
+    )
 
     return (
         <Card className="shadow-xl border-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
@@ -48,10 +26,10 @@ export default function SignupForm() {
                 </div>
             </CardHeader>
             <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {error && (
+                <form action={formAction} className="space-y-4">
+                    {state && (
                         <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-                            {error}
+                            {state.message}
                         </div>
                     )}
 
@@ -65,7 +43,7 @@ export default function SignupForm() {
                             type="text"
                             placeholder="홍길동"
                             required
-                            disabled={isLoading}
+                            disabled={isPending}
                         />
                     </div>
 
@@ -79,7 +57,7 @@ export default function SignupForm() {
                             type="email"
                             placeholder="example@email.com"
                             required
-                            disabled={isLoading}
+                            disabled={isPending}
                         />
                     </div>
 
@@ -93,7 +71,7 @@ export default function SignupForm() {
                             type="password"
                             placeholder="8자 이상 입력하세요"
                             required
-                            disabled={isLoading}
+                            disabled={isPending}
                             minLength={8}
                         />
                     </div>
@@ -108,16 +86,16 @@ export default function SignupForm() {
                             type="password"
                             placeholder="비밀번호를 다시 입력하세요"
                             required
-                            disabled={isLoading}
+                            disabled={isPending}
                         />
                     </div>
 
                     <Button
                         type="submit"
                         className="w-full"
-                        disabled={isLoading}
+                        disabled={isPending}
                     >
-                        {isLoading ? "회원가입 중..." : "회원가입"}
+                        {isPending ? "회원가입 중..." : "회원가입"}
                     </Button>
                 </form>
             </CardContent>

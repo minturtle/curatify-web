@@ -3,7 +3,7 @@ import { loginAction, signupAction, logoutAction } from '@/lib/auth/actions'
 import { createSession, destroySession } from '@/lib/auth/session'
 import { findUserByEmail, createUser, verifyPassword, hashPassword } from '@/lib/auth/user'
 import { getSession } from '@/lib/auth/session'
-import { SessionData, UserData, UserWithPassword } from '@/lib/types/auth'
+import { SessionData, UserData, UserWithPassword, ActionError } from '@/lib/types/auth'
 
 // Mock dependencies
 vi.mock('@/lib/auth/session', () => ({
@@ -17,6 +17,12 @@ vi.mock('@/lib/auth/user', () => ({
     createUser: vi.fn(),
     verifyPassword: vi.fn(),
     hashPassword: vi.fn(),
+}))
+
+vi.mock('next/navigation', () => ({
+    redirect: vi.fn().mockImplementation((url: string) => {
+        throw new Error(`NEXT_REDIRECT: ${url}`)
+    }),
 }))
 
 
@@ -49,9 +55,9 @@ describe('Auth Actions', () => {
             vi.mocked(createSession).mockResolvedValue(mockSession)
             vi.mocked(verifyPassword).mockResolvedValue(true)
 
-            const result = await loginAction(mockFormData)
+            // redirect가 호출되므로 예외가 발생할 것
+            await expect(loginAction(null, mockFormData)).rejects.toThrow('NEXT_REDIRECT')
 
-            expect(result).toEqual({ success: true })
             expect(createSession).toHaveBeenCalledWith({
                 id: mockUser.id,
                 email: mockUser.email,
@@ -67,12 +73,9 @@ describe('Auth Actions', () => {
             vi.mocked(getSession).mockResolvedValue(null)
             vi.mocked(findUserByEmail).mockResolvedValue(null)
 
-            const result = await loginAction(mockFormData)
+            const result = await loginAction(null, mockFormData)
 
-            expect(result).toEqual({
-                success: false,
-                error: 'Invalid credentials'
-            })
+            expect(result).toEqual({ message: '아이디/비밀번호가 일치하지 않습니다' })
         })
     })
 
@@ -101,9 +104,9 @@ describe('Auth Actions', () => {
             vi.mocked(createSession).mockResolvedValue(mockSession)
             vi.mocked(hashPassword).mockResolvedValue('hashedPassword123')
 
-            const result = await signupAction(mockFormData)
+            // redirect가 호출되므로 예외가 발생할 것
+            await expect(signupAction(null, mockFormData)).rejects.toThrow('NEXT_REDIRECT')
 
-            expect(result).toEqual({ success: true })
             expect(createUser).toHaveBeenCalledWith({
                 email: 'test@example.com',
                 name: 'Test User',
@@ -121,12 +124,9 @@ describe('Auth Actions', () => {
 
             vi.mocked(getSession).mockResolvedValue(null)
 
-            const result = await signupAction(mockFormData)
+            const result = await signupAction(null, mockFormData)
 
-            expect(result).toEqual({
-                success: false,
-                error: 'Passwords do not match'
-            })
+            expect(result).toEqual({ message: '비밀번호가 일치하지 않습니다' })
         })
 
         it('이미 존재하는 이메일에 대해 에러를 반환해야 한다', async () => {
@@ -146,12 +146,9 @@ describe('Auth Actions', () => {
             vi.mocked(getSession).mockResolvedValue(null)
             vi.mocked(findUserByEmail).mockResolvedValue(mockExistingUser)
 
-            const result = await signupAction(mockFormData)
+            const result = await signupAction(null, mockFormData)
 
-            expect(result).toEqual({
-                success: false,
-                error: 'Email already exists'
-            })
+            expect(result).toEqual({ message: '이미 존재하는 이메일입니다' })
         })
     })
 
@@ -161,21 +158,16 @@ describe('Auth Actions', () => {
 
             const result = await logoutAction()
 
-            expect(result).toEqual({ success: true })
+            expect(result).toBeNull()
             expect(destroySession).toHaveBeenCalled()
         })
 
-        it('로그아웃 에러를 처리해야 한다', async () => {
+        it('로그아웃 에러를 throw해야 한다', async () => {
             vi.mocked(destroySession).mockRejectedValue(
                 new Error('Logout failed')
             )
 
-            const result = await logoutAction()
-
-            expect(result).toEqual({
-                success: false,
-                error: 'Logout failed'
-            })
+            await expect(logoutAction()).rejects.toThrow('Logout failed')
         })
     })
 })

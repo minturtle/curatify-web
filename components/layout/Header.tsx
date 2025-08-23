@@ -46,14 +46,10 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
-      const result = await logoutAction();
-      if (result.success) {
-        setIsLoggedIn(false);
-        router.push('/');
-        router.refresh();
-      } else {
-        console.error('Logout failed:', result.error);
-      }
+      await logoutAction();
+      setIsLoggedIn(false);
+      router.push('/');
+      router.refresh();
     } catch (error) {
       console.error('Logout error:', error);
     }
