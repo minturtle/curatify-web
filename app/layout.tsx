@@ -1,24 +1,12 @@
 import type { Metadata } from 'next';
-import { Inter, Poppins, JetBrains_Mono } from 'next/font/google';
+import { Roboto } from 'next/font/google';
 import './globals.css';
 import Header from '@/components/layout/Header';
 
-const inter = Inter({
-  variable: '--font-inter',
+const roboto = Roboto({
+  variable: '--font-roboto',
   subsets: ['latin'],
-  display: 'swap',
-});
-
-const poppins = Poppins({
-  variable: '--font-poppins',
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  display: 'swap',
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: '--font-jetbrains-mono',
-  subsets: ['latin'],
+  weight: ['300', '400', '500', '700'],
   display: 'swap',
 });
 
@@ -34,9 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body
-        className={`${inter.variable} ${poppins.variable} ${jetbrainsMono.variable} antialiased bg-gray-50`}
-      >
+      <body className={`${roboto.variable} antialiased bg-gray-50`}>
         <Header />
         {children}
       </body>

@@ -16,9 +16,12 @@ export default async function Home({ searchParams }: HomePageProps) {
   return (
     <div>
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8 md:px-10">
+        <div className="mb-8 md:px-10 max-w-6xl mx-auto">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">AI가 추천하는 논문</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Reseach Paper Abstracts</h2>
+            <p className="text-gray-600">
+              관심 분야에 맞춰 AI가 큐레이션한 논문 요약을 만나보세요.
+            </p>
           </div>
           <PaperList papers={papers} />
         </div>
