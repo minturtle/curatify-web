@@ -11,7 +11,7 @@ import { ensureDatabaseConnection } from '@/lib/database/connection';
 
 /**
  * Paper Repository를 가져오는 private method
- * 
+ *
  * @returns {Repository<PaperEntity>} Paper 엔티티의 Repository
  * @private
  */
@@ -21,7 +21,7 @@ function getPaperRepository(): Repository<PaperEntity> {
 
 /**
  * PaperEntity를 Paper 타입으로 변환하는 함수
- * 
+ *
  * @param {PaperEntity} entity - 변환할 Paper 엔티티
  * @returns {Paper} 변환된 Paper 타입
  * @private
@@ -36,16 +36,18 @@ function entityToDto(entity: PaperEntity): Paper {
     authors = entity.authors ? JSON.parse(entity.authors) : [];
   } catch {
     // JSON 파싱 실패 시 콤마로 분리
-    authors = entity.authors ? entity.authors.split(',').map(a => a.trim()) : [];
+    authors = entity.authors ? entity.authors.split(',').map((a) => a.trim()) : [];
   }
 
   return {
-    id: entity.id.toString(),
+    id: entity.id,
     title: entity.title,
     summary: entity.summary || entity.abstract || '',
     authors,
     link: entity.url || '',
-    lastUpdate: entity.updateDate ? entity.updateDate.toISOString().split('T')[0] : entity.createdAt.toISOString().split('T')[0],
+    lastUpdate: entity.updateDate
+      ? entity.updateDate.toISOString().split('T')[0]
+      : entity.createdAt.toISOString().split('T')[0],
     categories,
   };
 }
@@ -105,13 +107,13 @@ export async function getPapers(
  * @param paperId 등록할 논문의 ID
  * @returns 등록 성공 여부
  */
-export async function registerPaper(paperId: string): Promise<boolean> {
+export async function registerPaper(paperId: number): Promise<boolean> {
   try {
     await ensureDatabaseConnection();
     const paperRepository = getPaperRepository();
 
     // 논문 존재 여부 확인
-    const paper = await paperRepository.findOne({ where: { id: parseInt(paperId) } });
+    const paper = await paperRepository.findOne({ where: { id: paperId } });
     if (!paper) {
       console.error(`논문을 찾을 수 없습니다: ${paperId}`);
       return false;

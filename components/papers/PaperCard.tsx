@@ -6,12 +6,14 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useActionState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Paper } from '@/lib/types/paper';
-import { registerPaper } from '@/lib/paper/paperService';
+import { registerPaperForAnalysis } from '@/lib/paper/actions';
+import { RegisterPaperActionResult } from '@/lib/types/paper';
 import { ChevronDown, ChevronUp, ExternalLink, Calendar, Users, Brain } from 'lucide-react';
 
 interface PaperCardProps {
@@ -20,26 +22,15 @@ interface PaperCardProps {
 
 export default function PaperCard({ paper }: PaperCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
+
+  // useActionState를 사용하여 server action 상태 관리
+  const [state, formAction, isPending] = useActionState<RegisterPaperActionResult, FormData>(
+    registerPaperForAnalysis,
+    { success: false }
+  );
 
   const handleToggle = () => {
     setIsExpanded(!isExpanded);
-  };
-
-  const handleDeepAnalysis = async () => {
-    setIsRegistering(true);
-    try {
-      const success = await registerPaper(paper.id);
-      if (success) {
-        alert('심층 분석이 등록되었습니다.');
-      } else {
-        alert('심층 분석 등록에 실패했습니다.');
-      }
-    } catch (error) {
-      alert(`심층 분석 등록 중 오류가 발생했습니다. ${error}`);
-    } finally {
-      setIsRegistering(false);
-    }
   };
 
   return (
@@ -112,15 +103,28 @@ export default function PaperCard({ paper }: PaperCardProps) {
 
           {/* 심층 분석 버튼 */}
           <div className="pt-4">
-            <Button
-              onClick={handleDeepAnalysis}
-              disabled={isRegistering}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              data-testid="deep-analysis-button"
-            >
-              <Brain className="h-4 w-4 mr-2" />
-              {isRegistering ? '등록 중...' : '심층 분석'}
-            </Button>
+            <form action={formAction}>
+              <input type="hidden" name="paperId" value={paper.id} />
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                data-testid="deep-analysis-button"
+              >
+                <Brain className="h-4 w-4 mr-2" />
+                {isPending ? '등록 중...' : '심층 분석'}
+              </Button>
+            </form>
+
+            {/* 결과 메시지 표시 */}
+            {state.success && state.message && (
+              <div className="mt-2 p-2 bg-green-100 text-green-800 rounded text-sm">
+                {state.message}
+              </div>
+            )}
+            {!state.success && state.error && (
+              <div className="mt-2 p-2 bg-red-100 text-red-800 rounded text-sm">{state.error}</div>
+            )}
           </div>
         </CardContent>
       )}

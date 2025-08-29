@@ -200,7 +200,7 @@ describe('paperService', () => {
       // Repository 모킹 설정 - 논문 존재
       mockRepository.findOne.mockResolvedValue(mockPaperEntities[0]);
 
-      const result = await registerPaper('1');
+      const result = await registerPaper(1);
 
       expect(result).toBe(true);
       expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
@@ -210,7 +210,7 @@ describe('paperService', () => {
       // Repository 모킹 설정 - 논문 없음
       mockRepository.findOne.mockResolvedValue(null);
 
-      const result = await registerPaper('999');
+      const result = await registerPaper(999);
 
       expect(result).toBe(false);
       expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 999 } });
