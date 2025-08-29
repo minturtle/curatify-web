@@ -32,5 +32,5 @@ export class User {
   updatedAt!: Date;
 
   @OneToMany('RSSUrl', 'user')
-  rssUrls!: RSSUrl[];
+  rssUrls!: Promise<RSSUrl[]>;
 }

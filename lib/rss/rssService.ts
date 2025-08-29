@@ -5,7 +5,18 @@
  * @author Minseok kim
  */
 
-import { RSSFeed, RSSUrl, RSSUrlFormData } from '@/lib/types/rss';
+import { RSSFeed, RSSUrl, RSSUrlFormData, PaginatedRSSFeeds, RSSType } from '@/lib/types/rss';
+import { ensureDatabaseConnection } from '@/lib/database/connection';
+import {
+  getRSSUrlRepository,
+  getUserRepository,
+  getRSSFeedRepository,
+} from '@/lib/database/repositories';
+import { RSSUrl as RSSUrlEntity } from '@/lib/database/entities/RSSUrl';
+import { RSSFeed as RSSFeedEntity } from '@/lib/database/entities/RSSFeed';
+import { publishJson } from '@/lib/redis/client';
+import { getSession } from '@/lib/auth/session';
+import { In } from 'typeorm';
 
 // Mock 데이터 - RSS 피드 목록
 const mockUrls: RSSUrl[] = [
@@ -23,64 +34,6 @@ const mockUrls: RSSUrl[] = [
     id: '3',
     url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC_x5XG1OV2P6uZZ5FSM9Ttw',
     type: 'youtube',
-  },
-];
-
-// Mock 데이터 - RSS 아이템 목록
-const mockFeeds: RSSFeed[] = [
-  {
-    id: '1',
-    feedId: '1',
-    title: 'AI 기술의 새로운 발전: GPT-5 출시 예정',
-    description:
-      'OpenAI가 GPT-5 출시를 앞두고 있으며, 이번 버전에서는 더욱 향상된 자연어 처리 능력을 제공할 예정입니다.',
-    link: 'https://techcrunch.com/2024/01/15/ai-gpt5-release',
-    pubDate: new Date('2024-01-15T10:00:00Z'),
-    author: 'John Smith',
-    createdAt: new Date('2024-01-15'),
-  },
-  {
-    id: '2',
-    feedId: '1',
-    title: '메타버스 플랫폼의 미래 전망',
-    description:
-      '메타버스 기술이 어떻게 우리의 일상생활을 변화시킬지에 대한 심층 분석을 제공합니다.',
-    link: 'https://techcrunch.com/2024/01-14/metaverse-future',
-    pubDate: new Date('2024-01-14T15:30:00Z'),
-    author: 'Jane Doe',
-    createdAt: new Date('2024-01-14'),
-  },
-  {
-    id: '3',
-    feedId: '2',
-    title: '새로운 스마트폰 기술 트렌드',
-    description: '2024년 스마트폰 시장의 주요 기술 트렌드와 향후 발전 방향을 살펴봅니다.',
-    link: 'https://www.theverge.com/2024/01/13/smartphone-trends',
-    pubDate: new Date('2024-01-13T09:15:00Z'),
-    author: 'Mike Johnson',
-    createdAt: new Date('2024-01-13'),
-  },
-  {
-    id: '4',
-    feedId: '2',
-    title: '클라우드 컴퓨팅의 새로운 패러다임',
-    description:
-      '클라우드 컴퓨팅 기술의 최신 동향과 기업들이 어떻게 이를 활용하고 있는지 알아봅니다.',
-    link: 'https://www.theverge.com/2024/01/12/cloud-computing-paradigm',
-    pubDate: new Date('2024-01-12T14:20:00Z'),
-    author: 'Sarah Wilson',
-    createdAt: new Date('2024-01-12'),
-  },
-  {
-    id: '5',
-    feedId: '1',
-    title: '블록체인 기술의 실제 활용 사례',
-    description:
-      '블록체인 기술이 금융, 의료, 물류 등 다양한 분야에서 어떻게 활용되고 있는지 살펴봅니다.',
-    link: 'https://techcrunch.com/2024/01/11/blockchain-use-cases',
-    pubDate: new Date('2024-01-11T11:45:00Z'),
-    author: 'David Brown',
-    createdAt: new Date('2024-01-11'),
   },
 ];
 
@@ -102,43 +55,231 @@ export async function addRSSUrl(formData: RSSUrlFormData) {
   if (formData.type === 'youtube' && !isValidYouTubeURL(formData.url)) {
     throw new Error('유효하지 않은 YouTube URL입니다.');
   }
+
+  // 세션에서 사용자 ID 가져오기
+  const session = await getSession();
+  if (!session || !session.userId) {
+    throw new Error('로그인이 필요합니다.');
+  }
+
+  try {
+    // 데이터베이스 연결 확인
+    await ensureDatabaseConnection();
+
+    // RSSUrl 엔티티 가져오기
+    const RSSUrlRepository = getRSSUrlRepository();
+    const UserRepository = getUserRepository();
+
+    const user = await UserRepository.findOne({ where: { id: session.userId } });
+    if (!user) {
+      throw new Error('사용자를 찾을 수 없습니다.');
+    }
+
+    const rssUrl = new RSSUrlEntity();
+    rssUrl.url = formData.url;
+    rssUrl.type = formData.type === 'youtube' ? 'youtube' : 'normal';
+    rssUrl.user = user;
+
+    const savedRssUrl = await RSSUrlRepository.save(rssUrl);
+
+    // Redis 채널에 RSS URL + RSS Type + 사용자 ID publish
+    const publishData = {
+      url: formData.url,
+      type: formData.type,
+      userId: session.userId,
+      rssUrlId: savedRssUrl.id,
+    };
+
+    await publishJson('rss:update_feeds', publishData);
+
+    return savedRssUrl;
+  } catch (error) {
+    console.error('RSS URL 등록 중 오류 발생:', error);
+    throw new Error('RSS URL 등록에 실패했습니다.');
+  }
 }
 
 /**
- * RSS 아이템 목록 조회 (페이지네이션)
+ * RSS 아이템 목록 조회 (페이지네이션) - 현재 사용자만
  */
 export async function getRSSFeeds(
   page: number = 1,
   limit: number = 10
-): Promise<{
-  items: RSSFeed[];
-  totalPages: number;
-  totalItems: number;
-}> {
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
+): Promise<PaginatedRSSFeeds> {
+  try {
+    // 세션에서 사용자 ID 가져오기
+    const session = await getSession();
+    if (!session || !session.userId) {
+      throw new Error('로그인이 필요합니다.');
+    }
 
-  // 최신순으로 정렬
-  const sortedItems = [...mockFeeds].sort(
-    (a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime()
-  );
+    // 데이터베이스 연결 확인
+    await ensureDatabaseConnection();
 
-  const paginatedItems = sortedItems.slice(startIndex, endIndex);
-  const totalItems = mockFeeds.length;
-  const totalPages = Math.ceil(totalItems / limit);
+    // RSSFeed repository 가져오기
+    const RSSFeedRepository = getRSSFeedRepository();
 
-  return {
-    items: paginatedItems,
-    totalPages,
-    totalItems,
-  };
+    // 현재 사용자의 RSS URL ID 목록 조회 (삭제된 것 포함 - 기존 피드 유지)
+    const RSSUrlRepository = getRSSUrlRepository();
+    const userRSSUrls = await RSSUrlRepository.find({
+      where: { user: { id: session.userId } },
+      select: ['id'],
+      withDeleted: true, // 삭제된 RSS URL도 포함하여 기존 피드 유지
+    });
+
+    const userRSSUrlIds = userRSSUrls.map((url) => url.id);
+
+    // 사용자의 RSS URL이 없는 경우 빈 결과 반환
+    if (userRSSUrlIds.length === 0) {
+      return {
+        items: [],
+        totalPages: 0,
+        totalItems: 0,
+      };
+    }
+
+    // 전체 아이템 수 조회 (현재 사용자만)
+    const totalItems = await RSSFeedRepository.count({
+      where: { rssUrl: { id: In(userRSSUrlIds) } },
+    });
+
+    // 페이지네이션 계산
+    const skip = (page - 1) * limit;
+    const totalPages = Math.ceil(totalItems / limit);
+
+    // RSS 피드 조회 (최신순 정렬, 현재 사용자만)
+    const feeds = await RSSFeedRepository.find({
+      where: { rssUrl: { id: In(userRSSUrlIds) } },
+      order: {
+        writedAt: 'DESC',
+        createdAt: 'DESC',
+      },
+      skip,
+      take: limit,
+      relations: ['rssUrl'],
+    });
+
+    // 타입 변환 (DB 엔티티 → 타입 정의)
+    const items: RSSFeed[] = await Promise.all(
+      feeds.map(async (feed) => ({
+        id: feed.id.toString(),
+        title: feed.title,
+        summary: feed.summary || undefined,
+        writedAt: feed.writedAt,
+        originalUrl: feed.originalUrl || undefined,
+        createdAt: feed.createdAt,
+        updatedAt: feed.updatedAt,
+        rssUrl: feed.rssUrl
+          ? ({
+              id: (await feed.rssUrl).id.toString(),
+              url: (await feed.rssUrl).url,
+              type: (await feed.rssUrl).type as RSSType,
+            } as RSSUrl)
+          : undefined,
+      }))
+    );
+
+    return {
+      items,
+      totalPages,
+      totalItems,
+    };
+  } catch (error) {
+    // 로그인 관련 에러는 원본 메시지 유지
+    if (error instanceof Error && error.message === '로그인이 필요합니다.') {
+      throw error;
+    }
+
+    console.error('RSS 피드 조회 중 오류 발생:', error);
+    throw new Error('RSS 피드 조회에 실패했습니다.');
+  }
 }
 
 /**
- * RSS 피드 목록 조회
+ * RSS 피드 URL 조회 - 현재 사용자만
  */
 export async function getRSSUrls(): Promise<RSSUrl[]> {
-  return mockUrls;
+  try {
+    // 세션에서 사용자 ID 가져오기
+    const session = await getSession();
+    if (!session || !session.userId) {
+      throw new Error('로그인이 필요합니다.');
+    }
+
+    // 데이터베이스 연결 확인
+    await ensureDatabaseConnection();
+
+    // RSSUrl repository 가져오기
+    const RSSUrlRepository = getRSSUrlRepository();
+
+    // 현재 사용자의 RSS URL 목록 조회 (삭제되지 않은 것만)
+    const rssUrls = await RSSUrlRepository.find({
+      where: { user: { id: session.userId } },
+      order: {
+        createdAt: 'DESC',
+      },
+      withDeleted: false, // 소프트 삭제된 레코드 제외
+    });
+
+    // 타입 변환 (DB 엔티티 → 타입 정의)
+    const items: RSSUrl[] = rssUrls.map((rssUrl) => ({
+      id: rssUrl.id.toString(),
+      url: rssUrl.url,
+      type: rssUrl.type === 'youtube' ? 'youtube' : 'rss',
+    }));
+
+    return items;
+  } catch (error) {
+    // 로그인 관련 에러는 원본 메시지 유지
+    if (error instanceof Error && error.message === '로그인이 필요합니다.') {
+      throw error;
+    }
+
+    console.error('RSS URL 조회 중 오류 발생:', error);
+    throw new Error('RSS URL 조회에 실패했습니다.');
+  }
+}
+
+/**
+ * RSS URL 삭제 (소프트 삭제)
+ */
+export async function deleteRSSUrl(rssUrlId: string): Promise<void> {
+  try {
+    // 세션에서 사용자 ID 가져오기
+    const session = await getSession();
+    if (!session || !session.userId) {
+      throw new Error('로그인이 필요합니다.');
+    }
+
+    // 데이터베이스 연결 확인
+    await ensureDatabaseConnection();
+
+    // RSSUrl repository 가져오기
+    const RSSUrlRepository = getRSSUrlRepository();
+
+    // RSS URL 조회 (현재 사용자의 것만)
+    const rssUrl = await RSSUrlRepository.findOne({
+      where: {
+        id: parseInt(rssUrlId),
+        user: { id: session.userId },
+      },
+    });
+
+    if (!rssUrl) {
+      throw new Error('RSS URL을 찾을 수 없습니다.');
+    }
+
+    // 소프트 삭제 실행
+    await RSSUrlRepository.softDelete(rssUrl.id);
+  } catch (error) {
+    // 로그인 관련 에러는 원본 메시지 유지
+    if (error instanceof Error && error.message === '로그인이 필요합니다.') {
+      throw error;
+    }
+
+    console.error('RSS URL 삭제 중 오류 발생:', error);
+    throw new Error('RSS URL 삭제에 실패했습니다.');
+  }
 }
 
 /**

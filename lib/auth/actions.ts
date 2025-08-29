@@ -67,7 +67,7 @@ export async function loginAction(_: unknown, formData: FormData): Promise<Actio
       id: user.id,
       email: user.email,
       name: user.name,
-      isVerified: false,
+      isVerified: user.isVerified,
     });
 
     redirect('/');

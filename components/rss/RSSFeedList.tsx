@@ -3,14 +3,18 @@
  * @author Minseok kim
  */
 
-import { RSSFeed } from '@/lib/types/rss';
 import RSSFeedCard from './RSSFeedCard';
+import { getRSSFeeds } from '@/lib/rss/rssService';
+import PaginationSSR from '@/components/ui/pagination-ssr';
 
 interface RSSFeedListProps {
-  items: RSSFeed[];
+  currentPage: number;
 }
 
-export default function RSSFeedList({ items }: RSSFeedListProps) {
+export default async function RSSFeedList({ currentPage }: RSSFeedListProps) {
+  // RSS 아이템 데이터 가져오기
+  const { items, totalPages } = await getRSSFeeds(currentPage, 3);
+
   if (items.length === 0) {
     return (
       <div className="text-center py-12">
@@ -25,6 +29,8 @@ export default function RSSFeedList({ items }: RSSFeedListProps) {
       {items.map((item) => (
         <RSSFeedCard key={item.id} item={item} />
       ))}
+      {/* 페이지네이션 */}
+      <PaginationSSR currentPage={currentPage} totalPages={totalPages} />
     </div>
   );
 }

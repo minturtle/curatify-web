@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   ManyToOne,
   OneToMany,
   JoinColumn,
@@ -28,10 +29,13 @@ export class RSSUrl {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deletedAt!: Date | null;
+
   // 관계 설정 - 문자열로 참조하여 순환 참조 방지
   @ManyToOne('User', 'rssUrls')
   @JoinColumn({ name: 'user_id' })
-  user!: Promise<User>;
+  user!: User;
 
   @OneToMany('RSSFeed', 'rssUrl')
   rssFeeds!: RSSFeed[];

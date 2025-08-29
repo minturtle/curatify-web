@@ -5,7 +5,7 @@
 
 'use server';
 
-import { addRSSUrl } from '@/lib/rss/rssService';
+import { addRSSUrl, deleteRSSUrl } from '@/lib/rss/rssService';
 import { RSSType, RSSUrlSchema, AddRSSUrlActionResult } from '@/lib/types/rss';
 import { revalidatePath } from 'next/cache';
 
@@ -44,6 +44,34 @@ export async function addRSSUrlAction(
     return {
       success: false,
       error: error instanceof Error ? error.message : 'RSS URL 등록에 실패했습니다.',
+    };
+  }
+}
+
+/**
+ * RSS URL 삭제 Server Action
+ */
+export async function deleteRSSUrlAction(
+  prevState: { success: boolean; error?: string },
+  formData: FormData
+): Promise<{ success: boolean; error?: string }> {
+  const rssUrlId = formData.get('rssUrlId') as string;
+
+  if (!rssUrlId) {
+    return {
+      success: false,
+      error: 'RSS URL ID가 필요합니다.',
+    };
+  }
+
+  try {
+    await deleteRSSUrl(rssUrlId);
+    revalidatePath('/rss');
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'RSS URL 삭제에 실패했습니다.',
     };
   }
 }
