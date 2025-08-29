@@ -316,14 +316,31 @@ describe('RSS Service', () => {
   });
 
   describe('getRSSFeeds', () => {
-    it('RSS 피드 목록을 페이지네이션과 함께 반환한다', async () => {
-      const { getRSSFeedRepository } = await import('@/lib/database/repositories');
+    it('현재 사용자의 RSS 피드 목록을 페이지네이션과 함께 반환한다', async () => {
+      const { getSession } = await import('@/lib/auth/session');
+      const { getRSSFeedRepository, getRSSUrlRepository } = await import(
+        '@/lib/database/repositories'
+      );
+
+      // Mock 설정 - 세션
+      vi.mocked(getSession).mockResolvedValue({
+        userId: 1,
+        email: 'test@example.com',
+        role: 'approved',
+      });
+
+      const mockRSSUrlRepository = {
+        find: vi.fn().mockResolvedValue([{ id: 1 }, { id: 2 }]), // 사용자의 RSS URL ID들
+      };
 
       const mockRSSFeedRepository = {
         find: vi.fn().mockResolvedValue(mockRSSFeeds),
         count: vi.fn().mockResolvedValue(mockRSSFeeds.length),
       };
 
+      vi.mocked(getRSSUrlRepository).mockReturnValue(
+        mockRSSUrlRepository as unknown as Repository<RSSUrlEntity>
+      );
       vi.mocked(getRSSFeedRepository).mockReturnValue(
         mockRSSFeedRepository as unknown as Repository<RSSFeedEntity>
       );
@@ -334,12 +351,30 @@ describe('RSS Service', () => {
       expect(result.items).toBeInstanceOf(Array);
       expect(result.totalPages).toBeGreaterThan(0);
       expect(result.totalItems).toBeGreaterThan(0);
+      expect(mockRSSUrlRepository.find).toHaveBeenCalledWith({
+        where: { user: { id: 1 } },
+        select: ['id'],
+      });
       expect(mockRSSFeedRepository.find).toHaveBeenCalled();
       expect(mockRSSFeedRepository.count).toHaveBeenCalled();
     });
 
     it('페이지 번호에 따라 올바른 아이템을 반환한다', async () => {
-      const { getRSSFeedRepository } = await import('@/lib/database/repositories');
+      const { getSession } = await import('@/lib/auth/session');
+      const { getRSSFeedRepository, getRSSUrlRepository } = await import(
+        '@/lib/database/repositories'
+      );
+
+      // Mock 설정 - 세션
+      vi.mocked(getSession).mockResolvedValue({
+        userId: 1,
+        email: 'test@example.com',
+        role: 'approved',
+      });
+
+      const mockRSSUrlRepository = {
+        find: vi.fn().mockResolvedValue([{ id: 1 }, { id: 2 }]),
+      };
 
       const mockRSSFeedRepository = {
         find: vi
@@ -349,6 +384,9 @@ describe('RSS Service', () => {
         count: vi.fn().mockResolvedValue(mockRSSFeeds.length),
       };
 
+      vi.mocked(getRSSUrlRepository).mockReturnValue(
+        mockRSSUrlRepository as unknown as Repository<RSSUrlEntity>
+      );
       vi.mocked(getRSSFeedRepository).mockReturnValue(
         mockRSSFeedRepository as unknown as Repository<RSSFeedEntity>
       );
@@ -361,16 +399,32 @@ describe('RSS Service', () => {
       expect(mockRSSFeedRepository.find).toHaveBeenCalledTimes(2);
     });
 
-    it('빈 결과를 반환할 때 올바른 페이지네이션 정보를 제공한다', async () => {
-      const { getRSSFeedRepository } = await import('@/lib/database/repositories');
+    it('로그인하지 않은 사용자가 RSS 피드를 조회하면 에러를 던진다', async () => {
+      const { getSession } = await import('@/lib/auth/session');
 
-      const mockRSSFeedRepository = {
-        find: vi.fn().mockResolvedValue([]),
-        count: vi.fn().mockResolvedValue(0),
+      // Mock 설정 - 세션이 없음
+      vi.mocked(getSession).mockResolvedValue(null);
+
+      await expect(getRSSFeeds(1, 5)).rejects.toThrow('로그인이 필요합니다.');
+    });
+
+    it('사용자의 RSS URL이 없으면 빈 결과를 반환한다', async () => {
+      const { getSession } = await import('@/lib/auth/session');
+      const { getRSSUrlRepository } = await import('@/lib/database/repositories');
+
+      // Mock 설정 - 세션
+      vi.mocked(getSession).mockResolvedValue({
+        userId: 1,
+        email: 'test@example.com',
+        role: 'approved',
+      });
+
+      const mockRSSUrlRepository = {
+        find: vi.fn().mockResolvedValue([]), // 사용자의 RSS URL이 없음
       };
 
-      vi.mocked(getRSSFeedRepository).mockReturnValue(
-        mockRSSFeedRepository as unknown as Repository<RSSFeedEntity>
+      vi.mocked(getRSSUrlRepository).mockReturnValue(
+        mockRSSUrlRepository as unknown as Repository<RSSUrlEntity>
       );
 
       const result = await getRSSFeeds(1, 5);
@@ -381,13 +435,30 @@ describe('RSS Service', () => {
     });
 
     it('기본 페이지네이션 파라미터를 사용할 때 올바르게 동작한다', async () => {
-      const { getRSSFeedRepository } = await import('@/lib/database/repositories');
+      const { getSession } = await import('@/lib/auth/session');
+      const { getRSSFeedRepository, getRSSUrlRepository } = await import(
+        '@/lib/database/repositories'
+      );
+
+      // Mock 설정 - 세션
+      vi.mocked(getSession).mockResolvedValue({
+        userId: 1,
+        email: 'test@example.com',
+        role: 'approved',
+      });
+
+      const mockRSSUrlRepository = {
+        find: vi.fn().mockResolvedValue([{ id: 1 }, { id: 2 }]),
+      };
 
       const mockRSSFeedRepository = {
         find: vi.fn().mockResolvedValue(mockRSSFeeds.slice(0, 10)),
         count: vi.fn().mockResolvedValue(mockRSSFeeds.length),
       };
 
+      vi.mocked(getRSSUrlRepository).mockReturnValue(
+        mockRSSUrlRepository as unknown as Repository<RSSUrlEntity>
+      );
       vi.mocked(getRSSFeedRepository).mockReturnValue(
         mockRSSFeedRepository as unknown as Repository<RSSFeedEntity>
       );

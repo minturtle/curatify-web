@@ -16,6 +16,7 @@ import { RSSUrl as RSSUrlEntity } from '@/lib/database/entities/RSSUrl';
 import { RSSFeed as RSSFeedEntity } from '@/lib/database/entities/RSSFeed';
 import { publishJson } from '@/lib/redis/client';
 import { getSession } from '@/lib/auth/session';
+import { In } from 'typeorm';
 
 // Mock 데이터 - RSS 피드 목록
 const mockUrls: RSSUrl[] = [
@@ -99,28 +100,55 @@ export async function addRSSUrl(formData: RSSUrlFormData) {
 }
 
 /**
- * RSS 아이템 목록 조회 (페이지네이션)
+ * RSS 아이템 목록 조회 (페이지네이션) - 현재 사용자만
  */
 export async function getRSSFeeds(
   page: number = 1,
   limit: number = 10
 ): Promise<PaginatedRSSFeeds> {
   try {
+    // 세션에서 사용자 ID 가져오기
+    const session = await getSession();
+    if (!session || !session.userId) {
+      throw new Error('로그인이 필요합니다.');
+    }
+
     // 데이터베이스 연결 확인
     await ensureDatabaseConnection();
 
     // RSSFeed repository 가져오기
     const RSSFeedRepository = getRSSFeedRepository();
 
-    // 전체 아이템 수 조회
-    const totalItems = await RSSFeedRepository.count();
+    // 현재 사용자의 RSS URL ID 목록 조회
+    const RSSUrlRepository = getRSSUrlRepository();
+    const userRSSUrls = await RSSUrlRepository.find({
+      where: { user: { id: session.userId } },
+      select: ['id'],
+    });
+
+    const userRSSUrlIds = userRSSUrls.map((url) => url.id);
+
+    // 사용자의 RSS URL이 없는 경우 빈 결과 반환
+    if (userRSSUrlIds.length === 0) {
+      return {
+        items: [],
+        totalPages: 0,
+        totalItems: 0,
+      };
+    }
+
+    // 전체 아이템 수 조회 (현재 사용자만)
+    const totalItems = await RSSFeedRepository.count({
+      where: { rssUrl: { id: In(userRSSUrlIds) } },
+    });
 
     // 페이지네이션 계산
     const skip = (page - 1) * limit;
     const totalPages = Math.ceil(totalItems / limit);
 
-    // RSS 피드 조회 (최신순 정렬)
+    // RSS 피드 조회 (최신순 정렬, 현재 사용자만)
     const feeds = await RSSFeedRepository.find({
+      where: { rssUrl: { id: In(userRSSUrlIds) } },
       order: {
         writedAt: 'DESC',
         createdAt: 'DESC',
@@ -156,6 +184,11 @@ export async function getRSSFeeds(
       totalItems,
     };
   } catch (error) {
+    // 로그인 관련 에러는 원본 메시지 유지
+    if (error instanceof Error && error.message === '로그인이 필요합니다.') {
+      throw error;
+    }
+    
     console.error('RSS 피드 조회 중 오류 발생:', error);
     throw new Error('RSS 피드 조회에 실패했습니다.');
   }
