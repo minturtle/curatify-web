@@ -472,14 +472,60 @@ describe('RSS Service', () => {
   });
 
   describe('getRSSUrls', () => {
-    it('등록된 RSS 피드 목록을 반환한다', async () => {
+    it('현재 사용자의 RSS URL 목록을 반환한다', async () => {
+      const { getSession } = await import('@/lib/auth/session');
+      const { getRSSUrlRepository } = await import('@/lib/database/repositories');
+
+      // Mock 설정 - 세션
+      vi.mocked(getSession).mockResolvedValue({
+        userId: 1,
+        email: 'test@example.com',
+        role: 'approved',
+      });
+
+      const mockRSSUrlRepository = {
+        find: vi.fn().mockResolvedValue([
+          {
+            id: 1,
+            url: 'https://techcrunch.com/feed',
+            type: 'normal',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          {
+            id: 2,
+            url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC_x5XG1OV2P6uZZ5FSM9Ttw',
+            type: 'youtube',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ]),
+      };
+
+      vi.mocked(getRSSUrlRepository).mockReturnValue(
+        mockRSSUrlRepository as unknown as Repository<RSSUrlEntity>
+      );
+
       const feeds = await getRSSUrls();
 
       expect(feeds).toBeInstanceOf(Array);
-      expect(feeds.length).toBeGreaterThan(0);
+      expect(feeds.length).toBe(2);
       expect(feeds[0]).toHaveProperty('id');
       expect(feeds[0]).toHaveProperty('url');
       expect(feeds[0]).toHaveProperty('type');
+      expect(mockRSSUrlRepository.find).toHaveBeenCalledWith({
+        where: { user: { id: 1 } },
+        order: { createdAt: 'DESC' },
+      });
+    });
+
+    it('로그인하지 않은 사용자가 RSS URL을 조회하면 에러를 던진다', async () => {
+      const { getSession } = await import('@/lib/auth/session');
+
+      // Mock 설정 - 세션이 없음
+      vi.mocked(getSession).mockResolvedValue(null);
+
+      await expect(getRSSUrls()).rejects.toThrow('로그인이 필요합니다.');
     });
   });
 });

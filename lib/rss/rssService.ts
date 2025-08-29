@@ -169,11 +169,11 @@ export async function getRSSFeeds(
         createdAt: feed.createdAt,
         updatedAt: feed.updatedAt,
         rssUrl: feed.rssUrl
-          ? {
+          ? ({
               id: (await feed.rssUrl).id.toString(),
               url: (await feed.rssUrl).url,
               type: (await feed.rssUrl).type as RSSType,
-            } as RSSUrl
+            } as RSSUrl)
           : undefined,
       }))
     );
@@ -188,17 +188,54 @@ export async function getRSSFeeds(
     if (error instanceof Error && error.message === '로그인이 필요합니다.') {
       throw error;
     }
-    
+
     console.error('RSS 피드 조회 중 오류 발생:', error);
     throw new Error('RSS 피드 조회에 실패했습니다.');
   }
 }
 
 /**
- * RSS 피드 목록 조회
+ * RSS 피드 URL 조회 - 현재 사용자만
  */
 export async function getRSSUrls(): Promise<RSSUrl[]> {
-  return mockUrls;
+  try {
+    // 세션에서 사용자 ID 가져오기
+    const session = await getSession();
+    if (!session || !session.userId) {
+      throw new Error('로그인이 필요합니다.');
+    }
+
+    // 데이터베이스 연결 확인
+    await ensureDatabaseConnection();
+
+    // RSSUrl repository 가져오기
+    const RSSUrlRepository = getRSSUrlRepository();
+
+    // 현재 사용자의 RSS URL 목록 조회
+    const rssUrls = await RSSUrlRepository.find({
+      where: { user: { id: session.userId } },
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+
+    // 타입 변환 (DB 엔티티 → 타입 정의)
+    const items: RSSUrl[] = rssUrls.map((rssUrl) => ({
+      id: rssUrl.id.toString(),
+      url: rssUrl.url,
+      type: rssUrl.type === 'youtube' ? 'youtube' : 'rss',
+    }));
+
+    return items;
+  } catch (error) {
+    // 로그인 관련 에러는 원본 메시지 유지
+    if (error instanceof Error && error.message === '로그인이 필요합니다.') {
+      throw error;
+    }
+
+    console.error('RSS URL 조회 중 오류 발생:', error);
+    throw new Error('RSS URL 조회에 실패했습니다.');
+  }
 }
 
 /**
