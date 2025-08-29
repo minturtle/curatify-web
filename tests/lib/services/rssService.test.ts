@@ -9,6 +9,7 @@ import { RSSUrlFormData } from '@/lib/types/rss';
 import { Repository } from 'typeorm';
 import { User } from '@/lib/database/entities/User';
 import { RSSUrl as RSSUrlEntity } from '@/lib/database/entities/RSSUrl';
+import { RSSFeed as RSSFeedEntity } from '@/lib/database/entities/RSSFeed';
 
 // Mock 모듈들
 vi.mock('@/lib/database/connection', () => ({
@@ -17,6 +18,7 @@ vi.mock('@/lib/database/connection', () => ({
 
 vi.mock('@/lib/database/repositories', () => ({
   getRSSUrlRepository: vi.fn(),
+  getRSSFeedRepository: vi.fn(),
   getUserRepository: vi.fn(),
 }));
 
@@ -49,6 +51,40 @@ describe('RSS Service', () => {
     user: mockUser,
     rssFeeds: [],
   };
+
+  const mockRSSFeeds = [
+    {
+      id: 1,
+      title: 'AI 기술의 새로운 발전: GPT-5 출시 예정',
+      summary:
+        'OpenAI가 GPT-5 출시를 앞두고 있으며, 이번 버전에서는 더욱 향상된 자연어 처리 능력을 제공할 예정입니다.',
+      writedAt: new Date('2024-01-15T10:00:00Z'),
+      originalUrl: 'https://techcrunch.com/2024/01/15/ai-gpt5-release',
+      createdAt: new Date('2024-01-15'),
+      updatedAt: new Date('2024-01-15'),
+      rssUrl: mockRSSUrl,
+    },
+    {
+      id: 2,
+      title: '메타버스 플랫폼의 미래 전망',
+      summary: '메타버스 기술이 어떻게 우리의 일상생활을 변화시킬지에 대한 심층 분석을 제공합니다.',
+      writedAt: new Date('2024-01-14T15:30:00Z'),
+      originalUrl: 'https://techcrunch.com/2024/01-14/metaverse-future',
+      createdAt: new Date('2024-01-14'),
+      updatedAt: new Date('2024-01-14'),
+      rssUrl: mockRSSUrl,
+    },
+    {
+      id: 3,
+      title: '새로운 스마트폰 기술 트렌드',
+      summary: '2024년 스마트폰 시장의 주요 기술 트렌드와 향후 발전 방향을 살펴봅니다.',
+      writedAt: new Date('2024-01-13T09:15:00Z'),
+      originalUrl: 'https://www.theverge.com/2024/01/13/smartphone-trends',
+      createdAt: new Date('2024-01-13'),
+      updatedAt: new Date('2024-01-13'),
+      rssUrl: mockRSSUrl,
+    },
+  ];
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -281,20 +317,86 @@ describe('RSS Service', () => {
 
   describe('getRSSFeeds', () => {
     it('RSS 피드 목록을 페이지네이션과 함께 반환한다', async () => {
+      const { getRSSFeedRepository } = await import('@/lib/database/repositories');
+
+      const mockRSSFeedRepository = {
+        find: vi.fn().mockResolvedValue(mockRSSFeeds),
+        count: vi.fn().mockResolvedValue(mockRSSFeeds.length),
+      };
+
+      vi.mocked(getRSSFeedRepository).mockReturnValue(
+        mockRSSFeedRepository as unknown as Repository<RSSFeedEntity>
+      );
+
       const result = await getRSSFeeds(1, 5);
 
       expect(result).toBeDefined();
       expect(result.items).toBeInstanceOf(Array);
       expect(result.totalPages).toBeGreaterThan(0);
       expect(result.totalItems).toBeGreaterThan(0);
+      expect(mockRSSFeedRepository.find).toHaveBeenCalled();
+      expect(mockRSSFeedRepository.count).toHaveBeenCalled();
     });
 
     it('페이지 번호에 따라 올바른 아이템을 반환한다', async () => {
+      const { getRSSFeedRepository } = await import('@/lib/database/repositories');
+
+      const mockRSSFeedRepository = {
+        find: vi
+          .fn()
+          .mockResolvedValueOnce(mockRSSFeeds.slice(0, 3))
+          .mockResolvedValueOnce(mockRSSFeeds.slice(3, 6)),
+        count: vi.fn().mockResolvedValue(mockRSSFeeds.length),
+      };
+
+      vi.mocked(getRSSFeedRepository).mockReturnValue(
+        mockRSSFeedRepository as unknown as Repository<RSSFeedEntity>
+      );
+
       const page1 = await getRSSFeeds(1, 3);
       const page2 = await getRSSFeeds(2, 3);
 
       expect(page1.items.length).toBeLessThanOrEqual(3);
       expect(page2.items.length).toBeLessThanOrEqual(3);
+      expect(mockRSSFeedRepository.find).toHaveBeenCalledTimes(2);
+    });
+
+    it('빈 결과를 반환할 때 올바른 페이지네이션 정보를 제공한다', async () => {
+      const { getRSSFeedRepository } = await import('@/lib/database/repositories');
+
+      const mockRSSFeedRepository = {
+        find: vi.fn().mockResolvedValue([]),
+        count: vi.fn().mockResolvedValue(0),
+      };
+
+      vi.mocked(getRSSFeedRepository).mockReturnValue(
+        mockRSSFeedRepository as unknown as Repository<RSSFeedEntity>
+      );
+
+      const result = await getRSSFeeds(1, 5);
+
+      expect(result.items).toEqual([]);
+      expect(result.totalItems).toBe(0);
+      expect(result.totalPages).toBe(0);
+    });
+
+    it('기본 페이지네이션 파라미터를 사용할 때 올바르게 동작한다', async () => {
+      const { getRSSFeedRepository } = await import('@/lib/database/repositories');
+
+      const mockRSSFeedRepository = {
+        find: vi.fn().mockResolvedValue(mockRSSFeeds.slice(0, 10)),
+        count: vi.fn().mockResolvedValue(mockRSSFeeds.length),
+      };
+
+      vi.mocked(getRSSFeedRepository).mockReturnValue(
+        mockRSSFeedRepository as unknown as Repository<RSSFeedEntity>
+      );
+
+      const result = await getRSSFeeds();
+
+      expect(result.items).toBeInstanceOf(Array);
+      expect(result.totalPages).toBeGreaterThan(0);
+      expect(result.totalItems).toBeGreaterThan(0);
     });
   });
 

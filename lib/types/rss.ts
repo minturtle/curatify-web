@@ -15,18 +15,24 @@ export interface RSSUrl {
 
 export interface RSSFeed {
   id: string;
-  feedId: string;
   title: string;
-  description?: string;
-  link: string;
-  pubDate: Date;
-  author?: string;
+  summary?: string;
+  writedAt: Date;
+  originalUrl?: string;
   createdAt: Date;
+  updatedAt: Date;
+  rssUrl?: RSSUrl;
 }
 
 export interface RSSUrlFormData {
   url: string;
   type: RSSType;
+}
+
+export interface PaginatedRSSFeeds {
+  items: RSSFeed[];
+  totalPages: number;
+  totalItems: number;
 }
 
 // RSS URL 등록을 위한 Zod 스키마

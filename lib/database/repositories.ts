@@ -5,6 +5,7 @@
 
 import { AppDataSource } from './ormconfig';
 import { RSSUrl } from './entities/RSSUrl';
+import { RSSFeed } from './entities/RSSFeed';
 import { User } from './entities/User';
 
 /**
@@ -12,6 +13,13 @@ import { User } from './entities/User';
  */
 export function getRSSUrlRepository() {
   return AppDataSource.getRepository(RSSUrl);
+}
+
+/**
+ * RSSFeed repository를 가져오는 유틸 함수
+ */
+export function getRSSFeedRepository() {
+  return AppDataSource.getRepository(RSSFeed);
 }
 
 /**
