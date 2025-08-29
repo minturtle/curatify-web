@@ -119,11 +119,12 @@ export async function getRSSFeeds(
     // RSSFeed repository 가져오기
     const RSSFeedRepository = getRSSFeedRepository();
 
-    // 현재 사용자의 RSS URL ID 목록 조회
+    // 현재 사용자의 RSS URL ID 목록 조회 (삭제된 것 포함 - 기존 피드 유지)
     const RSSUrlRepository = getRSSUrlRepository();
     const userRSSUrls = await RSSUrlRepository.find({
       where: { user: { id: session.userId } },
       select: ['id'],
+      withDeleted: true, // 삭제된 RSS URL도 포함하여 기존 피드 유지
     });
 
     const userRSSUrlIds = userRSSUrls.map((url) => url.id);
@@ -211,12 +212,13 @@ export async function getRSSUrls(): Promise<RSSUrl[]> {
     // RSSUrl repository 가져오기
     const RSSUrlRepository = getRSSUrlRepository();
 
-    // 현재 사용자의 RSS URL 목록 조회
+    // 현재 사용자의 RSS URL 목록 조회 (삭제되지 않은 것만)
     const rssUrls = await RSSUrlRepository.find({
       where: { user: { id: session.userId } },
       order: {
         createdAt: 'DESC',
       },
+      withDeleted: false, // 소프트 삭제된 레코드 제외
     });
 
     // 타입 변환 (DB 엔티티 → 타입 정의)
@@ -235,6 +237,48 @@ export async function getRSSUrls(): Promise<RSSUrl[]> {
 
     console.error('RSS URL 조회 중 오류 발생:', error);
     throw new Error('RSS URL 조회에 실패했습니다.');
+  }
+}
+
+/**
+ * RSS URL 삭제 (소프트 삭제)
+ */
+export async function deleteRSSUrl(rssUrlId: string): Promise<void> {
+  try {
+    // 세션에서 사용자 ID 가져오기
+    const session = await getSession();
+    if (!session || !session.userId) {
+      throw new Error('로그인이 필요합니다.');
+    }
+
+    // 데이터베이스 연결 확인
+    await ensureDatabaseConnection();
+
+    // RSSUrl repository 가져오기
+    const RSSUrlRepository = getRSSUrlRepository();
+
+    // RSS URL 조회 (현재 사용자의 것만)
+    const rssUrl = await RSSUrlRepository.findOne({
+      where: {
+        id: parseInt(rssUrlId),
+        user: { id: session.userId },
+      },
+    });
+
+    if (!rssUrl) {
+      throw new Error('RSS URL을 찾을 수 없습니다.');
+    }
+
+    // 소프트 삭제 실행
+    await RSSUrlRepository.softDelete(rssUrl.id);
+  } catch (error) {
+    // 로그인 관련 에러는 원본 메시지 유지
+    if (error instanceof Error && error.message === '로그인이 필요합니다.') {
+      throw error;
+    }
+
+    console.error('RSS URL 삭제 중 오류 발생:', error);
+    throw new Error('RSS URL 삭제에 실패했습니다.');
   }
 }
 

@@ -25,9 +25,12 @@ CREATE TABLE IF NOT EXISTS rss_urls (
     user_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_user_id (user_id),
-    INDEX idx_type (type)
+    INDEX idx_type (type),
+    INDEX idx_deleted_at (deleted_at),
+    INDEX idx_user_deleted_at (user_id, deleted_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- RSS Feed 테이블 생성
@@ -40,7 +43,7 @@ CREATE TABLE IF NOT EXISTS rss_feeds (
     rss_url_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (rss_url_id) REFERENCES rss_urls(id) ON DELETE CASCADE,
+    FOREIGN KEY (rss_url_id) REFERENCES rss_urls(id),
     INDEX idx_rss_url_id (rss_url_id),
     INDEX idx_writed_at (writed_at),
     INDEX idx_created_at (created_at)

@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { addRSSUrl, getRSSFeeds, getRSSUrls } from '@/lib/rss/rssService';
+import { addRSSUrl, getRSSFeeds, getRSSUrls, deleteRSSUrl } from '@/lib/rss/rssService';
 import { RSSUrlFormData } from '@/lib/types/rss';
 import { Repository } from 'typeorm';
 import { User } from '@/lib/database/entities/User';
@@ -354,6 +354,7 @@ describe('RSS Service', () => {
       expect(mockRSSUrlRepository.find).toHaveBeenCalledWith({
         where: { user: { id: 1 } },
         select: ['id'],
+        withDeleted: true,
       });
       expect(mockRSSFeedRepository.find).toHaveBeenCalled();
       expect(mockRSSFeedRepository.count).toHaveBeenCalled();
@@ -516,6 +517,7 @@ describe('RSS Service', () => {
       expect(mockRSSUrlRepository.find).toHaveBeenCalledWith({
         where: { user: { id: 1 } },
         order: { createdAt: 'DESC' },
+        withDeleted: false,
       });
     });
 
@@ -526,6 +528,105 @@ describe('RSS Service', () => {
       vi.mocked(getSession).mockResolvedValue(null);
 
       await expect(getRSSUrls()).rejects.toThrow('로그인이 필요합니다.');
+    });
+  });
+
+  describe('deleteRSSUrl', () => {
+    it('현재 사용자의 RSS URL을 소프트 삭제한다', async () => {
+      const { getSession } = await import('@/lib/auth/session');
+      const { getRSSUrlRepository } = await import('@/lib/database/repositories');
+
+      // Mock 설정 - 세션
+      vi.mocked(getSession).mockResolvedValue({
+        userId: 1,
+        email: 'test@example.com',
+        role: 'approved',
+      });
+
+      const mockRSSUrlRepository = {
+        findOne: vi.fn().mockResolvedValue(mockRSSUrl),
+        softDelete: vi.fn().mockResolvedValue({ affected: 1 }),
+      };
+
+      vi.mocked(getRSSUrlRepository).mockReturnValue(
+        mockRSSUrlRepository as unknown as Repository<RSSUrlEntity>
+      );
+
+      await deleteRSSUrl('1');
+
+      expect(mockRSSUrlRepository.findOne).toHaveBeenCalledWith({
+        where: {
+          id: 1,
+          user: { id: 1 },
+        },
+      });
+      expect(mockRSSUrlRepository.softDelete).toHaveBeenCalledWith(1);
+    });
+
+    it('로그인하지 않은 사용자가 RSS URL을 삭제하면 에러를 던진다', async () => {
+      const { getSession } = await import('@/lib/auth/session');
+
+      // Mock 설정 - 세션이 없음
+      vi.mocked(getSession).mockResolvedValue(null);
+
+      await expect(deleteRSSUrl('1')).rejects.toThrow('로그인이 필요합니다.');
+    });
+
+    it('존재하지 않는 RSS URL을 삭제하려고 하면 에러를 던진다', async () => {
+      const { getSession } = await import('@/lib/auth/session');
+      const { getRSSUrlRepository } = await import('@/lib/database/repositories');
+
+      // Mock 설정 - 세션
+      vi.mocked(getSession).mockResolvedValue({
+        userId: 1,
+        email: 'test@example.com',
+        role: 'approved',
+      });
+
+      const mockRSSUrlRepository = {
+        findOne: vi.fn().mockResolvedValue(null), // RSS URL을 찾을 수 없음
+      };
+
+      vi.mocked(getRSSUrlRepository).mockReturnValue(
+        mockRSSUrlRepository as unknown as Repository<RSSUrlEntity>
+      );
+
+      await expect(deleteRSSUrl('999')).rejects.toThrow('RSS URL 삭제에 실패했습니다.');
+    });
+
+    it('다른 사용자의 RSS URL을 삭제하려고 하면 에러를 던진다', async () => {
+      const { getSession } = await import('@/lib/auth/session');
+      const { getRSSUrlRepository } = await import('@/lib/database/repositories');
+
+      // Mock 설정 - 세션 (사용자 ID: 1)
+      vi.mocked(getSession).mockResolvedValue({
+        userId: 1,
+        email: 'test@example.com',
+        role: 'approved',
+      });
+
+      const mockRSSUrlRepository = {
+        findOne: vi.fn().mockResolvedValue(null), // 다른 사용자의 RSS URL이므로 찾을 수 없음
+      };
+
+      vi.mocked(getRSSUrlRepository).mockReturnValue(
+        mockRSSUrlRepository as unknown as Repository<RSSUrlEntity>
+      );
+
+      await expect(deleteRSSUrl('2')).rejects.toThrow('RSS URL 삭제에 실패했습니다.');
+    });
+
+    it('유효하지 않은 RSS URL ID를 전달하면 에러를 던진다', async () => {
+      const { getSession } = await import('@/lib/auth/session');
+
+      // Mock 설정 - 세션
+      vi.mocked(getSession).mockResolvedValue({
+        userId: 1,
+        email: 'test@example.com',
+        role: 'approved',
+      });
+
+      await expect(deleteRSSUrl('invalid-id')).rejects.toThrow('RSS URL 삭제에 실패했습니다.');
     });
   });
 });
