@@ -6,6 +6,12 @@
  */
 
 import { RSSFeed, RSSUrl, RSSUrlFormData } from '@/lib/types/rss';
+import { ensureDatabaseConnection } from '@/lib/database/connection';
+import { getRSSUrlRepository, getUserRepository } from '@/lib/database/repositories';
+import { RSSUrl as RSSUrlEntity } from '@/lib/database/entities/RSSUrl';
+import { User } from '@/lib/database/entities/User';
+import { publishJson } from '@/lib/redis/client';
+import { getSession } from '@/lib/auth/session';
 
 // Mock 데이터 - RSS 피드 목록
 const mockUrls: RSSUrl[] = [
@@ -101,6 +107,48 @@ export async function addRSSUrl(formData: RSSUrlFormData) {
   // YouTube URL 검증 (YouTube 타입인 경우)
   if (formData.type === 'youtube' && !isValidYouTubeURL(formData.url)) {
     throw new Error('유효하지 않은 YouTube URL입니다.');
+  }
+
+  // 세션에서 사용자 ID 가져오기
+  const session = await getSession();
+  if (!session || !session.userId) {
+    throw new Error('로그인이 필요합니다.');
+  }
+
+  try {
+    // 데이터베이스 연결 확인
+    await ensureDatabaseConnection();
+
+    // RSSUrl 엔티티 가져오기
+    const RSSUrlRepository = getRSSUrlRepository();
+    const UserRepository = getUserRepository();
+
+    const user = await UserRepository.findOne({ where: { id: session.userId } });
+    if (!user) {
+      throw new Error('사용자를 찾을 수 없습니다.');
+    }
+
+    const rssUrl = new RSSUrlEntity();
+    rssUrl.url = formData.url;
+    rssUrl.type = formData.type === 'youtube' ? 'youtube' : 'normal';
+    rssUrl.user = user;
+
+    const savedRssUrl = await RSSUrlRepository.save(rssUrl);
+
+    // Redis 채널에 RSS URL + RSS Type + 사용자 ID publish
+    const publishData = {
+      url: formData.url,
+      type: formData.type,
+      userId: session.userId,
+      rssUrlId: savedRssUrl.id,
+    };
+
+    await publishJson('rss:update_feeds', publishData);
+
+    return savedRssUrl;
+  } catch (error) {
+    console.error('RSS URL 등록 중 오류 발생:', error);
+    throw new Error('RSS URL 등록에 실패했습니다.');
   }
 }
 

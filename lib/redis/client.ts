@@ -9,12 +9,12 @@ const createRedisClient = (): Redis => {
   const config = getRedisConfig();
 
   return new Redis(config.url, {
-    maxRetriesPerRequest: config.maxRetriesPerRequest,
-    lazyConnect: config.lazyConnect,
+    lazyConnect: false, // 즉시 연결 시도
     keepAlive: config.keepAlive,
     connectTimeout: config.connectTimeout,
     commandTimeout: config.commandTimeout,
-    enableOfflineQueue: config.enableOfflineQueue,
+    enableOfflineQueue: true, // 오프라인 큐 활성화
+    maxRetriesPerRequest: 3,
   });
 };
 
@@ -44,11 +44,9 @@ export const initializeRedis = async (): Promise<Redis> => {
 };
 
 // Redis 클라이언트 가져오기
-export const getRedisClient = (): Redis => {
+export const getRedisClient = async (): Promise<Redis> => {
   if (!redisClient) {
-    throw new Error(
-      'Redis 클라이언트가 초기화되지 않았습니다. initializeRedis()를 먼저 호출하세요.'
-    );
+    redisClient = await initializeRedis();
   }
   return redisClient;
 };
@@ -65,10 +63,10 @@ export const closeRedis = async (): Promise<void> => {
  * Redis 채널에 JSON 객체를 발행합니다.
  * @param channel - 발행할 채널 이름
  * @param data - 발행할 JSON 데이터
- * @returns 발행된 구독자 수
  */
-export const publishJson = async <T>(channel: string, data: T): Promise<number> => {
-  const client = getRedisClient();
+export const publishJson = async <T>(channel: string, data: T): Promise<void> => {
+  const client = await getRedisClient();
   const message = JSON.stringify(data);
-  return await client.publish(channel, message);
+  await client.publish(channel, message);
+  return;
 };
