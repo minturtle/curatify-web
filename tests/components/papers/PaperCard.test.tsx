@@ -8,15 +8,22 @@ import { render, screen } from '../../utils';
 import userEvent from '@testing-library/user-event';
 import PaperCard from '@/components/papers/PaperCard';
 import { Paper } from '@/lib/types/paper';
+
+// paperService 모킹
+vi.mock('@/lib/paper/paperService', () => ({
+  registerPaper: vi.fn(),
+}));
+
 import * as paperService from '@/lib/paper/paperService';
 
 const mockPaper: Paper = {
   id: '1',
   title: 'AI와 머신러닝의 발전',
-  abstract: '이 논문은 **AI**와 머신러닝의 최신 발전 동향을 다룹니다.',
+  summary: '이 논문은 **AI**와 머신러닝의 최신 발전 동향을 다룹니다.',
   authors: ['김철수', '이영희'],
   link: 'https://example.com/paper1',
   lastUpdate: '2024-01-15',
+  categories: ['AI', '머신러닝'],
 };
 
 describe('PaperCard 컴포넌트', () => {
