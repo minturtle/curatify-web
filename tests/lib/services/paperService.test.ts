@@ -12,6 +12,16 @@ vi.mock('@/lib/database/connection', () => ({
   ensureDatabaseConnection: vi.fn().mockResolvedValue(undefined),
 }));
 
+// Redis 클라이언트 모킹
+vi.mock('@/lib/redis/client', () => ({
+  publishJson: vi.fn().mockResolvedValue(undefined),
+}));
+
+// 세션 모킹
+vi.mock('@/lib/auth/session', () => ({
+  getSession: vi.fn(),
+}));
+
 // Repository 모킹
 const mockRepository = {
   count: vi.fn(),
@@ -196,14 +206,32 @@ describe('paperService', () => {
   });
 
   describe('registerPaper', () => {
-    it('존재하는 논문 ID로 등록에 성공해야 한다', async () => {
+    const mockSession = {
+      userId: 123,
+      email: 'test@example.com',
+      role: 'approved' as const,
+    };
+
+    it('존재하는 논문 ID와 유효한 세션으로 등록에 성공해야 한다', async () => {
       // Repository 모킹 설정 - 논문 존재
       mockRepository.findOne.mockResolvedValue(mockPaperEntities[0]);
+
+      // 세션 모킹 설정 - 유효한 세션
+      const { getSession } = await import('@/lib/auth/session');
+      vi.mocked(getSession).mockResolvedValue(mockSession);
+
+      // Redis 모킹 설정
+      const { publishJson } = await import('@/lib/redis/client');
 
       const result = await registerPaper(1);
 
       expect(result).toBe(true);
       expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(getSession).toHaveBeenCalled();
+      expect(publishJson).toHaveBeenCalledWith('paper:analysis', {
+        user_id: 123,
+        paper_id: 1,
+      });
     });
 
     it('존재하지 않는 논문 ID로 등록에 실패해야 한다', async () => {
@@ -214,6 +242,84 @@ describe('paperService', () => {
 
       expect(result).toBe(false);
       expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 999 } });
+    });
+
+    it('세션이 없으면 등록에 실패해야 한다', async () => {
+      // Repository 모킹 설정 - 논문 존재
+      mockRepository.findOne.mockResolvedValue(mockPaperEntities[0]);
+
+      // 세션 모킹 설정 - 세션 없음
+      const { getSession } = await import('@/lib/auth/session');
+      vi.mocked(getSession).mockResolvedValue(null);
+
+      const result = await registerPaper(1);
+
+      expect(result).toBe(false);
+      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(getSession).toHaveBeenCalled();
+    });
+
+    it('Redis 발행 실패 시에도 논문 등록은 성공해야 한다', async () => {
+      // Repository 모킹 설정 - 논문 존재
+      mockRepository.findOne.mockResolvedValue(mockPaperEntities[0]);
+
+      // 세션 모킹 설정 - 유효한 세션
+      const { getSession } = await import('@/lib/auth/session');
+      vi.mocked(getSession).mockResolvedValue(mockSession);
+
+      // Redis 발행 모킹 설정 - 실패
+      const { publishJson } = await import('@/lib/redis/client');
+      vi.mocked(publishJson).mockRejectedValue(new Error('Redis connection failed'));
+
+      const result = await registerPaper(1);
+
+      expect(result).toBe(true);
+      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(getSession).toHaveBeenCalled();
+      expect(publishJson).toHaveBeenCalledWith('paper:analysis', {
+        user_id: 123,
+        paper_id: 1,
+      });
+    });
+
+    it('다양한 논문 ID로 등록할 수 있어야 한다', async () => {
+      // Repository 모킹 설정 - 다른 논문
+      mockRepository.findOne.mockResolvedValue(mockPaperEntities[2]);
+
+      // 세션 모킹 설정 - 유효한 세션
+      const { getSession } = await import('@/lib/auth/session');
+      vi.mocked(getSession).mockResolvedValue(mockSession);
+
+      // Redis 모킹 설정
+      const { publishJson } = await import('@/lib/redis/client');
+
+      const result = await registerPaper(3);
+
+      expect(result).toBe(true);
+      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 3 } });
+      expect(publishJson).toHaveBeenCalledWith('paper:analysis', {
+        user_id: 123,
+        paper_id: 3,
+      });
+    });
+
+    it('Redis 메시지가 올바른 형식으로 발행되어야 한다', async () => {
+      // Repository 모킹 설정 - 논문 존재
+      mockRepository.findOne.mockResolvedValue(mockPaperEntities[0]);
+
+      // 세션 모킹 설정 - 유효한 세션
+      const { getSession } = await import('@/lib/auth/session');
+      vi.mocked(getSession).mockResolvedValue(mockSession);
+
+      // Redis 모킹 설정
+      const { publishJson } = await import('@/lib/redis/client');
+
+      await registerPaper(1);
+
+      expect(publishJson).toHaveBeenCalledWith('paper:analysis', {
+        user_id: 123,
+        paper_id: 1,
+      });
     });
   });
 });

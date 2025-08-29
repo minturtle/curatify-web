@@ -8,6 +8,8 @@ import { AppDataSource } from '@/lib/database/ormconfig';
 import { Paper as PaperEntity } from '@/lib/database/entities/Paper';
 import { Repository } from 'typeorm';
 import { ensureDatabaseConnection } from '@/lib/database/connection';
+import { publishJson } from '@/lib/redis/client';
+import { getSession } from '@/lib/auth/session';
 
 /**
  * Paper Repository를 가져오는 private method
@@ -119,9 +121,24 @@ export async function registerPaper(paperId: number): Promise<boolean> {
       return false;
     }
 
-    // 여기서는 논문이 존재한다는 것만 확인하고 성공 반환
-    // 실제로는 심층 분석 요청을 위한 별도 테이블이나 상태 업데이트가 필요할 수 있음
-    console.log(`논문 심층 분석 등록: ${paperId} - ${paper.title}`);
+    // 현재 사용자 세션 가져오기
+    const session = await getSession();
+    if (!session) {
+      console.error('사용자 세션을 찾을 수 없습니다.');
+      return false;
+    }
+
+    // Redis 채널에 메시지 발행
+    try {
+      await publishJson('paper:analysis', {
+        user_id: session.userId,
+        paper_id: paperId,
+      });
+      console.log(`논문 심층 분석 등록: ${paperId} - ${paper.title} (사용자: ${session.userId})`);
+    } catch (redisError) {
+      console.error('Redis 메시지 발행 중 오류 발생:', redisError);
+      // Redis 오류가 있어도 논문 등록은 성공으로 처리
+    }
 
     return true;
   } catch (error) {
