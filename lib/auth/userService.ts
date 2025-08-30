@@ -305,3 +305,80 @@ export async function addUserInterest(content: string): Promise<UserInterestsTyp
     throw new Error('사용자 관심사 추가에 실패했습니다');
   }
 }
+
+/**
+ * 사용자 관심사를 수정합니다.
+ *
+ * @param {number} interestsId - 수정할 관심사의 ID
+ * @param {string} content - 새로운 관심사 내용
+ * @returns {Promise<UserInterestsType>} 수정된 관심사 정보
+ * @description 현재 세션의 사용자 ID를 사용하여 기존 관심사를 수정합니다.
+ *
+ * @example
+ * ```typescript
+ * const updatedInterest = await updateUserInterest(1, '머신러닝')
+ * console.log(`관심사 수정됨: ${updatedInterest.content}`)
+ * ```
+ */
+export async function updateUserInterest(
+  interestsId: number,
+  content: string
+): Promise<UserInterestsType> {
+  try {
+    // 세션에서 사용자 ID 가져오기
+    const session = await getSession();
+    if (!session) {
+      throw new Error('로그인이 필요합니다');
+    }
+
+    // 입력 데이터 검증
+    const validatedData = UserInterestsSchema.parse({
+      userId: session.userId,
+      content,
+    });
+
+    await ensureDatabaseConnection();
+    const userRepository = getUserRepository();
+
+    // 사용자 존재 확인
+    const user = await userRepository.findOne({ where: { id: session.userId } });
+    if (!user) {
+      throw new Error('사용자를 찾을 수 없습니다');
+    }
+
+    // 관심사 존재 확인 및 소유권 확인
+    const interestRepository = userRepository.manager.getRepository('UserInterests');
+    const existingInterest = await interestRepository.findOne({
+      where: { id: interestsId, userId: session.userId },
+    });
+
+    if (!existingInterest) {
+      throw new Error('관심사를 찾을 수 없습니다');
+    }
+
+    // 관심사 수정
+    existingInterest.content = validatedData.content;
+    const updatedInterest = await interestRepository.save(existingInterest);
+
+    // UserInterestsType 형태로 반환
+    return {
+      interestsId: updatedInterest.id,
+      content: updatedInterest.content,
+    };
+  } catch (error) {
+    console.error('사용자 관심사 수정 중 오류 발생:', error);
+    if (
+      error instanceof Error &&
+      (error.message === '사용자를 찾을 수 없습니다' ||
+        error.message === '로그인이 필요합니다' ||
+        error.message === '관심사를 찾을 수 없습니다')
+    ) {
+      throw error;
+    }
+    // Zod 검증 오류 그대로 전달
+    if (error instanceof Error && error.name === 'ZodError') {
+      throw new Error(error.message);
+    }
+    throw new Error('사용자 관심사 수정에 실패했습니다');
+  }
+}
