@@ -99,6 +99,18 @@ CREATE TABLE IF NOT EXISTS user_library (
     UNIQUE KEY unique_user_paper (user_id, paper_content_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- User Interests 테이블 생성 (사용자 관심사)
+CREATE TABLE IF NOT EXISTS user_interests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    content VARCHAR(300) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_id (user_id),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- 권한 설정
 GRANT ALL PRIVILEGES ON curatify.* TO 'curatify_user'@'%';
 FLUSH PRIVILEGES;
