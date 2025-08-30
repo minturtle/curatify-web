@@ -22,7 +22,7 @@ export default function LibraryList({ papers }: LibraryListProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {papers.map((paper) => (
         <LibraryCard key={paper.paperContentId} paper={paper} />
       ))}

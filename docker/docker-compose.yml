@@ -16,7 +16,7 @@ services:
       - mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/01-init.sql
       - ./seed-data.sql:/docker-entrypoint-initdb.d/02-seed-data.sql
-    command: --default-authentication-plugin=mysql_native_password
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     networks:
       - curatify_network
 

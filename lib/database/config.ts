@@ -16,6 +16,14 @@ export const getDatabaseConfig = (): DataSourceOptions => {
       synchronize: false, // 자동 동기화 비활성화
       logging: true,
       entities: ['lib/database/entities/*.ts'],
+      charset: 'utf8mb4',
+      extra: {
+        charset: 'utf8mb4_unicode_ci',
+        connectionLimit: 10,
+        acquireTimeout: 60000,
+        timeout: 60000,
+        reconnect: true,
+      },
     };
   } else {
     // 운영환경 (Oracle)

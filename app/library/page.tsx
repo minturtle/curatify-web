@@ -16,7 +16,7 @@ interface LibraryPageProps {
 
 export default async function LibraryPage({ searchParams }: LibraryPageProps) {
   // 페이지 파라미터 파싱
-  const currentPage = searchParams.page ? parseInt(searchParams.page, 10) : 1;
+  const currentPage = parseInt((await searchParams).page ?? '1', 10);
   const pageSize = 10;
 
   try {

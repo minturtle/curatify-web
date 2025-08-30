@@ -1,5 +1,10 @@
 -- Curify 데이터베이스 초기화 스크립트
 
+-- 문자셋 설정
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+SET character_set_connection=utf8mb4;
+
 -- 데이터베이스 생성 (이미 환경변수로 생성됨)
 -- CREATE DATABASE IF NOT EXISTS curify CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

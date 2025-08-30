@@ -16,7 +16,7 @@ interface LibraryCardProps {
 export default function LibraryCard({ paper }: LibraryCardProps) {
   return (
     <Link href={`/library/${paper.paperContentId}`}>
-      <Card className="hover:shadow-md transition-shadow cursor-pointer">
+      <Card className="hover:shadow-md transition-shadow cursor-pointer mb-2">
         <CardHeader>
           <CardTitle className="text-lg line-clamp-2">{paper.title}</CardTitle>
         </CardHeader>

@@ -1,5 +1,10 @@
 -- Curify 시드 데이터 스크립트
 
+-- 문자셋 설정
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+SET character_set_connection=utf8mb4;
+
 -- 데이터베이스 사용
 USE curatify;
 
