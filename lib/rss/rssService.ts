@@ -205,7 +205,7 @@ export async function getRSSUrls(): Promise<RSSUrl[]> {
     const items: RSSUrl[] = rssUrls.map((rssUrl) => ({
       id: rssUrl.id.toString(),
       url: rssUrl.url,
-      type: rssUrl.type === 'youtube' ? 'youtube' : 'rss',
+      type: rssUrl.type === 'youtube' ? 'youtube' : 'normal',
     }));
 
     return items;

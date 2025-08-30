@@ -5,7 +5,7 @@
 
 import { z } from 'zod';
 
-export type RSSType = 'rss' | 'youtube';
+export type RSSType = 'normal' | 'youtube';
 
 export interface RSSUrl {
   id: string;
@@ -38,7 +38,7 @@ export interface PaginatedRSSFeeds {
 // RSS URL 등록을 위한 Zod 스키마
 export const RSSUrlSchema = z.object({
   url: z.string().url('유효한 URL을 입력해주세요.'),
-  type: z.enum(['rss', 'youtube'] as const).refine((val) => val !== undefined, {
+  type: z.enum(['normal', 'youtube'] as const).refine((val) => val !== undefined, {
     message: 'RSS 타입을 선택해주세요.',
   }),
 });
