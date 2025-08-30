@@ -1,5 +1,10 @@
 -- Curify 데이터베이스 초기화 스크립트
 
+-- 문자셋 설정
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+SET character_set_connection=utf8mb4;
+
 -- 데이터베이스 생성 (이미 환경변수로 생성됨)
 -- CREATE DATABASE IF NOT EXISTS curify CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -66,9 +71,33 @@ CREATE TABLE IF NOT EXISTS cs_papers (
     INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 샘플 데이터 삽입 (선택사항)
--- INSERT INTO users (email, password, name, is_verified) VALUES 
--- ('admin@curify.com', '$2b$10$hashedpassword', 'Admin User', TRUE);
+-- Paper Content 테이블 생성 (논문 상세 내용)
+CREATE TABLE IF NOT EXISTS paper_content (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(500) NOT NULL,
+    authors TEXT,
+    content LONGTEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    paper_id INT NOT NULL,
+    FOREIGN KEY (paper_id) REFERENCES cs_papers(id) ON DELETE CASCADE,
+    INDEX idx_paper_id (paper_id),
+    INDEX idx_created_at (created_at),
+    UNIQUE KEY unique_paper_content (paper_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- User Library 테이블 생성 (사용자 논문 라이브러리)
+CREATE TABLE IF NOT EXISTS user_library (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    paper_content_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (paper_content_id) REFERENCES paper_content(id) ON DELETE CASCADE,
+    INDEX idx_user_id (user_id),
+    INDEX idx_paper_content_id (paper_content_id),
+    INDEX idx_created_at (created_at),
+    UNIQUE KEY unique_user_paper (user_id, paper_content_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 권한 설정
 GRANT ALL PRIVILEGES ON curatify.* TO 'curatify_user'@'%';

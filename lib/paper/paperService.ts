@@ -3,25 +3,22 @@
  * @author Minseok kim
  */
 
-import { Paper } from '@/lib/types/paper';
-import { AppDataSource } from '@/lib/database/ormconfig';
+import { Paper, PaperDetail } from '@/lib/types/paper';
+import {
+  getPaperRepository,
+  getUserLibraryRepository,
+  getPaperContentRepository,
+} from '@/lib/database/repositories';
 import { Paper as PaperEntity } from '@/lib/database/entities/Paper';
-import { Repository } from 'typeorm';
+import { PaperContent as PaperContentEntity } from '@/lib/database/entities/PaperContent';
 import { ensureDatabaseConnection } from '@/lib/database/connection';
-
-/**
- * Paper Repository를 가져오는 private method
- * 
- * @returns {Repository<PaperEntity>} Paper 엔티티의 Repository
- * @private
- */
-function getPaperRepository(): Repository<PaperEntity> {
-  return AppDataSource.getRepository(PaperEntity);
-}
-
+import { publishJson } from '@/lib/redis/client';
+import { getSession } from '@/lib/auth/session';
+import { UserLibrary as UserLibraryEntity } from '@/lib/database/entities/UserLibrary';
+import { UserLibrary as UserLibraryType } from '@/lib/types/paper';
 /**
  * PaperEntity를 Paper 타입으로 변환하는 함수
- * 
+ *
  * @param {PaperEntity} entity - 변환할 Paper 엔티티
  * @returns {Paper} 변환된 Paper 타입
  * @private
@@ -36,17 +33,58 @@ function entityToDto(entity: PaperEntity): Paper {
     authors = entity.authors ? JSON.parse(entity.authors) : [];
   } catch {
     // JSON 파싱 실패 시 콤마로 분리
-    authors = entity.authors ? entity.authors.split(',').map(a => a.trim()) : [];
+    authors = entity.authors ? entity.authors.split(',').map((a) => a.trim()) : [];
   }
 
   return {
-    id: entity.id.toString(),
+    id: entity.id,
     title: entity.title,
     summary: entity.summary || entity.abstract || '',
     authors,
     link: entity.url || '',
-    lastUpdate: entity.updateDate ? entity.updateDate.toISOString().split('T')[0] : entity.createdAt.toISOString().split('T')[0],
+    lastUpdate: entity.updateDate
+      ? entity.updateDate.toISOString().split('T')[0]
+      : entity.createdAt.toISOString().split('T')[0],
     categories,
+  };
+}
+
+/**
+ * UserLibraryEntity를 UserLibraryType으로 변환하는 함수
+ *
+ * @param {UserLibraryEntity} entity - 변환할 UserLibrary 엔티티
+ * @returns {UserLibraryType} 변환된 UserLibraryType
+ * @private
+ */
+async function userLibraryEntityToDto(entity: UserLibraryEntity): Promise<UserLibraryType> {
+  const paperContent = await entity.paperContent;
+  return {
+    paperContentId: entity.paperContentId,
+    title: paperContent?.title || '',
+    authors: paperContent?.authors
+      ? paperContent.authors.split(',').map((a: string) => a.trim())
+      : [],
+    createdAt: entity.createdAt,
+  };
+}
+
+/**
+ * PaperContentEntity를 PaperDetail 타입으로 변환하는 함수
+ *
+ * @param {PaperContentEntity} entity - 변환할 PaperContent 엔티티
+ * @param {PaperEntity} paper - 관련된 Paper 엔티티
+ * @returns {PaperDetail} 변환된 PaperDetail 타입
+ * @private
+ */
+function paperContentEntityToDto(entity: PaperContentEntity, paper: PaperEntity): PaperDetail {
+  return {
+    paperContentId: entity.id,
+    title: entity.title,
+    authors: entity.authors ? entity.authors.split(',').map((a: string) => a.trim()) : [],
+    content: entity.content,
+    createdAt: entity.createdAt,
+    publishedAt: paper.createdAt,
+    url: paper.url || '',
   };
 }
 
@@ -101,29 +139,132 @@ export async function getPapers(
 }
 
 /**
+ * 현재 사용자의 논문 라이브러리를 조회하는 함수
+ * @param page 현재 페이지 (1부터 시작)
+ * @param pageSize 페이지당 항목 수
+ * @returns 사용자의 논문 라이브러리와 페이지네이션 정보
+ */
+export async function getUserLibrary(
+  page: number = 1,
+  pageSize: number = 10
+): Promise<{
+  papers: UserLibraryType[];
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+}> {
+  try {
+    await ensureDatabaseConnection();
+
+    // 현재 사용자 세션 가져오기
+    const session = await getSession();
+    if (!session) {
+      throw new Error('사용자 세션을 찾을 수 없습니다.');
+    }
+    const userLibraryRepository = getUserLibraryRepository();
+    // 전체 개수 조회
+    const totalCount = await userLibraryRepository.count({
+      where: { userId: session.userId },
+    });
+
+    // 페이지네이션 계산
+    const skip = (page - 1) * pageSize;
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    // 사용자의 논문 라이브러리 조회 (최신순으로 정렬)
+    const userLibraries = await userLibraryRepository.find({
+      where: { userId: session.userId },
+      relations: ['paperContent', 'paperContent.paper'],
+      skip,
+      take: pageSize,
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+
+    // UserLibraryEntity를 UserLibraryType으로 변환
+    const papers = await Promise.all(userLibraries.map(userLibraryEntityToDto));
+
+    return {
+      papers,
+      currentPage: page,
+      totalPages,
+      totalCount,
+    };
+  } catch (error) {
+    console.error('사용자 라이브러리 조회 중 오류 발생:', error);
+    throw new Error('사용자 라이브러리 조회에 실패했습니다');
+  }
+}
+
+/**
  * 논문을 심층 분석을 위해 등록하는 함수
  * @param paperId 등록할 논문의 ID
  * @returns 등록 성공 여부
  */
-export async function registerPaper(paperId: string): Promise<boolean> {
+export async function registerPaper(paperId: number): Promise<boolean> {
   try {
     await ensureDatabaseConnection();
     const paperRepository = getPaperRepository();
 
     // 논문 존재 여부 확인
-    const paper = await paperRepository.findOne({ where: { id: parseInt(paperId) } });
+    const paper = await paperRepository.findOne({ where: { id: paperId } });
     if (!paper) {
       console.error(`논문을 찾을 수 없습니다: ${paperId}`);
       return false;
     }
 
-    // 여기서는 논문이 존재한다는 것만 확인하고 성공 반환
-    // 실제로는 심층 분석 요청을 위한 별도 테이블이나 상태 업데이트가 필요할 수 있음
-    console.log(`논문 심층 분석 등록: ${paperId} - ${paper.title}`);
+    // 현재 사용자 세션 가져오기
+    const session = await getSession();
+    if (!session) {
+      console.error('사용자 세션을 찾을 수 없습니다.');
+      return false;
+    }
+
+    // Redis 채널에 메시지 발행
+    try {
+      await publishJson('paper:analysis', {
+        user_id: session.userId,
+        paper_id: paperId,
+      });
+      console.log(`논문 심층 분석 등록: ${paperId} - ${paper.title} (사용자: ${session.userId})`);
+    } catch (redisError) {
+      console.error('Redis 메시지 발행 중 오류 발생:', redisError);
+      // Redis 오류가 있어도 논문 등록은 성공으로 처리
+    }
 
     return true;
   } catch (error) {
     console.error('논문 등록 중 오류 발생:', error);
     return false;
+  }
+}
+
+/**
+ * 논문 상세 정보를 조회하는 함수
+ * @param paperContentId 논문 콘텐츠 ID
+ * @returns 논문 상세 정보
+ */
+export async function getPaperDetail(paperContentId: number): Promise<PaperDetail | null> {
+  try {
+    await ensureDatabaseConnection();
+    const paperContentRepository = getPaperContentRepository();
+
+    // 논문 콘텐츠와 관련된 Paper 정보를 함께 조회
+    const paperContent = await paperContentRepository.findOne({
+      where: { id: paperContentId },
+      relations: ['paper'],
+    });
+
+    if (!paperContent || !paperContent.paper) {
+      console.error(`논문 콘텐츠를 찾을 수 없습니다: ${paperContentId}`);
+      return null;
+    }
+
+    // 엔티티를 DTO로 변환
+    return paperContentEntityToDto(paperContent, paperContent.paper);
+  } catch (error) {
+    console.error('논문 상세 정보 조회 중 오류 발생:', error);
+    throw new Error('논문 상세 정보 조회에 실패했습니다');
   }
 }

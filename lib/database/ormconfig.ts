@@ -4,6 +4,8 @@ import { User } from './entities/User';
 import { Paper } from './entities/Paper';
 import { RSSUrl } from './entities/RSSUrl';
 import { RSSFeed } from './entities/RSSFeed';
+import { PaperContent } from './entities/PaperContent';
+import { UserLibrary } from './entities/UserLibrary';
 
 // 환경 설정 검증
 validateConfig();
@@ -13,7 +15,7 @@ const databaseConfig = getDatabaseConfig();
 
 export const AppDataSource = new DataSource({
   ...databaseConfig,
-  entities: [User, Paper, RSSUrl, RSSFeed],
+  entities: [User, Paper, RSSUrl, RSSFeed, PaperContent, UserLibrary],
 });
 
 // 데이터베이스 연결 초기화

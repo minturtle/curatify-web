@@ -7,6 +7,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import type { RSSUrl } from './RSSUrl';
+import type { UserLibrary } from './UserLibrary';
 
 @Entity('users')
 export class User {
@@ -33,4 +34,7 @@ export class User {
 
   @OneToMany('RSSUrl', 'user')
   rssUrls!: Promise<RSSUrl[]>;
+
+  @OneToMany('UserLibrary', 'user')
+  userLibraries!: Promise<UserLibrary[]>;
 }

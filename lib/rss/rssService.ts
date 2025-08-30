@@ -13,29 +13,9 @@ import {
   getRSSFeedRepository,
 } from '@/lib/database/repositories';
 import { RSSUrl as RSSUrlEntity } from '@/lib/database/entities/RSSUrl';
-import { RSSFeed as RSSFeedEntity } from '@/lib/database/entities/RSSFeed';
 import { publishJson } from '@/lib/redis/client';
 import { getSession } from '@/lib/auth/session';
 import { In } from 'typeorm';
-
-// Mock 데이터 - RSS 피드 목록
-const mockUrls: RSSUrl[] = [
-  {
-    id: '1',
-    url: 'https://techcrunch.com/feed',
-    type: 'rss',
-  },
-  {
-    id: '2',
-    url: 'https://www.theverge.com/rss/index.xml',
-    type: 'rss',
-  },
-  {
-    id: '3',
-    url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC_x5XG1OV2P6uZZ5FSM9Ttw',
-    type: 'youtube',
-  },
-];
 
 /**
  * RSS 피드 등록
@@ -225,7 +205,7 @@ export async function getRSSUrls(): Promise<RSSUrl[]> {
     const items: RSSUrl[] = rssUrls.map((rssUrl) => ({
       id: rssUrl.id.toString(),
       url: rssUrl.url,
-      type: rssUrl.type === 'youtube' ? 'youtube' : 'rss',
+      type: rssUrl.type === 'youtube' ? 'youtube' : 'normal',
     }));
 
     return items;

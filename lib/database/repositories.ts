@@ -7,6 +7,9 @@ import { AppDataSource } from './ormconfig';
 import { RSSUrl } from './entities/RSSUrl';
 import { RSSFeed } from './entities/RSSFeed';
 import { User } from './entities/User';
+import { Paper } from './entities/Paper';
+import { UserLibrary } from './entities/UserLibrary';
+import { PaperContent } from './entities/PaperContent';
 
 /**
  * RSSUrl repository를 가져오는 유틸 함수
@@ -27,4 +30,22 @@ export function getRSSFeedRepository() {
  */
 export function getUserRepository() {
   return AppDataSource.getRepository(User);
+}
+
+/**
+ * Paper repository를 가져오는 유틸 함수
+ */
+export function getPaperRepository() {
+  return AppDataSource.getRepository(Paper);
+}
+
+export function getUserLibraryRepository() {
+  return AppDataSource.getRepository(UserLibrary);
+}
+
+/**
+ * PaperContent repository를 가져오는 유틸 함수
+ */
+export function getPaperContentRepository() {
+  return AppDataSource.getRepository(PaperContent);
 }

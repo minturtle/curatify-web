@@ -17,7 +17,7 @@ vi.mock('@/lib/paper/paperService', () => ({
 import * as paperService from '@/lib/paper/paperService';
 
 const mockPaper: Paper = {
-  id: '1',
+  id: 1,
   title: 'AI와 머신러닝의 발전',
   summary: '이 논문은 **AI**와 머신러닝의 최신 발전 동향을 다룹니다.',
   authors: ['김철수', '이영희'],
@@ -172,7 +172,7 @@ describe('PaperCard 컴포넌트', () => {
       await user.click(deepAnalysisButton);
 
       // registerPaper 함수가 올바른 인자로 호출되어야 함
-      expect(mockRegisterPaper).toHaveBeenCalledWith('1');
+      expect(mockRegisterPaper).toHaveBeenCalledWith(1);
       expect(mockRegisterPaper).toHaveBeenCalledTimes(1);
     });
 
