@@ -4,10 +4,11 @@ import {
   addUserInterest,
   updateUserInterest,
   removeUserInterest,
-} from '@/lib/auth/userService';
+} from '@/lib/profile/userProfileService';
 import { getSession } from '@/lib/auth/session';
-import { getUserRepository } from '@/lib/database/repositories';
+import { getUserRepository, getUserInterestsRepository } from '@/lib/database/repositories';
 import { User } from '@/lib/database/entities/User';
+import { UserInterests } from '@/lib/database/entities/UserInterests';
 import { Repository } from 'typeorm';
 
 // Mock dependencies
@@ -21,6 +22,7 @@ vi.mock('@/lib/database/connection', () => ({
 
 vi.mock('@/lib/database/repositories', () => ({
   getUserRepository: vi.fn(),
+  getUserInterestsRepository: vi.fn(),
 }));
 
 describe('UserService', () => {
@@ -167,26 +169,31 @@ describe('UserService', () => {
         updatedAt: new Date(),
       };
 
-      // Mock repository
+      // Mock repositories
       const mockRepository = {
         findOne: vi.fn().mockResolvedValue(mockUser),
-        manager: {
-          getRepository: vi.fn().mockReturnValue({
-            create: vi.fn().mockReturnValue(mockSavedInterest),
-            save: vi.fn().mockResolvedValue(mockSavedInterest),
-          }),
-        },
       } as unknown as Repository<User>;
+
+      const mockInterestRepository = {
+        create: vi.fn().mockReturnValue(mockSavedInterest),
+        save: vi.fn().mockResolvedValue(mockSavedInterest),
+      } as unknown as Repository<UserInterests>;
 
       vi.mocked(getSession).mockResolvedValue(mockSession);
       vi.mocked(getUserRepository).mockReturnValue(mockRepository);
+      vi.mocked(getUserInterestsRepository).mockReturnValue(mockInterestRepository);
 
       const result = await addUserInterest('인공지능');
 
       expect(getSession).toHaveBeenCalled();
       expect(getUserRepository).toHaveBeenCalled();
+      expect(getUserInterestsRepository).toHaveBeenCalled();
       expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 123 } });
-      expect(mockRepository.manager.getRepository).toHaveBeenCalledWith('UserInterests');
+      expect(mockInterestRepository.create).toHaveBeenCalledWith({
+        userId: 123,
+        content: '인공지능',
+      });
+      expect(mockInterestRepository.save).toHaveBeenCalledWith(mockSavedInterest);
 
       expect(result).toEqual({
         interestsId: 1,
@@ -235,8 +242,14 @@ describe('UserService', () => {
         findOne: vi.fn().mockResolvedValue(mockUser),
       } as unknown as Repository<User>;
 
+      const mockInterestRepository = {
+        create: vi.fn(),
+        save: vi.fn(),
+      } as unknown as Repository<UserInterests>;
+
       vi.mocked(getSession).mockResolvedValue(mockSession);
       vi.mocked(getUserRepository).mockReturnValue(mockRepository);
+      vi.mocked(getUserInterestsRepository).mockReturnValue(mockInterestRepository);
 
       await expect(addUserInterest('')).rejects.toThrow('사용자 관심사 추가에 실패했습니다');
     });
@@ -288,26 +301,30 @@ describe('UserService', () => {
         content: '머신러닝',
       };
 
-      // Mock repository
+      // Mock repositories
       const mockRepository = {
         findOne: vi.fn().mockResolvedValue(mockUser),
-        manager: {
-          getRepository: vi.fn().mockReturnValue({
-            findOne: vi.fn().mockResolvedValue(mockExistingInterest),
-            save: vi.fn().mockResolvedValue(mockUpdatedInterest),
-          }),
-        },
       } as unknown as Repository<User>;
+
+      const mockInterestRepository = {
+        findOne: vi.fn().mockResolvedValue(mockExistingInterest),
+        save: vi.fn().mockResolvedValue(mockUpdatedInterest),
+      } as unknown as Repository<UserInterests>;
 
       vi.mocked(getSession).mockResolvedValue(mockSession);
       vi.mocked(getUserRepository).mockReturnValue(mockRepository);
+      vi.mocked(getUserInterestsRepository).mockReturnValue(mockInterestRepository);
 
       const result = await updateUserInterest(1, '머신러닝');
 
       expect(getSession).toHaveBeenCalled();
       expect(getUserRepository).toHaveBeenCalled();
+      expect(getUserInterestsRepository).toHaveBeenCalled();
       expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 123 } });
-      expect(mockRepository.manager.getRepository).toHaveBeenCalledWith('UserInterests');
+      expect(mockInterestRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 1, userId: 123 },
+      });
+      expect(mockInterestRepository.save).toHaveBeenCalledWith(mockUpdatedInterest);
 
       expect(result).toEqual({
         interestsId: 1,
@@ -354,15 +371,15 @@ describe('UserService', () => {
 
       const mockRepository = {
         findOne: vi.fn().mockResolvedValue(mockUser),
-        manager: {
-          getRepository: vi.fn().mockReturnValue({
-            findOne: vi.fn().mockResolvedValue(null),
-          }),
-        },
       } as unknown as Repository<User>;
+
+      const mockInterestRepository = {
+        findOne: vi.fn().mockResolvedValue(null),
+      } as unknown as Repository<UserInterests>;
 
       vi.mocked(getSession).mockResolvedValue(mockSession);
       vi.mocked(getUserRepository).mockReturnValue(mockRepository);
+      vi.mocked(getUserInterestsRepository).mockReturnValue(mockInterestRepository);
 
       await expect(updateUserInterest(999, '머신러닝')).rejects.toThrow(
         '관심사를 찾을 수 없습니다'
@@ -386,16 +403,16 @@ describe('UserService', () => {
       // 다른 사용자의 관심사는 찾을 수 없어야 함 (userId가 다름)
       const mockRepository = {
         findOne: vi.fn().mockResolvedValue(mockUser),
-        manager: {
-          getRepository: vi.fn().mockReturnValue({
-            findOne: vi.fn().mockResolvedValue(null), // 다른 사용자의 관심사는 찾을 수 없음
-            save: vi.fn(),
-          }),
-        },
       } as unknown as Repository<User>;
+
+      const mockInterestRepository = {
+        findOne: vi.fn().mockResolvedValue(null), // 다른 사용자의 관심사는 찾을 수 없음
+        save: vi.fn(),
+      } as unknown as Repository<UserInterests>;
 
       vi.mocked(getSession).mockResolvedValue(mockSession);
       vi.mocked(getUserRepository).mockReturnValue(mockRepository);
+      vi.mocked(getUserInterestsRepository).mockReturnValue(mockInterestRepository);
 
       await expect(updateUserInterest(1, '머신러닝')).rejects.toThrow('관심사를 찾을 수 없습니다');
     });
@@ -418,8 +435,20 @@ describe('UserService', () => {
         findOne: vi.fn().mockResolvedValue(mockUser),
       } as unknown as Repository<User>;
 
+      const mockInterestRepository = {
+        findOne: vi.fn().mockResolvedValue({
+          id: 1,
+          userId: 123,
+          content: '기존 관심사',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }),
+        save: vi.fn(),
+      } as unknown as Repository<UserInterests>;
+
       vi.mocked(getSession).mockResolvedValue(mockSession);
       vi.mocked(getUserRepository).mockReturnValue(mockRepository);
+      vi.mocked(getUserInterestsRepository).mockReturnValue(mockInterestRepository);
 
       await expect(updateUserInterest(1, '')).rejects.toThrow('사용자 관심사 수정에 실패했습니다');
     });
@@ -467,27 +496,26 @@ describe('UserService', () => {
         updatedAt: new Date(),
       };
 
-      // Mock repository
+      // Mock repositories
       const mockRepository = {
         findOne: vi.fn().mockResolvedValue(mockUser),
-        manager: {
-          getRepository: vi.fn().mockReturnValue({
-            findOne: vi.fn().mockResolvedValue(mockExistingInterest),
-            remove: vi.fn().mockResolvedValue(undefined),
-          }),
-        },
       } as unknown as Repository<User>;
+
+      const mockInterestRepository = {
+        findOne: vi.fn().mockResolvedValue(mockExistingInterest),
+        remove: vi.fn().mockResolvedValue(undefined),
+      } as unknown as Repository<UserInterests>;
 
       vi.mocked(getSession).mockResolvedValue(mockSession);
       vi.mocked(getUserRepository).mockReturnValue(mockRepository);
+      vi.mocked(getUserInterestsRepository).mockReturnValue(mockInterestRepository);
 
       await removeUserInterest(1);
 
       expect(getSession).toHaveBeenCalled();
       expect(getUserRepository).toHaveBeenCalled();
+      expect(getUserInterestsRepository).toHaveBeenCalled();
       expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 123 } });
-      expect(mockRepository.manager.getRepository).toHaveBeenCalledWith('UserInterests');
-      const mockInterestRepository = mockRepository.manager.getRepository('UserInterests');
       expect(mockInterestRepository.findOne).toHaveBeenCalledWith({
         where: { id: 1, userId: 123 },
       });
@@ -533,15 +561,15 @@ describe('UserService', () => {
 
       const mockRepository = {
         findOne: vi.fn().mockResolvedValue(mockUser),
-        manager: {
-          getRepository: vi.fn().mockReturnValue({
-            findOne: vi.fn().mockResolvedValue(null),
-          }),
-        },
       } as unknown as Repository<User>;
+
+      const mockInterestRepository = {
+        findOne: vi.fn().mockResolvedValue(null),
+      } as unknown as Repository<UserInterests>;
 
       vi.mocked(getSession).mockResolvedValue(mockSession);
       vi.mocked(getUserRepository).mockReturnValue(mockRepository);
+      vi.mocked(getUserInterestsRepository).mockReturnValue(mockInterestRepository);
 
       await expect(removeUserInterest(999)).rejects.toThrow('관심사를 찾을 수 없습니다');
     });
@@ -563,16 +591,16 @@ describe('UserService', () => {
       // 다른 사용자의 관심사는 찾을 수 없어야 함 (userId가 다름)
       const mockRepository = {
         findOne: vi.fn().mockResolvedValue(mockUser),
-        manager: {
-          getRepository: vi.fn().mockReturnValue({
-            findOne: vi.fn().mockResolvedValue(null), // 다른 사용자의 관심사는 찾을 수 없음
-            remove: vi.fn(),
-          }),
-        },
       } as unknown as Repository<User>;
+
+      const mockInterestRepository = {
+        findOne: vi.fn().mockResolvedValue(null), // 다른 사용자의 관심사는 찾을 수 없음
+        remove: vi.fn(),
+      } as unknown as Repository<UserInterests>;
 
       vi.mocked(getSession).mockResolvedValue(mockSession);
       vi.mocked(getUserRepository).mockReturnValue(mockRepository);
+      vi.mocked(getUserInterestsRepository).mockReturnValue(mockInterestRepository);
 
       await expect(removeUserInterest(1)).rejects.toThrow('관심사를 찾을 수 없습니다');
     });
