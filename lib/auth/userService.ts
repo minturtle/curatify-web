@@ -1,5 +1,5 @@
 import { UserData, UserWithPassword } from '@/lib/types/auth';
-import { UserInterestsType } from '@/lib/types/user';
+import { UserInterestsType, UserInterestsSchema } from '@/lib/types/user';
 import bcrypt from 'bcrypt';
 import { ensureDatabaseConnection } from '@/lib/database/connection';
 import { getUserRepository } from '@/lib/database/repositories';
@@ -235,5 +235,73 @@ export async function findUserInterests(): Promise<UserInterestsType[]> {
       throw error;
     }
     throw new Error('사용자 관심사 조회에 실패했습니다');
+  }
+}
+
+/**
+ * 사용자 관심사를 추가합니다.
+ *
+ * @param {string} content - 추가할 관심사 내용
+ * @returns {Promise<UserInterestsType>} 추가된 관심사 정보
+ * @description 현재 세션의 사용자 ID를 사용하여 새로운 관심사를 추가합니다.
+ *
+ * @example
+ * ```typescript
+ * const newInterest = await addUserInterest('인공지능')
+ * console.log(`관심사 추가됨: ${newInterest.content}`)
+ * ```
+ */
+export async function addUserInterest(content: string): Promise<UserInterestsType> {
+  try {
+    // 세션에서 사용자 ID 가져오기
+    const session = await getSession();
+    if (!session) {
+      throw new Error('로그인이 필요합니다');
+    }
+
+    // 입력 데이터 검증
+    const validatedData = UserInterestsSchema.parse({
+      userId: session.userId,
+      content,
+    });
+
+    await ensureDatabaseConnection();
+    const userRepository = getUserRepository();
+
+    // 사용자 존재 확인
+    const user = await userRepository.findOne({ where: { id: session.userId } });
+    if (!user) {
+      throw new Error('사용자를 찾을 수 없습니다');
+    }
+
+    // 새로운 관심사 생성
+    const newInterest = userRepository.manager.getRepository('UserInterests').create({
+      userId: validatedData.userId,
+      content: validatedData.content,
+    });
+
+    // 데이터베이스에 저장
+    const savedInterest = await userRepository.manager
+      .getRepository('UserInterests')
+      .save(newInterest);
+
+    // UserInterestsType 형태로 반환
+    return {
+      interestsId: savedInterest.id,
+      content: savedInterest.content,
+    };
+  } catch (error) {
+    console.error('사용자 관심사 추가 중 오류 발생:', error);
+    if (
+      error instanceof Error &&
+      (error.message === '사용자를 찾을 수 없습니다' || error.message === '로그인이 필요합니다')
+    ) {
+      throw error;
+    }
+    // Zod 검증 오류 그대로 전달
+    if (error instanceof Error && error.name === 'ZodError') {
+      throw new Error(error.message);
+    }
+    throw new Error('사용자 관심사 추가에 실패했습니다');
   }
 }
