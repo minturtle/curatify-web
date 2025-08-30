@@ -3,24 +3,14 @@
  * @author Minseok kim
  */
 
-import { Paper } from '@/lib/types/paper';
-import { AppDataSource } from '@/lib/database/ormconfig';
+import { Paper, UserLibrary } from '@/lib/types/paper';
+import { getPaperRepository, getUserLibraryRepository } from '@/lib/database/repositories';
 import { Paper as PaperEntity } from '@/lib/database/entities/Paper';
-import { Repository } from 'typeorm';
 import { ensureDatabaseConnection } from '@/lib/database/connection';
 import { publishJson } from '@/lib/redis/client';
 import { getSession } from '@/lib/auth/session';
-
-/**
- * Paper Repository를 가져오는 private method
- *
- * @returns {Repository<PaperEntity>} Paper 엔티티의 Repository
- * @private
- */
-function getPaperRepository(): Repository<PaperEntity> {
-  return AppDataSource.getRepository(PaperEntity);
-}
-
+import { UserLibrary as UserLibraryEntity } from '@/lib/database/entities/UserLibrary';
+import { UserLibrary as UserLibraryType } from '@/lib/types/paper';
 /**
  * PaperEntity를 Paper 타입으로 변환하는 함수
  *
@@ -51,6 +41,25 @@ function entityToDto(entity: PaperEntity): Paper {
       ? entity.updateDate.toISOString().split('T')[0]
       : entity.createdAt.toISOString().split('T')[0],
     categories,
+  };
+}
+
+/**
+ * UserLibraryEntity를 UserLibraryType으로 변환하는 함수
+ *
+ * @param {UserLibraryEntity} entity - 변환할 UserLibrary 엔티티
+ * @returns {UserLibraryType} 변환된 UserLibraryType
+ * @private
+ */
+async function userLibraryEntityToDto(entity: UserLibraryEntity): Promise<UserLibraryType> {
+  const paperContent = await entity.paperContent;
+  return {
+    paperContentId: entity.paperContentId,
+    title: paperContent?.title || '',
+    authors: paperContent?.authors
+      ? paperContent.authors.split(',').map((a: string) => a.trim())
+      : [],
+    createdAt: entity.createdAt,
   };
 }
 
@@ -101,6 +110,65 @@ export async function getPapers(
   } catch (error) {
     console.error('논문 목록 조회 중 오류 발생:', error);
     throw new Error('논문 목록 조회에 실패했습니다');
+  }
+}
+
+/**
+ * 현재 사용자의 논문 라이브러리를 조회하는 함수
+ * @param page 현재 페이지 (1부터 시작)
+ * @param pageSize 페이지당 항목 수
+ * @returns 사용자의 논문 라이브러리와 페이지네이션 정보
+ */
+export async function getUserLibrary(
+  page: number = 1,
+  pageSize: number = 10
+): Promise<{
+  papers: UserLibraryType[];
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+}> {
+  try {
+    await ensureDatabaseConnection();
+
+    // 현재 사용자 세션 가져오기
+    const session = await getSession();
+    if (!session) {
+      throw new Error('사용자 세션을 찾을 수 없습니다.');
+    }
+    const userLibraryRepository = getUserLibraryRepository();
+    // 전체 개수 조회
+    const totalCount = await userLibraryRepository.count({
+      where: { userId: session.userId },
+    });
+
+    // 페이지네이션 계산
+    const skip = (page - 1) * pageSize;
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    // 사용자의 논문 라이브러리 조회 (최신순으로 정렬)
+    const userLibraries = await userLibraryRepository.find({
+      where: { userId: session.userId },
+      relations: ['paperContent', 'paperContent.paper'],
+      skip,
+      take: pageSize,
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+
+    // UserLibraryEntity를 UserLibraryType으로 변환
+    const papers = await Promise.all(userLibraries.map(userLibraryEntityToDto));
+
+    return {
+      papers,
+      currentPage: page,
+      totalPages,
+      totalCount,
+    };
+  } catch (error) {
+    console.error('사용자 라이브러리 조회 중 오류 발생:', error);
+    throw new Error('사용자 라이브러리 조회에 실패했습니다');
   }
 }
 

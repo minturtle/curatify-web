@@ -36,3 +36,10 @@ export interface RegisterPaperActionResult {
   message?: string;
   error?: string;
 }
+
+export interface UserLibrary {
+  paperContentId: number;
+  title: string;
+  authors: string[];
+  createdAt: Date;
+}

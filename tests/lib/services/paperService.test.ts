@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getPapers, registerPaper } from '@/lib/paper/paperService';
+import { getPapers, registerPaper, getUserLibrary } from '@/lib/paper/paperService';
 
 // 데이터베이스 연결 모킹
 vi.mock('@/lib/database/connection', () => ({
@@ -28,6 +28,19 @@ const mockRepository = {
   find: vi.fn(),
   findOne: vi.fn(),
 };
+
+const mockUserLibraryRepository = {
+  count: vi.fn(),
+  find: vi.fn(),
+  findOne: vi.fn(),
+  save: vi.fn(),
+  delete: vi.fn(),
+};
+
+vi.mock('@/lib/database/repositories', () => ({
+  getPaperRepository: vi.fn(() => mockRepository),
+  getUserLibraryRepository: vi.fn(() => mockUserLibraryRepository),
+}));
 
 vi.mock('@/lib/database/ormconfig', () => ({
   AppDataSource: {
@@ -97,6 +110,52 @@ describe('paperService', () => {
       updateDate: new Date('2024-02-05'),
       createdAt: new Date('2024-02-05'),
       allCategories: 'cs.AI cs.CY',
+    },
+  ];
+
+  // UserLibrary 테스트 데이터
+  const mockUserLibraryEntities = [
+    {
+      id: 1,
+      userId: 123,
+      paperContentId: 1,
+      createdAt: new Date('2024-01-15'),
+      paperContent: Promise.resolve({
+        id: 1,
+        title: 'AI와 머신러닝의 발전',
+        authors: '김철수, 이영희',
+        content: '논문 전체 내용...',
+        paperId: 1,
+        createdAt: new Date('2024-01-15'),
+      }),
+    },
+    {
+      id: 2,
+      userId: 123,
+      paperContentId: 2,
+      createdAt: new Date('2024-01-20'),
+      paperContent: Promise.resolve({
+        id: 2,
+        title: '딥러닝을 활용한 자연어 처리',
+        authors: '박민수',
+        content: '논문 전체 내용...',
+        paperId: 2,
+        createdAt: new Date('2024-01-20'),
+      }),
+    },
+    {
+      id: 3,
+      userId: 123,
+      paperContentId: 3,
+      createdAt: new Date('2024-01-25'),
+      paperContent: Promise.resolve({
+        id: 3,
+        title: '컴퓨터 비전의 최신 동향',
+        authors: '최지영, 정현우, 김태호',
+        content: '논문 전체 내용...',
+        paperId: 3,
+        createdAt: new Date('2024-01-25'),
+      }),
     },
   ];
 
@@ -202,6 +261,95 @@ describe('paperService', () => {
 
       // categories 필드가 올바르게 파싱되는지 확인
       expect(paper.categories).toEqual(['cs.AI', 'cs.ML']);
+    });
+  });
+
+  describe('getUserLibrary', () => {
+    const mockSession = {
+      userId: 123,
+      email: 'test@example.com',
+      role: 'approved' as const,
+    };
+
+    it('유효한 세션으로 사용자 라이브러리를 조회할 수 있어야 한다', async () => {
+      // 세션 모킹 설정 - 유효한 세션
+      const { getSession } = await import('@/lib/auth/session');
+      vi.mocked(getSession).mockResolvedValue(mockSession);
+
+      // Repository 모킹 설정 - 3개의 저장된 논문
+      mockUserLibraryRepository.count.mockResolvedValue(3);
+      mockUserLibraryRepository.find.mockResolvedValue(mockUserLibraryEntities);
+
+      const result = await getUserLibrary(1, 3);
+
+      expect(result.papers).toHaveLength(3);
+      expect(result.currentPage).toBe(1);
+      expect(result.totalPages).toBe(1);
+      expect(result.totalCount).toBe(3);
+
+      // 첫 번째 논문 확인
+      const firstPaper = result.papers[0];
+      expect(firstPaper.paperContentId).toBe(1);
+      expect(firstPaper.title).toBe('AI와 머신러닝의 발전');
+      expect(firstPaper.authors).toEqual(['김철수', '이영희']);
+      expect(firstPaper.createdAt).toBeInstanceOf(Date);
+    });
+
+    it('페이지네이션이 올바르게 작동해야 한다', async () => {
+      // 세션 모킹 설정 - 유효한 세션
+      const { getSession } = await import('@/lib/auth/session');
+      vi.mocked(getSession).mockResolvedValue(mockSession);
+
+      // Repository 모킹 설정 - 5개의 저장된 논문, 첫 페이지 2개
+      mockUserLibraryRepository.count.mockResolvedValue(5);
+      mockUserLibraryRepository.find.mockResolvedValue(mockUserLibraryEntities.slice(0, 2));
+
+      const result = await getUserLibrary(1, 2);
+
+      expect(result.papers).toHaveLength(2);
+      expect(result.currentPage).toBe(1);
+      expect(result.totalPages).toBe(3); // 5개 논문, 페이지당 2개
+      expect(result.totalCount).toBe(5);
+    });
+
+    it('저장된 논문이 없으면 빈 배열을 반환해야 한다', async () => {
+      // 세션 모킹 설정 - 유효한 세션
+      const { getSession } = await import('@/lib/auth/session');
+      vi.mocked(getSession).mockResolvedValue(mockSession);
+
+      // Repository 모킹 설정 - 저장된 논문 없음
+      mockUserLibraryRepository.count.mockResolvedValue(0);
+      mockUserLibraryRepository.find.mockResolvedValue([]);
+
+      const result = await getUserLibrary(1, 10);
+
+      expect(result.papers).toHaveLength(0);
+      expect(result.currentPage).toBe(1);
+      expect(result.totalPages).toBe(0);
+      expect(result.totalCount).toBe(0);
+    });
+
+    it('저장된 논문의 구조가 올바르게 반환되어야 한다', async () => {
+      // 세션 모킹 설정 - 유효한 세션
+      const { getSession } = await import('@/lib/auth/session');
+      vi.mocked(getSession).mockResolvedValue(mockSession);
+
+      // Repository 모킹 설정 - 1개의 저장된 논문
+      mockUserLibraryRepository.count.mockResolvedValue(1);
+      mockUserLibraryRepository.find.mockResolvedValue([mockUserLibraryEntities[0]]);
+
+      const result = await getUserLibrary(1, 1);
+      const paper = result.papers[0];
+
+      expect(paper).toHaveProperty('paperContentId');
+      expect(paper).toHaveProperty('title');
+      expect(paper).toHaveProperty('authors');
+      expect(paper).toHaveProperty('createdAt');
+
+      expect(typeof paper.paperContentId).toBe('number');
+      expect(typeof paper.title).toBe('string');
+      expect(Array.isArray(paper.authors)).toBe(true);
+      expect(paper.createdAt).toBeInstanceOf(Date);
     });
   });
 
