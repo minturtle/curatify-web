@@ -5,10 +5,8 @@
 
 import React from 'react';
 import { getUserLibrary } from '@/lib/paper/paperService';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PaginationSSR from '@/components/ui/pagination-ssr';
-import Link from 'next/link';
-import { Calendar, Users } from 'lucide-react';
+import LibraryList from '@/components/library/LibraryList';
 
 interface LibraryPageProps {
   searchParams: {
@@ -38,42 +36,8 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
         </div>
 
         {/* 논문 리스트 */}
-        <div className="space-y-4 mb-8">
-          {papers.length > 0 ? (
-            papers.map((paper) => (
-              <Link key={paper.paperContentId} href={`/library/${paper.paperContentId}`}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                  <CardHeader>
-                    <CardTitle className="text-lg line-clamp-2">{paper.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {/* 저자 정보 */}
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Users className="h-4 w-4" />
-                      <span>
-                        <strong>저자:</strong> {paper.authors.join(', ')}
-                      </span>
-                    </div>
-
-                    {/* 저장 날짜 */}
-                    <div className="flex items-center space-x-2 text-sm text-gray-500">
-                      <Calendar className="h-4 w-4" />
-                      <span>
-                        <strong>저장일:</strong> {paper.createdAt.toLocaleDateString('ko-KR')}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))
-          ) : (
-            <div className="text-center py-12">
-              <div className="text-gray-500 text-lg mb-2">아직 저장한 논문이 없습니다.</div>
-              <div className="text-gray-400 text-sm">
-                논문을 심층 분석하여 라이브러리에 저장해보세요.
-              </div>
-            </div>
-          )}
+        <div className="mb-8">
+          <LibraryList papers={papers} />
         </div>
 
         {/* 페이지네이션 */}
