@@ -3,9 +3,14 @@
  * @author Minseok kim
  */
 
-import { Paper, UserLibrary } from '@/lib/types/paper';
-import { getPaperRepository, getUserLibraryRepository } from '@/lib/database/repositories';
+import { Paper, PaperDetail } from '@/lib/types/paper';
+import {
+  getPaperRepository,
+  getUserLibraryRepository,
+  getPaperContentRepository,
+} from '@/lib/database/repositories';
 import { Paper as PaperEntity } from '@/lib/database/entities/Paper';
+import { PaperContent as PaperContentEntity } from '@/lib/database/entities/PaperContent';
 import { ensureDatabaseConnection } from '@/lib/database/connection';
 import { publishJson } from '@/lib/redis/client';
 import { getSession } from '@/lib/auth/session';
@@ -60,6 +65,26 @@ async function userLibraryEntityToDto(entity: UserLibraryEntity): Promise<UserLi
       ? paperContent.authors.split(',').map((a: string) => a.trim())
       : [],
     createdAt: entity.createdAt,
+  };
+}
+
+/**
+ * PaperContentEntity를 PaperDetail 타입으로 변환하는 함수
+ *
+ * @param {PaperContentEntity} entity - 변환할 PaperContent 엔티티
+ * @param {PaperEntity} paper - 관련된 Paper 엔티티
+ * @returns {PaperDetail} 변환된 PaperDetail 타입
+ * @private
+ */
+function paperContentEntityToDto(entity: PaperContentEntity, paper: PaperEntity): PaperDetail {
+  return {
+    paperContentId: entity.id,
+    title: entity.title,
+    authors: entity.authors ? entity.authors.split(',').map((a: string) => a.trim()) : [],
+    content: entity.content,
+    createdAt: entity.createdAt,
+    publishedAt: paper.createdAt,
+    url: paper.url || '',
   };
 }
 
@@ -212,5 +237,34 @@ export async function registerPaper(paperId: number): Promise<boolean> {
   } catch (error) {
     console.error('논문 등록 중 오류 발생:', error);
     return false;
+  }
+}
+
+/**
+ * 논문 상세 정보를 조회하는 함수
+ * @param paperContentId 논문 콘텐츠 ID
+ * @returns 논문 상세 정보
+ */
+export async function getPaperDetail(paperContentId: number): Promise<PaperDetail | null> {
+  try {
+    await ensureDatabaseConnection();
+    const paperContentRepository = getPaperContentRepository();
+
+    // 논문 콘텐츠와 관련된 Paper 정보를 함께 조회
+    const paperContent = await paperContentRepository.findOne({
+      where: { id: paperContentId },
+      relations: ['paper'],
+    });
+
+    if (!paperContent || !paperContent.paper) {
+      console.error(`논문 콘텐츠를 찾을 수 없습니다: ${paperContentId}`);
+      return null;
+    }
+
+    // 엔티티를 DTO로 변환
+    return paperContentEntityToDto(paperContent, paperContent.paper);
+  } catch (error) {
+    console.error('논문 상세 정보 조회 중 오류 발생:', error);
+    throw new Error('논문 상세 정보 조회에 실패했습니다');
   }
 }

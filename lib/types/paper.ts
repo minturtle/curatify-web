@@ -43,3 +43,13 @@ export interface UserLibrary {
   authors: string[];
   createdAt: Date;
 }
+
+export interface PaperDetail {
+  paperContentId: number;
+  title: string;
+  authors: string[];
+  content: string;
+  createdAt: Date;
+  publishedAt: Date;
+  url: string;
+}

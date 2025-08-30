@@ -9,6 +9,7 @@ import { RSSFeed } from './entities/RSSFeed';
 import { User } from './entities/User';
 import { Paper } from './entities/Paper';
 import { UserLibrary } from './entities/UserLibrary';
+import { PaperContent } from './entities/PaperContent';
 
 /**
  * RSSUrl repository를 가져오는 유틸 함수
@@ -40,4 +41,11 @@ export function getPaperRepository() {
 
 export function getUserLibraryRepository() {
   return AppDataSource.getRepository(UserLibrary);
+}
+
+/**
+ * PaperContent repository를 가져오는 유틸 함수
+ */
+export function getPaperContentRepository() {
+  return AppDataSource.getRepository(PaperContent);
 }
