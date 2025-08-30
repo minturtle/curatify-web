@@ -5,7 +5,7 @@ USE curatify;
 
 -- 사용자 예시 데이터
 INSERT INTO users (email, password, name, is_verified) VALUES
-('tester@test.com', '$2b$12$ixsz8fg5jJAjgfTfpCEuf.CI1bVbWfuelhFOuMrAiwGs29sq8v10W', '테스트 사용자', TRUE),
+('tester@test.com', '$2b$12$ixsz8fg5jJAjgfTfpCEuf.CI1bVbWfuelhFOuMrAiwGs29sq8v10W', '테스트 사용자', TRUE);
 
 -- RSS URL 예시 데이터
 INSERT INTO rss_urls (type, url, user_id) VALUES
@@ -48,3 +48,16 @@ INSERT INTO user_library (user_id, paper_content_id) VALUES
 (1, 2), -- 테스트 사용자가 "BERT" 추가
 (1, 4), -- 테스트 사용자가 "GAN" 추가
 (1, 5); -- 테스트 사용자가 "YOLO" 추가
+
+
+SELECT 'Users' as table_name, COUNT(*) as count FROM users
+UNION ALL
+SELECT 'RSS URLs', COUNT(*) FROM rss_urls
+UNION ALL
+SELECT 'RSS Feeds', COUNT(*) FROM rss_feeds
+UNION ALL
+SELECT 'CS Papers', COUNT(*) FROM cs_papers
+UNION ALL
+SELECT 'Paper Content', COUNT(*) FROM paper_content
+UNION ALL
+SELECT 'User Library', COUNT(*) FROM user_library;
