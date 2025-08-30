@@ -184,3 +184,34 @@ export async function hashPassword(password: string): Promise<string> {
     throw new Error('비밀번호 해시에 실패했습니다');
   }
 }
+
+/**
+ * 현재 세션의 사용자 정보를 조회합니다.
+ *
+ * @returns {Promise<UserData | null>} 현재 사용자 정보 또는 null
+ * @description 현재 세션에서 사용자 ID를 가져와 사용자 정보를 조회합니다.
+ *              로그인하지 않은 경우 null을 반환합니다.
+ *
+ * @example
+ * ```typescript
+ * const currentUser = await getCurrentUser()
+ * if (currentUser) {
+ *   console.log(`현재 사용자: ${currentUser.name}`)
+ * }
+ * ```
+ */
+export async function getCurrentUser(): Promise<UserData | null> {
+  try {
+    const { getSession } = await import('@/lib/auth/session');
+    const session = await getSession();
+
+    if (!session || !session.userId) {
+      return null;
+    }
+
+    return await findUserById(session.userId.toString());
+  } catch (error) {
+    console.error('현재 사용자 조회 중 오류 발생:', error);
+    return null;
+  }
+}
