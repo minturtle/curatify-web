@@ -49,17 +49,17 @@ export async function findUserByEmail(email: string): Promise<UserWithPassword |
  *
  * @example
  * ```typescript
- * const user = await findUserById('user-123')
+ * const user = await findUserById(1)
  * if (user) {
  *   console.log(`사용자: ${user.name} (${user.email})`)
  * }
  * ```
  */
-export async function findUserById(id: string): Promise<UserData | null> {
+export async function findUserById(id: number): Promise<UserData | null> {
   try {
     await ensureDatabaseConnection();
     const userRepository = getUserRepository();
-    const user = await userRepository.findOne({ where: { id: parseInt(id) } });
+    const user = await userRepository.findOne({ where: { id: id } });
 
     if (!user) return null;
 
@@ -209,7 +209,7 @@ export async function getCurrentUser(): Promise<UserData | null> {
       return null;
     }
 
-    return await findUserById(session.userId.toString());
+    return await findUserById(session.userId);
   } catch (error) {
     console.error('현재 사용자 조회 중 오류 발생:', error);
     return null;
