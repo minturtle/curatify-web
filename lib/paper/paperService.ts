@@ -23,9 +23,10 @@ import { UserLibrary as UserLibraryType } from '@/lib/types/paper';
  * @returns {Paper} 변환된 Paper 타입
  * @private
  */
-function entityToDto(entity: PaperEntity): Paper {
-  // allCategories를 categories 배열로 파싱
-  const categories = entity.allCategories ? entity.allCategories.split(' ').filter(Boolean) : [];
+async function entityToDto(entity: PaperEntity): Promise<Paper> {
+  // categories 관계에서 카테고리 이름들을 가져옴
+  const categoryEntities = await entity.categories;
+  const categories = categoryEntities.map((cat) => cat.name);
 
   // authors를 배열로 파싱 (콤마 구분 또는 JSON 형태로 저장되어 있다고 가정)
   let authors: string[] = [];
@@ -114,17 +115,18 @@ export async function getPapers(
     const skip = (page - 1) * pageSize;
     const totalPages = Math.ceil(totalCount / pageSize);
 
-    // 논문 목록 조회 (최신순으로 정렬)
+    // 논문 목록 조회 (최신순으로 정렬, categories 관계 포함)
     const entities = await paperRepository.find({
       skip,
       take: pageSize,
       order: {
         createdAt: 'DESC',
       },
+      relations: ['categories'],
     });
 
-    // 엔티티를 DTO로 변환
-    const papers = entities.map(entityToDto);
+    // 엔티티를 DTO로 변환 (비동기 처리)
+    const papers = await Promise.all(entities.map(entityToDto));
 
     return {
       papers,

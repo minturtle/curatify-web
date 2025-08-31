@@ -70,7 +70,10 @@ describe('paperService', () => {
       url: 'https://example.com/paper1',
       updateDate: new Date('2024-01-15'),
       createdAt: new Date('2024-01-15'),
-      allCategories: 'cs.AI cs.ML',
+      categories: Promise.resolve([
+        { id: 1, name: 'cs.AI' },
+        { id: 2, name: 'cs.ML' },
+      ]),
     },
     {
       id: 2,
@@ -81,7 +84,10 @@ describe('paperService', () => {
       url: 'https://example.com/paper2',
       updateDate: new Date('2024-01-20'),
       createdAt: new Date('2024-01-20'),
-      allCategories: 'cs.CL cs.AI',
+      categories: Promise.resolve([
+        { id: 3, name: 'cs.CL' },
+        { id: 1, name: 'cs.AI' },
+      ]),
     },
     {
       id: 3,
@@ -92,7 +98,10 @@ describe('paperService', () => {
       url: 'https://example.com/paper3',
       updateDate: new Date('2024-01-25'),
       createdAt: new Date('2024-01-25'),
-      allCategories: 'cs.CV cs.AI',
+      categories: Promise.resolve([
+        { id: 4, name: 'cs.CV' },
+        { id: 1, name: 'cs.AI' },
+      ]),
     },
     {
       id: 4,
@@ -103,7 +112,10 @@ describe('paperService', () => {
       url: 'https://example.com/paper4',
       updateDate: new Date('2024-01-30'),
       createdAt: new Date('2024-01-30'),
-      allCategories: 'cs.AI cs.LG',
+      categories: Promise.resolve([
+        { id: 1, name: 'cs.AI' },
+        { id: 5, name: 'cs.LG' },
+      ]),
     },
     {
       id: 5,
@@ -114,7 +126,10 @@ describe('paperService', () => {
       url: 'https://example.com/paper5',
       updateDate: new Date('2024-02-05'),
       createdAt: new Date('2024-02-05'),
-      allCategories: 'cs.AI cs.CY',
+      categories: Promise.resolve([
+        { id: 1, name: 'cs.AI' },
+        { id: 6, name: 'cs.CY' },
+      ]),
     },
   ];
 
@@ -183,7 +198,6 @@ describe('paperService', () => {
         url: 'https://example.com/paper1',
         updateDate: new Date('2024-01-15'),
         createdAt: new Date('2024-01-15'),
-        allCategories: 'cs.AI cs.ML',
       },
     },
     {
@@ -203,7 +217,6 @@ describe('paperService', () => {
         url: 'https://example.com/paper2',
         updateDate: new Date('2024-01-20'),
         createdAt: new Date('2024-01-20'),
-        allCategories: 'cs.CL cs.AI',
       },
     },
     {
@@ -223,7 +236,6 @@ describe('paperService', () => {
         url: 'https://example.com/paper3',
         updateDate: new Date('2024-01-25'),
         createdAt: new Date('2024-01-25'),
-        allCategories: 'cs.CV cs.AI',
       },
     },
   ];

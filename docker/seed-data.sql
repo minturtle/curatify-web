@@ -20,13 +20,30 @@ INSERT INTO rss_urls (type, url, user_id) VALUES
 ('normal', 'https://feeds.arstechnica.com/arstechnica/index', 1),
 ('youtube', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCsT0YIqwnpJCM-mx7-gSA4Q', 1);
 
--- CS Papers 예시 데이터
-INSERT INTO cs_papers (title, all_categories, authors, update_date, url, abstract, summary) VALUES
-('Attention Is All You Need', 'cs.CL, cs.AI', 'Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Lukasz Kaiser, Illia Polosukhin', '2017-06-12 00:00:00', 'https://arxiv.org/abs/1706.03762', 'The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely.', 'Transformer 아키텍처를 제안한 논문으로, RNN과 CNN 없이 attention 메커니즘만으로 구성된 모델입니다.'),
-('BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding', 'cs.CL', 'Jacob Devlin, Ming-Wei Chang, Kenton Lee, Kristina Toutanova', '2018-10-11 00:00:00', 'https://arxiv.org/abs/1810.04805', 'We introduce a new language representation model called BERT, which stands for Bidirectional Encoder Representations from Transformers. Unlike recent language representation models, BERT is designed to pre-train deep bidirectional representations from unlabeled text by jointly conditioning on both left and right context in all layers.', '양방향 Transformer를 사용한 언어 이해 모델 BERT를 제안한 논문입니다.'),
-('ResNet: Deep Residual Learning for Image Recognition', 'cs.CV', 'Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun', '2015-12-10 00:00:00', 'https://arxiv.org/abs/1512.03385', 'Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions.', '깊은 신경망의 학습을 위한 residual learning 프레임워크를 제안한 논문입니다.'),
-('Generative Adversarial Networks', 'cs.LG, cs.AI', 'Ian J. Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil Ozair, Aaron Courville, Yoshua Bengio', '2014-06-10 00:00:00', 'https://arxiv.org/abs/1406.2661', 'We propose a new framework for estimating generative models via an adversarial process, in which we simultaneously train two models: a generative model G that captures the data distribution, and a discriminative model D that estimates the probability that a sample came from the training data rather than G.', '생성 모델과 판별 모델을 동시에 학습하는 GAN 프레임워크를 제안한 논문입니다.'),
-('YOLO: Real-Time Object Detection', 'cs.CV', 'Joseph Redmon, Santosh Divvala, Ross Girshick, Ali Farhadi', '2015-06-08 00:00:00', 'https://arxiv.org/abs/1506.02640', 'We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities.', '실시간 객체 탐지를 위한 YOLO 모델을 제안한 논문입니다.');
+-- Paper Categories 예시 데이터
+INSERT INTO cs_paper_categories (name) VALUES
+('cs.CL'),
+('cs.AI'),
+('cs.CV'),
+('cs.LG');
+
+-- Papers 예시 데이터
+INSERT INTO papers (title, authors, update_date, url, abstract, summary) VALUES
+('Attention Is All You Need', 'Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Lukasz Kaiser, Illia Polosukhin', '2017-06-12 00:00:00', 'https://arxiv.org/abs/1706.03762', 'The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely.', 'Transformer 아키텍처를 제안한 논문으로, RNN과 CNN 없이 attention 메커니즘만으로 구성된 모델입니다.'),
+('BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding', 'Jacob Devlin, Ming-Wei Chang, Kenton Lee, Kristina Toutanova', '2018-10-11 00:00:00', 'https://arxiv.org/abs/1810.04805', 'We introduce a new language representation model called BERT, which stands for Bidirectional Encoder Representations from Transformers. Unlike recent language representation models, BERT is designed to pre-train deep bidirectional representations from unlabeled text by jointly conditioning on both left and right context in all layers.', '양방향 Transformer를 사용한 언어 이해 모델 BERT를 제안한 논문입니다.'),
+('ResNet: Deep Residual Learning for Image Recognition', 'Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun', '2015-12-10 00:00:00', 'https://arxiv.org/abs/1512.03385', 'Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions.', '깊은 신경망의 학습을 위한 residual learning 프레임워크를 제안한 논문입니다.'),
+('Generative Adversarial Networks', 'Ian J. Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil Ozair, Aaron Courville, Yoshua Bengio', '2014-06-10 00:00:00', 'https://arxiv.org/abs/1406.2661', 'We propose a new framework for estimating generative models via an adversarial process, in which we simultaneously train two models: a generative model G that captures the data distribution, and a discriminative model D that estimates the probability that a sample came from the training data rather than G.', '생성 모델과 판별 모델을 동시에 학습하는 GAN 프레임워크를 제안한 논문입니다.'),
+('YOLO: Real-Time Object Detection', 'Joseph Redmon, Santosh Divvala, Ross Girshick, Ali Farhadi', '2015-06-08 00:00:00', 'https://arxiv.org/abs/1506.02640', 'We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities.', '실시간 객체 탐지를 위한 YOLO 모델을 제안한 논문입니다.');
+
+-- Paper-Category 관계 데이터
+INSERT INTO cs_paper_category_relations (paper_id, category_id) VALUES
+(1, 1), -- Attention Is All You Need - cs.CL
+(1, 2), -- Attention Is All You Need - cs.AI
+(2, 1), -- BERT - cs.CL
+(3, 3), -- ResNet - cs.CV
+(4, 4), -- GAN - cs.LG
+(4, 2), -- GAN - cs.AI
+(5, 3); -- YOLO - cs.CV
 
 -- Paper Content 예시 데이터
 INSERT INTO paper_content (title, authors, content, paper_id) VALUES
@@ -383,7 +400,11 @@ SELECT 'RSS URLs', COUNT(*) FROM rss_urls
 UNION ALL
 SELECT 'RSS Feeds', COUNT(*) FROM rss_feeds
 UNION ALL
-SELECT 'CS Papers', COUNT(*) FROM cs_papers
+SELECT 'Papers', COUNT(*) FROM papers
+UNION ALL
+SELECT 'Paper Categories', COUNT(*) FROM cs_paper_categories
+UNION ALL
+SELECT 'Paper-Category Relations', COUNT(*) FROM cs_paper_category_relations
 UNION ALL
 SELECT 'Paper Content', COUNT(*) FROM paper_content
 UNION ALL

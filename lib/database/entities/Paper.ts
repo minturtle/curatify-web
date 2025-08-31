@@ -6,11 +6,12 @@ import {
   UpdateDateColumn,
   Index,
   OneToMany,
+  ManyToMany,
 } from 'typeorm';
 import type { PaperContent } from './PaperContent';
+import type { PaperCategory } from './PaperCategory';
 
-@Entity('cs_papers')
-@Index('idx_categories', ['allCategories'])
+@Entity('papers')
 @Index('idx_update_date', ['updateDate'])
 @Index('idx_created_at', ['createdAt'])
 export class Paper {
@@ -19,9 +20,6 @@ export class Paper {
 
   @Column({ type: 'varchar', length: 500 })
   title!: string;
-
-  @Column({ type: 'varchar', length: 200, nullable: true, name: 'all_categories' })
-  allCategories!: string;
 
   @Column({ type: 'text', nullable: true })
   authors!: string;
@@ -46,4 +44,7 @@ export class Paper {
 
   @OneToMany('PaperContent', 'paper')
   paperContents!: Promise<PaperContent[]>;
+
+  @ManyToMany('PaperCategory', 'papers')
+  categories!: Promise<PaperCategory[]>;
 }

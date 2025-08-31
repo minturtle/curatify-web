@@ -54,11 +54,10 @@ CREATE TABLE IF NOT EXISTS rss_feeds (
     INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- CS Papers 테이블 생성
-CREATE TABLE IF NOT EXISTS cs_papers (
+-- Papers 테이블 생성
+CREATE TABLE IF NOT EXISTS papers (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(500) NOT NULL,
-    all_categories VARCHAR(200),
     authors TEXT,
     update_date TIMESTAMP NULL,
     url VARCHAR(500),
@@ -66,9 +65,30 @@ CREATE TABLE IF NOT EXISTS cs_papers (
     summary TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_categories (all_categories),
     INDEX idx_update_date (update_date),
     INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Paper Categories 테이블 생성
+CREATE TABLE IF NOT EXISTS cs_paper_categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_category_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Paper-Category 관계 테이블 생성 (N:M 관계)
+CREATE TABLE IF NOT EXISTS cs_paper_category_relations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    paper_id INT NOT NULL,
+    category_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES cs_paper_categories(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_paper_category (paper_id, category_id),
+    INDEX idx_paper_id (paper_id),
+    INDEX idx_category_id (category_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Paper Content 테이블 생성 (논문 상세 내용)
@@ -79,7 +99,7 @@ CREATE TABLE IF NOT EXISTS paper_content (
     content LONGTEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     paper_id INT NOT NULL,
-    FOREIGN KEY (paper_id) REFERENCES cs_papers(id) ON DELETE CASCADE,
+    FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE,
     INDEX idx_paper_id (paper_id),
     INDEX idx_created_at (created_at),
     UNIQUE KEY unique_paper_content (paper_id)
