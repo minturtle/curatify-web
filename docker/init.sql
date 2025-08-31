@@ -94,29 +94,29 @@ CREATE TABLE IF NOT EXISTS cs_paper_category_relations (
 -- Paper Content 테이블 생성 (논문 상세 내용)
 CREATE TABLE IF NOT EXISTS paper_content (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(500) NOT NULL,
-    authors TEXT,
+    content_title VARCHAR(500) NOT NULL,
     content LONGTEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `order` INT NOT NULL,
     paper_id INT NOT NULL,
     FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE,
     INDEX idx_paper_id (paper_id),
     INDEX idx_created_at (created_at),
-    UNIQUE KEY unique_paper_content (paper_id)
+    UNIQUE KEY unique_paper_content (paper_id, `order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- User Library 테이블 생성 (사용자 논문 라이브러리)
 CREATE TABLE IF NOT EXISTS user_library (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    paper_content_id INT NOT NULL,
+    paper_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (paper_content_id) REFERENCES paper_content(id) ON DELETE CASCADE,
+    FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE,
     INDEX idx_user_id (user_id),
-    INDEX idx_paper_content_id (paper_content_id),
+    INDEX idx_paper_id (paper_id),
     INDEX idx_created_at (created_at),
-    UNIQUE KEY unique_user_paper (user_id, paper_content_id)
+    UNIQUE KEY unique_user_paper (user_id, paper_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- User Interests 테이블 생성 (사용자 관심사)

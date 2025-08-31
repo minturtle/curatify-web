@@ -3,12 +3,8 @@
  * @author Minseok kim
  */
 
-import { Paper, PaperDetail } from '@/lib/types/paper';
-import {
-  getPaperRepository,
-  getUserLibraryRepository,
-  getPaperContentRepository,
-} from '@/lib/database/repositories';
+import { Paper, PaperDetail, PaperContentBlock } from '@/lib/types/paper';
+import { getPaperRepository, getUserLibraryRepository } from '@/lib/database/repositories';
 import { Paper as PaperEntity } from '@/lib/database/entities/Paper';
 import { PaperContent as PaperContentEntity } from '@/lib/database/entities/PaperContent';
 import { ensureDatabaseConnection } from '@/lib/database/connection';
@@ -58,32 +54,69 @@ async function entityToDto(entity: PaperEntity): Promise<Paper> {
  * @private
  */
 async function userLibraryEntityToDto(entity: UserLibraryEntity): Promise<UserLibraryType> {
-  const paperContent = await entity.paperContent;
+  const paper = await entity.paper;
+
+  // authors를 배열로 파싱
+  let authors: string[] = [];
+  try {
+    authors = paper.authors ? JSON.parse(paper.authors) : [];
+  } catch {
+    authors = paper.authors ? paper.authors.split(',').map((a: string) => a.trim()) : [];
+  }
+
   return {
-    paperContentId: entity.paperContentId,
-    title: paperContent?.title || '',
-    authors: paperContent?.authors
-      ? paperContent.authors.split(',').map((a: string) => a.trim())
-      : [],
+    paperContentId: entity.paperId, // paperId로 변경
+    title: paper.title,
+    authors,
     createdAt: entity.createdAt,
   };
 }
 
 /**
- * PaperContentEntity를 PaperDetail 타입으로 변환하는 함수
+ * PaperContentEntity를 PaperContentBlock 타입으로 변환하는 함수
  *
  * @param {PaperContentEntity} entity - 변환할 PaperContent 엔티티
- * @param {PaperEntity} paper - 관련된 Paper 엔티티
+ * @returns {PaperContentBlock} 변환된 PaperContentBlock 타입
+ * @private
+ */
+function paperContentEntityToBlock(entity: PaperContentEntity): PaperContentBlock {
+  return {
+    id: entity.id,
+    title: `Content ${entity.order}`, // order를 기반으로 제목 생성
+    content: entity.content,
+    order: entity.order,
+  };
+}
+
+/**
+ * PaperEntity와 PaperContentEntity 배열을 PaperDetail 타입으로 변환하는 함수
+ *
+ * @param {PaperEntity} paper - Paper 엔티티
+ * @param {PaperContentEntity[]} paperContents - PaperContent 엔티티 배열
  * @returns {PaperDetail} 변환된 PaperDetail 타입
  * @private
  */
-function paperContentEntityToDto(entity: PaperContentEntity, paper: PaperEntity): PaperDetail {
+function paperAndContentsToDetail(
+  paper: PaperEntity,
+  paperContents: PaperContentEntity[]
+): PaperDetail {
+  // authors를 배열로 파싱
+  let authors: string[] = [];
+  try {
+    authors = paper.authors ? JSON.parse(paper.authors) : [];
+  } catch {
+    authors = paper.authors ? paper.authors.split(',').map((a: string) => a.trim()) : [];
+  }
+
+  // PaperContent를 PaperContentBlock 배열로 변환 (이미 DB에서 정렬됨)
+  const contentBlocks = paperContents.map(paperContentEntityToBlock);
+
   return {
-    paperContentId: entity.id,
-    title: entity.title,
-    authors: entity.authors ? entity.authors.split(',').map((a: string) => a.trim()) : [],
-    content: entity.content,
-    createdAt: entity.createdAt,
+    paperContentId: paper.id, // paperId를 사용
+    title: paper.title,
+    authors,
+    content: contentBlocks,
+    createdAt: paperContents[0]?.createdAt || paper.createdAt,
     publishedAt: paper.createdAt,
     url: paper.url || '',
   };
@@ -176,7 +209,7 @@ export async function getUserLibrary(
     // 사용자의 논문 라이브러리 조회 (최신순으로 정렬)
     const userLibraries = await userLibraryRepository.find({
       where: { userId: session.userId },
-      relations: ['paperContent', 'paperContent.paper'],
+      relations: ['paper'],
       skip,
       take: pageSize,
       order: {
@@ -244,27 +277,37 @@ export async function registerPaper(paperId: number): Promise<boolean> {
 
 /**
  * 논문 상세 정보를 조회하는 함수
- * @param paperContentId 논문 콘텐츠 ID
+ * @param paperId 논문 ID
  * @returns 논문 상세 정보
  */
-export async function getPaperDetail(paperContentId: number): Promise<PaperDetail | null> {
+export async function getPaperDetail(paperId: number): Promise<PaperDetail | null> {
   try {
     await ensureDatabaseConnection();
-    const paperContentRepository = getPaperContentRepository();
+    const paperRepository = getPaperRepository();
 
-    // 논문 콘텐츠와 관련된 Paper 정보를 함께 조회
-    const paperContent = await paperContentRepository.findOne({
-      where: { id: paperContentId },
-      relations: ['paper'],
+    // 논문 정보와 관련된 PaperContent들을 함께 조회 (order 순으로 정렬)
+    const paper = await paperRepository.findOne({
+      where: { id: paperId },
+      relations: {
+        paperContents: true,
+      },
+      order: {
+        paperContents: {
+          order: 'ASC',
+        },
+      },
     });
 
-    if (!paperContent || !paperContent.paper) {
-      console.error(`논문 콘텐츠를 찾을 수 없습니다: ${paperContentId}`);
+    if (!paper) {
+      console.error(`논문을 찾을 수 없습니다: ${paperId}`);
       return null;
     }
 
-    // 엔티티를 DTO로 변환
-    return paperContentEntityToDto(paperContent, paperContent.paper);
+    // Paper의 paperContents 관계에서 PaperContent 배열 가져오기 (이미 정렬됨)
+    const paperContents = await paper.paperContents;
+
+    // Paper와 PaperContent를 PaperDetail로 변환
+    return paperAndContentsToDetail(paper, paperContents);
   } catch (error) {
     console.error('논문 상세 정보 조회 중 오류 발생:', error);
     throw new Error('논문 상세 정보 조회에 실패했습니다');

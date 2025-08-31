@@ -48,8 +48,15 @@ export interface PaperDetail {
   paperContentId: number;
   title: string;
   authors: string[];
-  content: string;
+  content: PaperContentBlock[];
   createdAt: Date;
   publishedAt: Date;
   url: string;
+}
+
+export interface PaperContentBlock {
+  id: number;
+  title: string;
+  content: string;
+  order: number;
 }

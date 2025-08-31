@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import type { PaperContent } from './PaperContent';
 import type { PaperCategory } from './PaperCategory';
+import type { UserLibrary } from './UserLibrary';
 
 @Entity('papers')
 @Index('idx_update_date', ['updateDate'])
@@ -47,4 +48,7 @@ export class Paper {
 
   @ManyToMany('PaperCategory', 'papers')
   categories!: Promise<PaperCategory[]>;
+
+  @OneToMany('UserLibrary', 'paper')
+  userLibraries!: Promise<UserLibrary[]>;
 }

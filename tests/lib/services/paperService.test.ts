@@ -37,14 +37,9 @@ const mockUserLibraryRepository = {
   delete: vi.fn(),
 };
 
-const mockPaperContentRepository = {
-  findOne: vi.fn(),
-};
-
 vi.mock('@/lib/database/repositories', () => ({
   getPaperRepository: vi.fn(() => mockRepository),
   getUserLibraryRepository: vi.fn(() => mockUserLibraryRepository),
-  getPaperContentRepository: vi.fn(() => mockPaperContentRepository),
 }));
 
 vi.mock('@/lib/database/ormconfig', () => ({
@@ -74,6 +69,20 @@ describe('paperService', () => {
         { id: 1, name: 'cs.AI' },
         { id: 2, name: 'cs.ML' },
       ]),
+      paperContents: Promise.resolve([
+        {
+          id: 1,
+          content: '이 논문은 인공지능과 머신러닝의 최신 발전 동향을 다룹니다.',
+          order: 0,
+          createdAt: new Date('2024-01-15'),
+        },
+        {
+          id: 2,
+          content: '특히 딥러닝 모델의 성능 향상과 실제 응용 사례에 대해 자세히 분석합니다.',
+          order: 1,
+          createdAt: new Date('2024-01-15'),
+        },
+      ]),
     },
     {
       id: 2,
@@ -87,6 +96,14 @@ describe('paperService', () => {
       categories: Promise.resolve([
         { id: 3, name: 'cs.CL' },
         { id: 1, name: 'cs.AI' },
+      ]),
+      paperContents: Promise.resolve([
+        {
+          id: 3,
+          content: '자연어 처리를 위한 딥러닝 모델의 성능 향상에 대한 연구입니다.',
+          order: 0,
+          createdAt: new Date('2024-01-20'),
+        },
       ]),
     },
     {
@@ -102,6 +119,14 @@ describe('paperService', () => {
         { id: 4, name: 'cs.CV' },
         { id: 1, name: 'cs.AI' },
       ]),
+      paperContents: Promise.resolve([
+        {
+          id: 4,
+          content: '컴퓨터 비전 분야에서 CNN과 Vision Transformer의 발전 과정을 다룹니다.',
+          order: 0,
+          createdAt: new Date('2024-01-25'),
+        },
+      ]),
     },
     {
       id: 4,
@@ -115,6 +140,14 @@ describe('paperService', () => {
       categories: Promise.resolve([
         { id: 1, name: 'cs.AI' },
         { id: 5, name: 'cs.LG' },
+      ]),
+      paperContents: Promise.resolve([
+        {
+          id: 5,
+          content: '강화학습을 활용한 게임 AI와 로봇 제어 시스템의 실제 응용 사례를 다룹니다.',
+          order: 0,
+          createdAt: new Date('2024-01-30'),
+        },
       ]),
     },
     {
@@ -130,113 +163,39 @@ describe('paperService', () => {
         { id: 1, name: 'cs.AI' },
         { id: 6, name: 'cs.CY' },
       ]),
+      paperContents: Promise.resolve([
+        {
+          id: 6,
+          content: '생성형 AI의 발전에 따른 윤리적 문제와 사회적 영향을 분석합니다.',
+          order: 0,
+          createdAt: new Date('2024-02-05'),
+        },
+      ]),
     },
   ];
 
-  // UserLibrary 테스트 데이터
+  // UserLibrary 테스트 데이터 (Paper를 참조하도록 변경)
   const mockUserLibraryEntities = [
     {
       id: 1,
       userId: 123,
-      paperContentId: 1,
+      paperId: 1, // paperContentId에서 paperId로 변경
       createdAt: new Date('2024-01-15'),
-      paperContent: Promise.resolve({
-        id: 1,
-        title: 'AI와 머신러닝의 발전',
-        authors: '김철수, 이영희',
-        content: '논문 전체 내용...',
-        paperId: 1,
-        createdAt: new Date('2024-01-15'),
-      }),
+      paper: Promise.resolve(mockPaperEntities[0]),
     },
     {
       id: 2,
       userId: 123,
-      paperContentId: 2,
-      createdAt: new Date('2024-01-20'),
-      paperContent: Promise.resolve({
-        id: 2,
-        title: '딥러닝을 활용한 자연어 처리',
-        authors: '박민수',
-        content: '논문 전체 내용...',
-        paperId: 2,
-        createdAt: new Date('2024-01-20'),
-      }),
-    },
-    {
-      id: 3,
-      userId: 123,
-      paperContentId: 3,
-      createdAt: new Date('2024-01-25'),
-      paperContent: Promise.resolve({
-        id: 3,
-        title: '컴퓨터 비전의 최신 동향',
-        authors: '최지영, 정현우, 김태호',
-        content: '논문 전체 내용...',
-        paperId: 3,
-        createdAt: new Date('2024-01-25'),
-      }),
-    },
-  ];
-
-  // PaperDetail 테스트 데이터
-  const mockPaperContentEntities = [
-    {
-      id: 1,
-      title: 'AI와 머신러닝의 발전',
-      authors: '김철수, 이영희',
-      content:
-        '이 논문은 인공지능과 머신러닝의 최신 발전 동향을 다룹니다. 특히 딥러닝 모델의 성능 향상과 실제 응용 사례에 대해 자세히 분석합니다.',
-      paperId: 1,
-      createdAt: new Date('2024-01-15'),
-      paper: {
-        id: 1,
-        title: 'AI와 머신러닝의 발전',
-        summary: '이 논문은 **AI**와 머신러닝의 최신 발전 동향을 다룹니다.',
-        abstract: '이 논문은 **AI**와 머신러닝의 최신 발전 동향을 다룹니다.',
-        authors: '["김철수", "이영희"]',
-        url: 'https://example.com/paper1',
-        updateDate: new Date('2024-01-15'),
-        createdAt: new Date('2024-01-15'),
-      },
-    },
-    {
-      id: 2,
-      title: '딥러닝을 활용한 자연어 처리',
-      authors: '박민수',
-      content:
-        '자연어 처리를 위한 딥러닝 모델의 성능 향상에 대한 연구입니다. Transformer 아키텍처와 BERT 모델의 발전 과정을 다룹니다.',
       paperId: 2,
       createdAt: new Date('2024-01-20'),
-      paper: {
-        id: 2,
-        title: '딥러닝을 활용한 자연어 처리',
-        summary: '자연어 처리를 위한 **딥러닝** 모델의 성능 향상에 대한 연구입니다.',
-        abstract: '자연어 처리를 위한 **딥러닝** 모델의 성능 향상에 대한 연구입니다.',
-        authors: '["박민수"]',
-        url: 'https://example.com/paper2',
-        updateDate: new Date('2024-01-20'),
-        createdAt: new Date('2024-01-20'),
-      },
+      paper: Promise.resolve(mockPaperEntities[1]),
     },
     {
       id: 3,
-      title: '컴퓨터 비전의 최신 동향',
-      authors: '최지영, 정현우, 김태호',
-      content:
-        '컴퓨터 비전 분야에서 CNN과 Vision Transformer의 발전 과정을 다룹니다. 이미지 분류, 객체 감지, 세그멘테이션 등의 태스크에서의 성능 비교를 포함합니다.',
+      userId: 123,
       paperId: 3,
       createdAt: new Date('2024-01-25'),
-      paper: {
-        id: 3,
-        title: '컴퓨터 비전의 최신 동향',
-        summary: '컴퓨터 비전 분야에서 **CNN**과 **Vision Transformer**의 발전 과정을 다룹니다.',
-        abstract: '컴퓨터 비전 분야에서 **CNN**과 **Vision Transformer**의 발전 과정을 다룹니다.',
-        authors: '["최지영", "정현우", "김태호"]',
-        url: 'https://example.com/paper3',
-        updateDate: new Date('2024-01-25'),
-        createdAt: new Date('2024-01-25'),
-      },
+      paper: Promise.resolve(mockPaperEntities[2]),
     },
   ];
 
@@ -370,7 +329,7 @@ describe('paperService', () => {
 
       // 첫 번째 논문 확인
       const firstPaper = result.papers[0];
-      expect(firstPaper.paperContentId).toBe(1);
+      expect(firstPaper.paperContentId).toBe(1); // paperId를 paperContentId로 반환
       expect(firstPaper.title).toBe('AI와 머신러닝의 발전');
       expect(firstPaper.authors).toEqual(['김철수', '이영희']);
       expect(firstPaper.createdAt).toBeInstanceOf(Date);
@@ -553,45 +512,64 @@ describe('paperService', () => {
   });
 
   describe('getPaperDetail', () => {
-    it('존재하는 논문 콘텐츠 ID로 상세 정보를 조회할 수 있어야 한다', async () => {
-      // Repository 모킹 설정 - 논문 콘텐츠 존재
-      mockPaperContentRepository.findOne.mockResolvedValue(mockPaperContentEntities[0]);
+    it('존재하는 논문 ID로 상세 정보를 조회할 수 있어야 한다', async () => {
+      // Repository 모킹 설정 - 논문 존재 (paperContents 관계 포함)
+      mockRepository.findOne.mockResolvedValue(mockPaperEntities[0]);
 
       const result = await getPaperDetail(1);
 
       expect(result).not.toBeNull();
-      expect(result?.paperContentId).toBe(1);
+      expect(result?.paperContentId).toBe(1); // paperId를 paperContentId로 반환
       expect(result?.title).toBe('AI와 머신러닝의 발전');
       expect(result?.authors).toEqual(['김철수', '이영희']);
-      expect(result?.content).toBe(
-        '이 논문은 인공지능과 머신러닝의 최신 발전 동향을 다룹니다. 특히 딥러닝 모델의 성능 향상과 실제 응용 사례에 대해 자세히 분석합니다.'
+      expect(Array.isArray(result?.content)).toBe(true);
+      expect(result?.content).toHaveLength(2);
+      expect(result?.content[0].id).toBe(1);
+      expect(result?.content[0].title).toBe('Content 0');
+      expect(result?.content[0].content).toBe(
+        '이 논문은 인공지능과 머신러닝의 최신 발전 동향을 다룹니다.'
       );
+      expect(result?.content[0].order).toBe(0);
       expect(result?.createdAt).toBeInstanceOf(Date);
       expect(result?.publishedAt).toBeInstanceOf(Date);
       expect(result?.url).toBe('https://example.com/paper1');
 
-      expect(mockPaperContentRepository.findOne).toHaveBeenCalledWith({
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
         where: { id: 1 },
-        relations: ['paper'],
+        relations: {
+          paperContents: true,
+        },
+        order: {
+          paperContents: {
+            order: 'ASC',
+          },
+        },
       });
     });
 
-    it('존재하지 않는 논문 콘텐츠 ID로 조회 시 null을 반환해야 한다', async () => {
-      // Repository 모킹 설정 - 논문 콘텐츠 없음
-      mockPaperContentRepository.findOne.mockResolvedValue(null);
+    it('존재하지 않는 논문 ID로 조회 시 null을 반환해야 한다', async () => {
+      // Repository 모킹 설정 - 논문 없음
+      mockRepository.findOne.mockResolvedValue(null);
 
       const result = await getPaperDetail(999);
 
       expect(result).toBeNull();
-      expect(mockPaperContentRepository.findOne).toHaveBeenCalledWith({
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
         where: { id: 999 },
-        relations: ['paper'],
+        relations: {
+          paperContents: true,
+        },
+        order: {
+          paperContents: {
+            order: 'ASC',
+          },
+        },
       });
     });
 
     it('authors 필드가 올바르게 파싱되어야 한다', async () => {
       // Repository 모킹 설정 - 여러 저자가 있는 논문
-      mockPaperContentRepository.findOne.mockResolvedValue(mockPaperContentEntities[2]);
+      mockRepository.findOne.mockResolvedValue(mockPaperEntities[2]);
 
       const result = await getPaperDetail(3);
 
@@ -600,11 +578,11 @@ describe('paperService', () => {
 
     it('authors 필드가 비어있는 경우 빈 배열을 반환해야 한다', async () => {
       // Repository 모킹 설정 - 저자 정보가 없는 논문
-      const paperContentWithoutAuthors = {
-        ...mockPaperContentEntities[0],
+      const paperWithoutAuthors = {
+        ...mockPaperEntities[0],
         authors: null,
       };
-      mockPaperContentRepository.findOne.mockResolvedValue(paperContentWithoutAuthors);
+      mockRepository.findOne.mockResolvedValue(paperWithoutAuthors);
 
       const result = await getPaperDetail(1);
 
@@ -613,18 +591,56 @@ describe('paperService', () => {
 
     it('url 필드가 null인 경우 빈 문자열을 반환해야 한다', async () => {
       // Repository 모킹 설정 - URL이 null인 논문
-      const paperContentWithNullUrl = {
-        ...mockPaperContentEntities[0],
-        paper: {
-          ...mockPaperContentEntities[0].paper,
-          url: null,
-        },
+      const paperWithNullUrl = {
+        ...mockPaperEntities[0],
+        url: null,
       };
-      mockPaperContentRepository.findOne.mockResolvedValue(paperContentWithNullUrl);
+      mockRepository.findOne.mockResolvedValue(paperWithNullUrl);
 
       const result = await getPaperDetail(1);
 
       expect(result?.url).toBe('');
+    });
+
+    it('PaperContent가 없는 경우 빈 배열을 반환해야 한다', async () => {
+      // Repository 모킹 설정 - PaperContent가 없는 논문
+      const paperWithoutContents = {
+        ...mockPaperEntities[0],
+        paperContents: Promise.resolve([]),
+      };
+      mockRepository.findOne.mockResolvedValue(paperWithoutContents);
+
+      const result = await getPaperDetail(1);
+
+      expect(result?.content).toEqual([]);
+    });
+
+    it('PaperContent가 order 순으로 정렬되어야 한다', async () => {
+      // Repository 모킹 설정 - 순서가 뒤바뀐 PaperContent (DB에서 정렬됨)
+      const paperWithReorderedContents = {
+        ...mockPaperEntities[0],
+        paperContents: Promise.resolve([
+          {
+            id: 1,
+            content: '이 논문은 인공지능과 머신러닝의 최신 발전 동향을 다룹니다.',
+            order: 0,
+            createdAt: new Date('2024-01-15'),
+          },
+          {
+            id: 2,
+            content: '특히 딥러닝 모델의 성능 향상과 실제 응용 사례에 대해 자세히 분석합니다.',
+            order: 1,
+            createdAt: new Date('2024-01-15'),
+          },
+        ]),
+      };
+      mockRepository.findOne.mockResolvedValue(paperWithReorderedContents);
+
+      const result = await getPaperDetail(1);
+
+      expect(result?.content).toHaveLength(2);
+      expect(result?.content[0].order).toBe(0);
+      expect(result?.content[1].order).toBe(1);
     });
   });
 });
