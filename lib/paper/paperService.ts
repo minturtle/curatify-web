@@ -117,7 +117,7 @@ function paperAndContentsToDetail(
     authors,
     content: contentBlocks,
     createdAt: paper.createdAt,
-    publishedAt: paper.createdAt,
+    publishedAt: paper.updateDate,
     url: paper.url || '',
   };
 }
