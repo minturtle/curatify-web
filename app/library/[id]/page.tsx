@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, Calendar, Users, FileText } from 'lucide-react';
 import BackButton from '@/app/library/[id]/BackButton';
+import TableOfContents from '@/components/library/TableOfContents';
 
 interface PageProps {
   params: {
@@ -30,24 +31,28 @@ export async function generateMetadata({ params }: PageProps) {
 
     if (!paperDetail) {
       return {
-        title: '논문을 찾을 수 없습니다 | Curify',
+        title: '논문을 찾을 수 없습니다 | Curatify',
         description: '요청하신 논문을 찾을 수 없습니다.',
       };
     }
 
+    // content 배열에서 첫 번째 블록의 content를 사용하여 설명 생성
+    const firstContent = paperDetail.content[0]?.content || '';
+    const description = firstContent.substring(0, 160) + (firstContent.length > 160 ? '...' : '');
+
     return {
-      title: `${paperDetail.title} | Curify`,
-      description: paperDetail.content.substring(0, 160) + '...',
+      title: `${paperDetail.title} | Curatify`,
+      description,
       openGraph: {
         title: paperDetail.title,
-        description: paperDetail.content.substring(0, 160) + '...',
+        description,
         type: 'article',
         authors: paperDetail.authors,
       },
     };
-  } catch (error) {
+  } catch {
     return {
-      title: '논문 상세 | Curify',
+      title: '논문 상세 | Curatify',
       description: '논문 상세 정보를 불러오는 중 오류가 발생했습니다.',
     };
   }
@@ -122,16 +127,30 @@ export default async function PaperDetailPage({ params }: PageProps) {
           )}
         </div>
 
-        {/* 메인 콘텐츠 */}
-        <Card className="mb-6">
-          <CardContent>
-            <div className="prose prose-lg max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-                {paperDetail.content}
-              </ReactMarkdown>
-            </div>
-          </CardContent>
-        </Card>
+        {/* 목차와 메인 콘텐츠 그리드 레이아웃 */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* 메인 콘텐츠 */}
+          <div className="lg:col-span-3">
+            <Card className="mb-6">
+              <CardContent className="pt-6">
+                <div className="prose prose-lg max-w-none">
+                  {paperDetail.content.map((contentBlock) => (
+                    <div key={contentBlock.id} id={`section-${contentBlock.id}`} className="mb-12">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                        {contentBlock.content}
+                      </ReactMarkdown>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* 목차 사이드바 */}
+          <div className="lg:col-span-1">
+            <TableOfContents content={paperDetail.content} />
+          </div>
+        </div>
 
         {/* 추가 정보 */}
         <Card>

@@ -8,11 +8,11 @@ import {
   Index,
 } from 'typeorm';
 import type { User } from './User';
-import type { PaperContent } from './PaperContent';
+import type { Paper } from './Paper';
 
 @Entity('user_library')
 @Index('idx_user_id', ['userId'])
-@Index('idx_paper_content_id', ['paperContentId'])
+@Index('idx_paper_id', ['paperId'])
 @Index('idx_created_at', ['createdAt'])
 export class UserLibrary {
   @PrimaryGeneratedColumn()
@@ -21,8 +21,8 @@ export class UserLibrary {
   @Column({ name: 'user_id' })
   userId!: number;
 
-  @Column({ name: 'paper_content_id' })
-  paperContentId!: number;
+  @Column({ name: 'paper_id' })
+  paperId!: number;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
@@ -31,7 +31,7 @@ export class UserLibrary {
   @JoinColumn({ name: 'user_id' })
   user!: Promise<User>;
 
-  @ManyToOne('PaperContent', 'userLibraries')
-  @JoinColumn({ name: 'paper_content_id' })
-  paperContent!: Promise<PaperContent>;
+  @ManyToOne('Paper', 'userLibraries')
+  @JoinColumn({ name: 'paper_id' })
+  paper!: Promise<Paper>;
 }

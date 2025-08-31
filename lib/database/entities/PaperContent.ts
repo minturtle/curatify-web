@@ -6,10 +6,8 @@ import {
   ManyToOne,
   JoinColumn,
   Index,
-  OneToMany,
 } from 'typeorm';
 import type { Paper } from './Paper';
-import type { UserLibrary } from './UserLibrary';
 
 @Entity('paper_content')
 @Index('idx_paper_id', ['paperId'])
@@ -18,14 +16,14 @@ export class PaperContent {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ type: 'varchar', length: 500 })
-  title!: string;
-
-  @Column({ type: 'text', nullable: true })
-  authors!: string;
+  @Column({ type: 'varchar', length: 500, name: 'content_title' })
+  contentTitle!: string;
 
   @Column({ type: 'longtext' })
   content!: string;
+
+  @Column({ type: 'int', default: 0 })
+  order!: number;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
@@ -36,7 +34,4 @@ export class PaperContent {
   @ManyToOne('Paper', 'paperContents')
   @JoinColumn({ name: 'paper_id' })
   paper!: Paper;
-
-  @OneToMany('UserLibrary', 'paperContent')
-  userLibraries!: Promise<UserLibrary[]>;
 }
