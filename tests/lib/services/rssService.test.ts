@@ -128,7 +128,7 @@ describe('RSS Service', () => {
 
       const formData: RSSUrlFormData = {
         url: 'https://example.com/rss',
-        type: 'rss',
+        type: 'normal',
       };
 
       const result = await addRSSUrl(formData);
@@ -198,7 +198,7 @@ describe('RSS Service', () => {
 
       const formData: RSSUrlFormData = {
         url: 'https://example.com/rss',
-        type: 'rss',
+        type: 'normal',
       };
 
       await expect(addRSSUrl(formData)).rejects.toThrow('로그인이 필요합니다.');
@@ -225,7 +225,7 @@ describe('RSS Service', () => {
 
       const formData: RSSUrlFormData = {
         url: 'https://example.com/rss',
-        type: 'rss',
+        type: 'normal',
       };
 
       await expect(addRSSUrl(formData)).rejects.toThrow('RSS URL 등록에 실패했습니다.');
@@ -234,7 +234,7 @@ describe('RSS Service', () => {
     it('유효하지 않은 URL을 등록하면 에러를 던진다', async () => {
       const formData: RSSUrlFormData = {
         url: 'invalid-url',
-        type: 'rss',
+        type: 'normal',
       };
 
       await expect(addRSSUrl(formData)).rejects.toThrow('유효하지 않은 URL입니다.');
@@ -243,7 +243,7 @@ describe('RSS Service', () => {
     it('빈 URL을 등록하면 에러를 던진다', async () => {
       const formData: RSSUrlFormData = {
         url: '',
-        type: 'rss',
+        type: 'normal',
       };
 
       await expect(addRSSUrl(formData)).rejects.toThrow('유효하지 않은 URL입니다.');
@@ -308,7 +308,7 @@ describe('RSS Service', () => {
 
       const formData: RSSUrlFormData = {
         url: 'https://example.com/rss',
-        type: 'rss',
+        type: 'normal',
       };
 
       await expect(addRSSUrl(formData)).rejects.toThrow('RSS URL 등록에 실패했습니다.');
