@@ -72,12 +72,14 @@ describe('paperService', () => {
       paperContents: Promise.resolve([
         {
           id: 1,
+          contentTitle: '서론',
           content: '이 논문은 인공지능과 머신러닝의 최신 발전 동향을 다룹니다.',
           order: 0,
           createdAt: new Date('2024-01-15'),
         },
         {
           id: 2,
+          contentTitle: '본론',
           content: '특히 딥러닝 모델의 성능 향상과 실제 응용 사례에 대해 자세히 분석합니다.',
           order: 1,
           createdAt: new Date('2024-01-15'),
@@ -100,6 +102,7 @@ describe('paperService', () => {
       paperContents: Promise.resolve([
         {
           id: 3,
+          contentTitle: '연구 배경',
           content: '자연어 처리를 위한 딥러닝 모델의 성능 향상에 대한 연구입니다.',
           order: 0,
           createdAt: new Date('2024-01-20'),
@@ -122,6 +125,7 @@ describe('paperService', () => {
       paperContents: Promise.resolve([
         {
           id: 4,
+          contentTitle: '컴퓨터 비전 개요',
           content: '컴퓨터 비전 분야에서 CNN과 Vision Transformer의 발전 과정을 다룹니다.',
           order: 0,
           createdAt: new Date('2024-01-25'),
@@ -144,6 +148,7 @@ describe('paperService', () => {
       paperContents: Promise.resolve([
         {
           id: 5,
+          contentTitle: '강화학습 기초',
           content: '강화학습을 활용한 게임 AI와 로봇 제어 시스템의 실제 응용 사례를 다룹니다.',
           order: 0,
           createdAt: new Date('2024-01-30'),
@@ -166,6 +171,7 @@ describe('paperService', () => {
       paperContents: Promise.resolve([
         {
           id: 6,
+          contentTitle: '윤리적 문제',
           content: '생성형 AI의 발전에 따른 윤리적 문제와 사회적 영향을 분석합니다.',
           order: 0,
           createdAt: new Date('2024-02-05'),
@@ -525,7 +531,7 @@ describe('paperService', () => {
       expect(Array.isArray(result?.content)).toBe(true);
       expect(result?.content).toHaveLength(2);
       expect(result?.content[0].id).toBe(1);
-      expect(result?.content[0].title).toBe('Content 0');
+      expect(result?.content[0].title).toBe('서론'); // contentTitle 필드 사용
       expect(result?.content[0].content).toBe(
         '이 논문은 인공지능과 머신러닝의 최신 발전 동향을 다룹니다.'
       );
@@ -622,12 +628,14 @@ describe('paperService', () => {
         paperContents: Promise.resolve([
           {
             id: 1,
+            contentTitle: '서론',
             content: '이 논문은 인공지능과 머신러닝의 최신 발전 동향을 다룹니다.',
             order: 0,
             createdAt: new Date('2024-01-15'),
           },
           {
             id: 2,
+            contentTitle: '본론',
             content: '특히 딥러닝 모델의 성능 향상과 실제 응용 사례에 대해 자세히 분석합니다.',
             order: 1,
             createdAt: new Date('2024-01-15'),

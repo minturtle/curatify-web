@@ -82,7 +82,7 @@ async function userLibraryEntityToDto(entity: UserLibraryEntity): Promise<UserLi
 function paperContentEntityToBlock(entity: PaperContentEntity): PaperContentBlock {
   return {
     id: entity.id,
-    title: `Content ${entity.order}`, // order를 기반으로 제목 생성
+    title: entity.contentTitle, // DB의 contentTitle 필드 사용
     content: entity.content,
     order: entity.order,
   };
@@ -116,7 +116,7 @@ function paperAndContentsToDetail(
     title: paper.title,
     authors,
     content: contentBlocks,
-    createdAt: paperContents[0]?.createdAt || paper.createdAt,
+    createdAt: paper.createdAt,
     publishedAt: paper.createdAt,
     url: paper.url || '',
   };

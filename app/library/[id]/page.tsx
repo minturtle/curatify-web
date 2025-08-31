@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, Calendar, Users, FileText } from 'lucide-react';
 import BackButton from '@/app/library/[id]/BackButton';
+import TableOfContents from '@/components/library/TableOfContents';
 
 interface PageProps {
   params: {
@@ -126,20 +127,30 @@ export default async function PaperDetailPage({ params }: PageProps) {
           )}
         </div>
 
-        {/* 메인 콘텐츠 */}
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="prose prose-lg max-w-none">
-              {paperDetail.content.map((contentBlock) => (
-                <div key={contentBlock.id} className="mb-12">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-                    {contentBlock.content}
-                  </ReactMarkdown>
+        {/* 목차와 메인 콘텐츠 그리드 레이아웃 */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* 메인 콘텐츠 */}
+          <div className="lg:col-span-3">
+            <Card className="mb-6">
+              <CardContent className="pt-6">
+                <div className="prose prose-lg max-w-none">
+                  {paperDetail.content.map((contentBlock) => (
+                    <div key={contentBlock.id} id={`section-${contentBlock.id}`} className="mb-12">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                        {contentBlock.content}
+                      </ReactMarkdown>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* 목차 사이드바 */}
+          <div className="lg:col-span-1">
+            <TableOfContents content={paperDetail.content} />
+          </div>
+        </div>
 
         {/* 추가 정보 */}
         <Card>
