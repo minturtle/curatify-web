@@ -15,6 +15,9 @@ import { Button } from '@/components/ui/button';
 import { ExternalLink, Calendar, Users, FileText } from 'lucide-react';
 import BackButton from '@/app/library/[id]/BackButton';
 import TableOfContents from '@/components/library/TableOfContents';
+import { getUserAuthStatus } from '@/lib/auth/userService';
+import { AuthRequiredModal } from '@/components/auth/AuthRequiredModal';
+import { ApprovalRequiredModal } from '@/components/auth/ApprovalRequiredModal';
 
 interface PageProps {
   params: {
@@ -62,6 +65,17 @@ export async function generateMetadata({ params }: PageProps) {
  * 논문 상세 페이지 컴포넌트
  */
 export default async function PaperDetailPage({ params }: PageProps) {
+  // 인증/인가 상태 확인
+  const authStatus = await getUserAuthStatus();
+  
+  if (!authStatus.authenticate_status) {
+    return <AuthRequiredModal redirectTo="/auth" />;
+  }
+  
+  if (!authStatus.authorize_status) {
+    return <ApprovalRequiredModal userName={authStatus.user?.name} />;
+  }
+
   try {
     const paperId = parseInt(params.id);
 

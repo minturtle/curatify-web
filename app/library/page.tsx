@@ -7,6 +7,9 @@ import React from 'react';
 import { getUserLibrary } from '@/lib/paper/paperService';
 import PaginationSSR from '@/components/ui/pagination-ssr';
 import LibraryList from '@/components/library/LibraryList';
+import { getUserAuthStatus } from '@/lib/auth/userService';
+import { AuthRequiredModal } from '@/components/auth/AuthRequiredModal';
+import { ApprovalRequiredModal } from '@/components/auth/ApprovalRequiredModal';
 
 interface LibraryPageProps {
   searchParams: {
@@ -15,6 +18,17 @@ interface LibraryPageProps {
 }
 
 export default async function LibraryPage({ searchParams }: LibraryPageProps) {
+  // 인증/인가 상태 확인
+  const authStatus = await getUserAuthStatus();
+  
+  if (!authStatus.authenticate_status) {
+    return <AuthRequiredModal redirectTo="/auth" />;
+  }
+  
+  if (!authStatus.authorize_status) {
+    return <ApprovalRequiredModal userName={authStatus.user?.name} />;
+  }
+
   // 페이지 파라미터 파싱
   const currentPage = parseInt((await searchParams).page ?? '1', 10);
   const pageSize = 10;

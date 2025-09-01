@@ -1,17 +1,24 @@
-import { redirect } from 'next/navigation';
-import { getCurrentUser } from '@/lib/auth/userService';
+import { getUserAuthStatus } from '@/lib/auth/userService';
 import { findUserInterests } from '@/lib/profile/userProfileService';
 import UserInterestList from '@/components/profile/UserInterestList';
 import AddInterestForm from '@/components/profile/AddInterestForm';
 import LogoutButton from '@/components/profile/LogoutButton';
+import { AuthRequiredModal } from '@/components/auth/AuthRequiredModal';
+import { ApprovalRequiredModal } from '@/components/auth/ApprovalRequiredModal';
 
 export default async function MyPage() {
-  // 현재 사용자 정보 조회
-  const currentUser = await getCurrentUser();
-
-  if (!currentUser) {
-    redirect('/auth');
+  // 인증/인가 상태 확인
+  const authStatus = await getUserAuthStatus();
+  
+  if (!authStatus.authenticate_status) {
+    return <AuthRequiredModal redirectTo="/auth" />;
   }
+  
+  if (!authStatus.authorize_status) {
+    return <ApprovalRequiredModal userName={authStatus.user?.name} />;
+  }
+
+  const currentUser = authStatus.user!;
 
   // 사용자 관심사 조회
   const interests = await findUserInterests();

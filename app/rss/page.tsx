@@ -8,11 +8,25 @@ import RSSFeedList from '@/components/rss/RSSFeedList';
 import RSSUrlList from '@/components/rss/RSSUrlList';
 import { Info } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { getUserAuthStatus } from '@/lib/auth/userService';
+import { AuthRequiredModal } from '@/components/auth/AuthRequiredModal';
+import { ApprovalRequiredModal } from '@/components/auth/ApprovalRequiredModal';
 interface RSSPageProps {
   searchParams: { page?: string };
 }
 
 export default async function RSSPage({ searchParams }: RSSPageProps) {
+  // 인증/인가 상태 확인
+  const authStatus = await getUserAuthStatus();
+  
+  if (!authStatus.authenticate_status) {
+    return <AuthRequiredModal redirectTo="/auth" />;
+  }
+  
+  if (!authStatus.authorize_status) {
+    return <ApprovalRequiredModal userName={authStatus.user?.name} />;
+  }
+
   // URL 파라미터에서 페이지 번호 추출 (기본값: 1)
   const currentPage = parseInt((await searchParams).page ?? '1');
 
