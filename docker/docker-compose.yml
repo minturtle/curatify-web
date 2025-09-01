@@ -1,22 +1,21 @@
 version: '3.8'
 
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: curatify_mysql
+  oracle:
+    image: doctorkirk/oracle-19c
+    container_name: curatify_oracle
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: curatify
-      MYSQL_USER: curatify_user
-      MYSQL_PASSWORD: curatify_password
+      ORACLE_PWD: rootpassword
+      ORACLE_CHARACTERSET: AL32UTF8
+      NLS_LANG: AMERICAN_AMERICA.AL32UTF8
     ports:
-      - '3307:3306'
+      - '1521:1521'
+      - '5500:5500'
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/01-init.sql
-      - ./seed-data.sql:/docker-entrypoint-initdb.d/02-seed-data.sql
-    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+      - oracle_data:/opt/oracle/oradata
+      - ./init.sql:/opt/oracle/scripts/setup/01-init.sql
+      - ./seed-data.sql:/opt/oracle/scripts/setup/02-seed-data.sql
     networks:
       - curatify_network
 
@@ -33,7 +32,7 @@ services:
       - curatify_network
 
 volumes:
-  mysql_data:
+  oracle_data:
     driver: local
   redis_data:
     driver: local
