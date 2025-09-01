@@ -2,7 +2,7 @@ import { DataSourceOptions } from 'typeorm';
 
 // 환경별 데이터베이스 설정
 export const getDatabaseConfig = (): DataSourceOptions => {
-  const isDevelopment = process.env.NODE_ENV === 'development';
+  const isDevelopment = process.env.CURRENT_ENV === 'development';
 
   if (isDevelopment) {
     // 개발환경 (Oracle 19c)
@@ -69,7 +69,7 @@ export const getRedisConfig = () => {
 
 // 환경별 설정 검증
 export const validateConfig = () => {
-  const currentEnv = process.env.NODE_ENV || 'development';
+  const currentEnv = process.env.CURRENT_ENV || 'development';
 
   // 테스트 환경에서는 환경 변수 검증을 건너뜀
   if (currentEnv === 'test') {
