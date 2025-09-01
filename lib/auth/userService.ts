@@ -1,4 +1,4 @@
-import { UserData, UserWithPassword } from '@/lib/types/auth';
+import { UserData, UserWithPassword, UserAuthStatus } from '@/lib/types/auth';
 import bcrypt from 'bcrypt';
 import { ensureDatabaseConnection } from '@/lib/database/connection';
 import { getUserRepository } from '@/lib/database/repositories';
@@ -213,5 +213,66 @@ export async function getCurrentUser(): Promise<UserData | null> {
   } catch (error) {
     console.error('현재 사용자 조회 중 오류 발생:', error);
     return null;
+  }
+}
+
+/**
+ * 현재 사용자의 인증/인가 상태를 종합적으로 확인합니다.
+ *
+ * @returns {Promise<UserAuthStatus>} 사용자의 인증/인가 상태 정보
+ * @description 세션 존재 여부(인증)와 DB의 is_verified 상태(인가)를 모두 확인하여 반환합니다.
+ *
+ * @example
+ * ```typescript
+ * const authStatus = await getUserAuthStatus()
+ * 
+ * if (!authStatus.authenticate_status) {
+ *   // 로그인하지 않은 사용자 -> 로그인 페이지로
+ * } else if (!authStatus.authorize_status) {
+ *   // 로그인했지만 관리자 승인 대기 -> 승인 대기 모달 표시
+ * } else {
+ *   // 모든 조건 만족 -> 서비스 이용 가능
+ * }
+ * ```
+ */
+export async function getUserAuthStatus(): Promise<UserAuthStatus> {
+  try {
+    const { getSession } = await import('@/lib/auth/session');
+    const session = await getSession();
+
+    // 세션이 없거나 필수 정보가 없는 경우 - 인증 실패
+    if (!session || !session.userId) {
+      return {
+        authenticate_status: false,
+        authorize_status: false,
+        user: null
+      };
+    }
+
+    // DB에서 사용자 정보 조회
+    const user = await findUserById(session.userId);
+    
+    // DB에 사용자가 없는 경우 - 인증은 되었지만 사용자 정보 없음
+    if (!user) {
+      return {
+        authenticate_status: true,
+        authorize_status: false,
+        user: null
+      };
+    }
+
+    // 모든 정보가 있는 경우
+    return {
+      authenticate_status: true,
+      authorize_status: user.isVerified,
+      user: user
+    };
+  } catch (error) {
+    console.error('사용자 인증/인가 상태 확인 중 오류 발생:', error);
+    return {
+      authenticate_status: false,
+      authorize_status: false,
+      user: null
+    };
   }
 }
