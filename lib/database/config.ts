@@ -5,36 +5,38 @@ export const getDatabaseConfig = (): DataSourceOptions => {
   const isDevelopment = process.env.NODE_ENV === 'development';
 
   if (isDevelopment) {
-    // 개발환경 (MySQL)
-    return {
-      type: 'mysql',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '3306'),
-      username: process.env.DB_USERNAME || 'root',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'curatify',
-      synchronize: false, // 자동 동기화 비활성화
-      logging: true,
-      entities: ['lib/database/entities/*.ts'],
-      charset: 'utf8mb4',
-      extra: {
-        charset: 'utf8mb4_unicode_ci',
-        connectionLimit: 10,
-        acquireTimeout: 60000,
-        timeout: 60000,
-        reconnect: true,
-      },
-    };
-  } else {
-    // 운영환경 (Oracle)
+    // 개발환경 (Oracle 19c)
     return {
       type: 'oracle',
       host: process.env.DB_HOST || 'localhost',
       port: parseInt(process.env.DB_PORT || '1521'),
       username: process.env.DB_USERNAME || 'system',
+      password: process.env.DB_PASSWORD || 'rootpassword',
+      sid: process.env.DB_SID,
+      serviceName: process.env.DB_SERVICE_NAME || 'ORCLCDB',
+      schema: process.env.DB_SCHEMA || 'SYSTEM',
+      synchronize: false, // 자동 동기화 비활성화 (Oracle에서는 특히 중요)
+      logging: true,
+      entities: ['lib/database/entities/*.ts'],
+      extra: {
+        poolSize: 10,
+        queueTimeout: 60000,
+        connectTimeout: 60000,
+        enableArithAbort: true,
+        // Oracle 한글 지원을 위한 NLS 설정
+        options: {
+          'NLS_LANG': 'AMERICAN_AMERICA.AL32UTF8',
+          'NLS_CHARACTERSET': 'AL32UTF8',
+        },
+      },
+    };
+  } else {
+    // 운영환경 (Oracle with DSN)
+    return {
+      type: 'oracle',
+      connectString: process.env.DB_DSN || process.env.DB_CONNECT_STRING,
+      username: process.env.DB_USERNAME || 'system',
       password: process.env.DB_PASSWORD || '',
-      sid: process.env.DB_SID || 'XE',
-      serviceName: process.env.DB_SERVICE_NAME,
       synchronize: false, // 운영환경에서는 자동 동기화 비활성화
       logging: false,
       entities: ['lib/database/entities/*.ts'],
@@ -42,6 +44,11 @@ export const getDatabaseConfig = (): DataSourceOptions => {
         poolSize: 10,
         queueTimeout: 60000,
         connectTimeout: 60000,
+        // Oracle 한글 지원을 위한 NLS 설정
+        options: {
+          'NLS_LANG': 'AMERICAN_AMERICA.AL32UTF8',
+          'NLS_CHARACTERSET': 'AL32UTF8',
+        },
       },
     };
   }
@@ -70,8 +77,8 @@ export const validateConfig = () => {
   }
 
   const requiredEnvVars = {
-    development: ['DB_HOST', 'DB_USERNAME', 'DB_PASSWORD', 'DB_NAME'],
-    production: ['DB_HOST', 'DB_USERNAME', 'DB_PASSWORD', 'DB_SID', 'REDIS_URL'],
+    development: ['DB_HOST', 'DB_USERNAME', 'DB_PASSWORD'],
+    production: ['DB_DSN', 'DB_USERNAME', 'DB_PASSWORD', 'REDIS_URL'],
   };
 
   const required = requiredEnvVars[currentEnv as keyof typeof requiredEnvVars];
