@@ -10,27 +10,27 @@ import type { RSSUrl } from './RSSUrl';
 import type { UserLibrary } from './UserLibrary';
 import type { UserInterests } from './UserInterests';
 
-@Entity('users')
+@Entity('USERS')
 export class User {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'ID' })
   id!: number;
 
-  @Column({ type: 'varchar', unique: true })
+  @Column({ type: 'varchar', unique: true, name: 'EMAIL' })
   email!: string;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', name: 'PASSWORD' })
   password!: string;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'varchar', nullable: true, name: 'NAME' })
   name!: string;
 
-  @Column({ type: 'boolean', default: false, name: 'is_verified' })
+  @Column({ type: 'number', default: 0, name: 'IS_VERIFIED', transformer: { to: (value: boolean) => value ? 1 : 0, from: (value: number) => value === 1 } })
   isVerified!: boolean;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: 'CREATED_AT' })
   createdAt!: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ name: 'UPDATED_AT' })
   updatedAt!: Date;
 
   @OneToMany('RSSUrl', 'user')

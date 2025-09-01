@@ -10,28 +10,28 @@ import {
 import type { User } from './User';
 import type { Paper } from './Paper';
 
-@Entity('user_library')
+@Entity('USER_LIBRARY')
 @Index('idx_user_id', ['userId'])
 @Index('idx_paper_id', ['paperId'])
 @Index('idx_created_at', ['createdAt'])
 export class UserLibrary {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'ID' })
   id!: number;
 
-  @Column({ name: 'user_id' })
+  @Column({ name: 'USER_ID' })
   userId!: number;
 
-  @Column({ name: 'paper_id' })
+  @Column({ name: 'PAPER_ID' })
   paperId!: number;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: 'CREATED_AT' })
   createdAt!: Date;
 
   @ManyToOne('User', 'userLibraries')
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'USER_ID' })
   user!: Promise<User>;
 
   @ManyToOne('Paper', 'userLibraries')
-  @JoinColumn({ name: 'paper_id' })
+  @JoinColumn({ name: 'PAPER_ID' })
   paper!: Promise<Paper>;
 }
