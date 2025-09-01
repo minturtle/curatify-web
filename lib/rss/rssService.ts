@@ -26,11 +26,6 @@ export async function addRSSUrl(formData: RSSUrlFormData) {
     throw new Error('유효하지 않은 URL입니다.');
   }
 
-  // 타입 유효성 검사
-  if (!formData.type || !['rss', 'youtube'].includes(formData.type)) {
-    throw new Error('유효하지 않은 RSS 타입입니다.');
-  }
-
   // YouTube URL 검증 (YouTube 타입인 경우)
   if (formData.type === 'youtube' && !isValidYouTubeURL(formData.url)) {
     throw new Error('유효하지 않은 YouTube URL입니다.');

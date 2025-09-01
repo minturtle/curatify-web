@@ -9,31 +9,30 @@ import {
 } from 'typeorm';
 import { RSSUrl } from './RSSUrl';
 
-@Entity('rss_feeds')
+@Entity('RSS_FEEDS')
 export class RSSFeed {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'ID' })
   id!: number;
 
-  @Column({ type: 'varchar', length: 500 })
+  @Column({ type: 'varchar', length: 500, name: 'TITLE' })
   title!: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: 'clob', nullable: true, name: 'SUMMARY' })
   summary!: string;
 
-  @Column({ type: 'timestamp', name: 'writed_at' })
+  @Column({ type: 'timestamp', name: 'WRITED_AT' })
   writedAt!: Date;
 
-  @Column({ type: 'varchar', length: 500, nullable: true, name: 'original_url' })
+  @Column({ type: 'varchar', length: 500, nullable: true, name: 'ORIGINAL_URL' })
   originalUrl!: string;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: 'CREATED_AT' })
   createdAt!: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ name: 'UPDATED_AT' })
   updatedAt!: Date;
 
-  // 관계 설정 - 문자열로 참조하여 순환 참조 방지
   @ManyToOne('RSSUrl', 'rssFeeds')
-  @JoinColumn({ name: 'rss_url_id' })
+  @JoinColumn({ name: 'RSS_URL_ID' })
   rssUrl!: Promise<RSSUrl>;
 }

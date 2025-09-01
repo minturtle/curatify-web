@@ -12,35 +12,35 @@ import type { PaperContent } from './PaperContent';
 import type { PaperCategory } from './PaperCategory';
 import type { UserLibrary } from './UserLibrary';
 
-@Entity('papers')
+@Entity('PAPERS')
 @Index('idx_update_date', ['updateDate'])
 @Index('idx_created_at', ['createdAt'])
 export class Paper {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'ID' })
   id!: number;
 
-  @Column({ type: 'varchar', length: 500 })
+  @Column({ type: 'varchar', length: 500, name: 'TITLE' })
   title!: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: 'clob', nullable: true, name: 'AUTHORS' })
   authors!: string;
 
-  @Column({ type: 'timestamp', nullable: true, name: 'update_date' })
+  @Column({ type: 'timestamp', nullable: true, name: 'UPDATE_DATE' })
   updateDate!: Date;
 
-  @Column({ type: 'varchar', length: 500, nullable: true })
+  @Column({ type: 'varchar', length: 500, nullable: true, name: 'URL' })
   url!: string;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'clob', name: 'ABSTRACT' })
   abstract!: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: 'clob', nullable: true, name: 'SUMMARY' })
   summary!: string;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: 'CREATED_AT' })
   createdAt!: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ name: 'UPDATED_AT' })
   updatedAt!: Date;
 
   @OneToMany('PaperContent', 'paper')

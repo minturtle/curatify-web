@@ -9,24 +9,24 @@ import {
 } from 'typeorm';
 import { User } from './User';
 
-@Entity('user_interests')
+@Entity('USER_INTERESTS')
 export class UserInterests {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'ID' })
   id!: number;
 
-  @Column({ name: 'user_id' })
+  @Column({ name: 'USER_ID' })
   userId!: number;
 
-  @Column({ type: 'varchar', length: 300 })
+  @Column({ type: 'varchar', length: 300, name: 'CONTENT' })
   content!: string;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: 'CREATED_AT' })
   createdAt!: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ name: 'UPDATED_AT' })
   updatedAt!: Date;
 
   @ManyToOne(() => User, (user) => user.interests, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'USER_ID' })
   user!: User;
 }

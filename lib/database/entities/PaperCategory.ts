@@ -10,31 +10,29 @@ import {
 } from 'typeorm';
 import type { Paper } from './Paper';
 
-@Entity('cs_paper_categories')
+@Entity('CS_PAPER_CATEGORIES')
 @Index('idx_category_name', ['name'])
 export class PaperCategory {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'ID' })
   id!: number;
 
-  @Column({ type: 'varchar', length: 100, unique: true })
+  @Column({ type: 'varchar', length: 100, unique: true, name: 'NAME' })
   name!: string;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: 'CREATED_AT' })
   createdAt!: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ name: 'UPDATED_AT' })
   updatedAt!: Date;
 
   @ManyToMany('Paper', 'categories')
   @JoinTable({
-    name: 'cs_paper_category_relations',
+    name: 'CS_PAPER_CATEGORY_RELATIONS',
     joinColumn: {
-      name: 'category_id',
-      referencedColumnName: 'id',
+      name: 'CATEGORY_ID',
     },
     inverseJoinColumn: {
-      name: 'paper_id',
-      referencedColumnName: 'id',
+      name: 'PAPER_ID',
     },
   })
   papers!: Promise<Paper[]>;
