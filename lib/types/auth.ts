@@ -8,7 +8,7 @@ import { z } from 'zod';
 export interface SessionData {
   userId?: number;
   email?: string;
-  role?: 'approved' | 'not_approved';
+  isVerified?: boolean;
 }
 
 /**
@@ -56,4 +56,13 @@ export const signupSchema = z
  */
 export type ActionError = {
   message: string;
+};
+
+/**
+ * 사용자 인증/인가 종합 상태
+ */
+export type UserAuthStatus = {
+  authenticate_status: boolean;  // 로그인 여부
+  authorize_status: boolean;     // 관리자 승인 여부  
+  user: UserData | null;
 };
