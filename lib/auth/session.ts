@@ -46,7 +46,7 @@ export async function getSession(): Promise<SessionData | null> {
  * @param {UserData} userData - 세션에 저장할 사용자 데이터
  * @returns {Promise<SessionData>} 생성된 세션 데이터
  * @description 사용자 로그인/회원가입 시 새로운 세션을 생성하고 암호화된 쿠키에 저장합니다.
- *              새로 가입한 사용자는 기본적으로 'not_approved' 상태로 설정됩니다.
+ *              사용자의 인증 상태(isVerified)를 세션에 포함시킵니다.
  * 
  * @example
  * ```typescript
@@ -61,7 +61,7 @@ export async function createSession(userData: UserData): Promise<SessionData> {
 
     session.userId = userData.id
     session.email = userData.email
-    session.role = 'not_approved' // 새로 가입한 사용자는 승인되지 않은 상태
+    session.isVerified = userData.isVerified
 
     await session.save()
 
