@@ -1,53 +1,80 @@
--- Curify 시드 데이터 스크립트
-
--- 문자셋 설정
-SET NAMES utf8mb4;
-SET CHARACTER SET utf8mb4;
-SET character_set_connection=utf8mb4;
-
--- 데이터베이스 사용
-USE curatify;
+-- Curatify Oracle 19c 시드 데이터 스크립트
 
 -- 사용자 예시 데이터
-INSERT INTO users (email, password, name, is_verified) VALUES
-('tester@test.com', '$2b$12$ixsz8fg5jJAjgfTfpCEuf.CI1bVbWfuelhFOuMrAiwGs29sq8v10W', '테스트 사용자', TRUE);
+INSERT INTO USERS (EMAIL, PASSWORD, NAME, IS_VERIFIED) VALUES
+('tester@test.com', '$2b$12$ixsz8fg5jJAjgfTfpCEuf.CI1bVbWfuelhFOuMrAiwGs29sq8v10W', '테스트 사용자', 1);
 
 -- RSS URL 예시 데이터
-INSERT INTO rss_urls (type, url, user_id) VALUES
-('normal', 'https://feeds.feedburner.com/TechCrunch', 1),
-('normal', 'https://rss.cnn.com/rss/edition.rss', 1),
-('youtube', 'https://www.youtube.com/feeds/videos.xml?channel_id=UC_x5XG1OV2P6uZZ5FSM9Ttw', 1),
-('normal', 'https://feeds.arstechnica.com/arstechnica/index', 1),
-('youtube', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCsT0YIqwnpJCM-mx7-gSA4Q', 1);
+INSERT INTO RSS_URLS (TYPE, URL, USER_ID) VALUES ('normal', 'https://feeds.feedburner.com/TechCrunch', 1);
+INSERT INTO RSS_URLS (TYPE, URL, USER_ID) VALUES ('normal', 'https://rss.cnn.com/rss/edition.rss', 1);
+INSERT INTO RSS_URLS (TYPE, URL, USER_ID) VALUES ('youtube', 'https://www.youtube.com/feeds/videos.xml?channel_id=UC_x5XG1OV2P6uZZ5FSM9Ttw', 1);
+INSERT INTO RSS_URLS (TYPE, URL, USER_ID) VALUES ('normal', 'https://feeds.arstechnica.com/arstechnica/index', 1);
+INSERT INTO RSS_URLS (TYPE, URL, USER_ID) VALUES ('youtube', 'https://www.youtube.com/feeds/videos.xml?channel_id=UCsT0YIqwnpJCM-mx7-gSA4Q', 1);
 
 -- Paper Categories 예시 데이터
-INSERT INTO cs_paper_categories (name) VALUES
-('cs.CL'),
-('cs.AI'),
-('cs.CV'),
-('cs.LG');
+INSERT INTO CS_PAPER_CATEGORIES (NAME) VALUES ('cs.CL');
+INSERT INTO CS_PAPER_CATEGORIES (NAME) VALUES ('cs.AI');
+INSERT INTO CS_PAPER_CATEGORIES (NAME) VALUES ('cs.CV');
+INSERT INTO CS_PAPER_CATEGORIES (NAME) VALUES ('cs.LG');
 
--- Papers 예시 데이터
-INSERT INTO papers (title, authors, update_date, url, abstract, summary) VALUES
-('Attention Is All You Need', 'Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Lukasz Kaiser, Illia Polosukhin', '2017-06-12 00:00:00', 'https://arxiv.org/abs/1706.03762', 'The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely.', 'Transformer 아키텍처를 제안한 논문으로, RNN과 CNN 없이 attention 메커니즘만으로 구성된 모델입니다.'),
-('BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding', 'Jacob Devlin, Ming-Wei Chang, Kenton Lee, Kristina Toutanova', '2018-10-11 00:00:00', 'https://arxiv.org/abs/1810.04805', 'We introduce a new language representation model called BERT, which stands for Bidirectional Encoder Representations from Transformers. Unlike recent language representation models, BERT is designed to pre-train deep bidirectional representations from unlabeled text by jointly conditioning on both left and right context in all layers.', '양방향 Transformer를 사용한 언어 이해 모델 BERT를 제안한 논문입니다.'),
-('ResNet: Deep Residual Learning for Image Recognition', 'Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun', '2015-12-10 00:00:00', 'https://arxiv.org/abs/1512.03385', 'Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions.', '깊은 신경망의 학습을 위한 residual learning 프레임워크를 제안한 논문입니다.'),
-('Generative Adversarial Networks', 'Ian J. Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil Ozair, Aaron Courville, Yoshua Bengio', '2014-06-10 00:00:00', 'https://arxiv.org/abs/1406.2661', 'We propose a new framework for estimating generative models via an adversarial process, in which we simultaneously train two models: a generative model G that captures the data distribution, and a discriminative model D that estimates the probability that a sample came from the training data rather than G.', '생성 모델과 판별 모델을 동시에 학습하는 GAN 프레임워크를 제안한 논문입니다.'),
-('YOLO: Real-Time Object Detection', 'Joseph Redmon, Santosh Divvala, Ross Girshick, Ali Farhadi', '2015-06-08 00:00:00', 'https://arxiv.org/abs/1506.02640', 'We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities.', '실시간 객체 탐지를 위한 YOLO 모델을 제안한 논문입니다.');
+-- Papers 예시 데이터 (Oracle에서는 각각 삽입)
+INSERT INTO PAPERS (TITLE, AUTHORS, UPDATE_DATE, URL, ABSTRACT, SUMMARY) VALUES (
+'Attention Is All You Need', 
+'Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Lukasz Kaiser, Illia Polosukhin', 
+TO_TIMESTAMP('2017-06-12 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), 
+'https://arxiv.org/abs/1706.03762', 
+'The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely.', 
+'Transformer 아키텍처를 제안한 논문으로, RNN과 CNN 없이 attention 메커니즘만으로 구성된 모델입니다.'
+);
+
+INSERT INTO PAPERS (TITLE, AUTHORS, UPDATE_DATE, URL, ABSTRACT, SUMMARY) VALUES (
+'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding', 
+'Jacob Devlin, Ming-Wei Chang, Kenton Lee, Kristina Toutanova', 
+TO_TIMESTAMP('2018-10-11 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), 
+'https://arxiv.org/abs/1810.04805', 
+'We introduce a new language representation model called BERT, which stands for Bidirectional Encoder Representations from Transformers. Unlike recent language representation models, BERT is designed to pre-train deep bidirectional representations from unlabeled text by jointly conditioning on both left and right context in all layers.', 
+'양방향 Transformer를 사용한 언어 이해 모델 BERT를 제안한 논문입니다.'
+);
+
+INSERT INTO PAPERS (TITLE, AUTHORS, UPDATE_DATE, URL, ABSTRACT, SUMMARY) VALUES (
+'ResNet: Deep Residual Learning for Image Recognition', 
+'Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun', 
+TO_TIMESTAMP('2015-12-10 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), 
+'https://arxiv.org/abs/1512.03385', 
+'Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residual functions with reference to the layer inputs, instead of learning unreferenced functions.', 
+'깊은 신경망의 학습을 위한 residual learning 프레임워크를 제안한 논문입니다.'
+);
+
+INSERT INTO PAPERS (TITLE, AUTHORS, UPDATE_DATE, URL, ABSTRACT, SUMMARY) VALUES (
+'Generative Adversarial Networks', 
+'Ian J. Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil Ozair, Aaron Courville, Yoshua Bengio', 
+TO_TIMESTAMP('2014-06-10 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), 
+'https://arxiv.org/abs/1406.2661', 
+'We propose a new framework for estimating generative models via an adversarial process, in which we simultaneously train two models: a generative model G that captures the data distribution, and a discriminative model D that estimates the probability that a sample came from the training data rather than G.', 
+'생성 모델과 판별 모델을 동시에 학습하는 GAN 프레임워크를 제안한 논문입니다.'
+);
+
+INSERT INTO PAPERS (TITLE, AUTHORS, UPDATE_DATE, URL, ABSTRACT, SUMMARY) VALUES (
+'YOLO: Real-Time Object Detection', 
+'Joseph Redmon, Santosh Divvala, Ross Girshick, Ali Farhadi', 
+TO_TIMESTAMP('2015-06-08 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), 
+'https://arxiv.org/abs/1506.02640', 
+'We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities.', 
+'실시간 객체 탐지를 위한 YOLO 모델을 제안한 논문입니다.'
+);
 
 -- Paper-Category 관계 데이터
-INSERT INTO cs_paper_category_relations (paper_id, category_id) VALUES
-(1, 1), -- Attention Is All You Need - cs.CL
-(1, 2), -- Attention Is All You Need - cs.AI
-(2, 1), -- BERT - cs.CL
-(3, 3), -- ResNet - cs.CV
-(4, 4), -- GAN - cs.LG
-(4, 2), -- GAN - cs.AI
-(5, 3); -- YOLO - cs.CV
+INSERT INTO CS_PAPER_CATEGORY_RELATIONS (PAPER_ID, CATEGORY_ID) VALUES (1, 1); -- Attention Is All You Need - cs.CL
+INSERT INTO CS_PAPER_CATEGORY_RELATIONS (PAPER_ID, CATEGORY_ID) VALUES (1, 2); -- Attention Is All You Need - cs.AI
+INSERT INTO CS_PAPER_CATEGORY_RELATIONS (PAPER_ID, CATEGORY_ID) VALUES (2, 1); -- BERT - cs.CL
+INSERT INTO CS_PAPER_CATEGORY_RELATIONS (PAPER_ID, CATEGORY_ID) VALUES (3, 3); -- ResNet - cs.CV
+INSERT INTO CS_PAPER_CATEGORY_RELATIONS (PAPER_ID, CATEGORY_ID) VALUES (4, 4); -- GAN - cs.LG
+INSERT INTO CS_PAPER_CATEGORY_RELATIONS (PAPER_ID, CATEGORY_ID) VALUES (4, 2); -- GAN - cs.AI
+INSERT INTO CS_PAPER_CATEGORY_RELATIONS (PAPER_ID, CATEGORY_ID) VALUES (5, 3); -- YOLO - cs.CV
 
--- Paper Content 예시 데이터
-INSERT INTO paper_content (content_title, content, `order`, paper_id) VALUES
+-- Paper Content 예시 데이터 (Oracle에서는 order 대신 order_num 사용)
 -- Attention Is All You Need (Transformer)
+INSERT INTO PAPER_CONTENT (CONTENT_TITLE, CONTENT, ORDER_NUM, PAPER_ID) VALUES
 ('Abstract', '# Abstract\n\n지배적인 시퀀스 변환 모델들은 인코더와 디코더를 포함하는 복잡한 순환 신경망이나 컨볼루션 신경망을 기반으로 합니다. 최고 성능을 보이는 모델들은 또한 어텐션 메커니즘을 통해 인코더와 디코더를 연결합니다. 우리는 순환과 컨볼루션을 완전히 배제하고 오직 어텐션 메커니즘만을 기반으로 하는 새로운 간단한 네트워크 아키텍처인 **Transformer**를 제안합니다.\n\n두 개의 기계 번역 작업에서의 실험은 이러한 모델들이 품질 면에서 우수하면서도 더 병렬화 가능하고 훈련 시간이 훨씬 적게 걸린다는 것을 보여줍니다. 우리의 모델은 WMT 2014 영어-독일어 번역 작업에서 28.4 BLEU를 달성하여, 앙상블을 포함한 기존 최고 결과보다 2 BLEU 이상 향상되었습니다. WMT 2014 영어-프랑스어 번역 작업에서는 8개 GPU에서 3.5일간 훈련한 후 41.8의 새로운 단일 모델 최고 BLEU 점수를 달성했으며, 이는 문헌의 최고 모델들의 훈련 비용의 일부에 불과합니다.\n\n우리는 Transformer가 대량의 훈련 데이터로 영어 구문 분석에 성공적으로 적용함으로써 다른 작업에도 잘 일반화된다는 것을 보여줍니다.', 1, 1),
 ('Introduction', '# Introduction\n\n## 기존 접근 방식의 한계\n\n순환 신경망, 특히 **LSTM(Long Short-Term Memory)**과 **GRU(Gated Recurrent Neural Networks)**는 언어 모델링과 기계 번역과 같은 시퀀스 모델링 및 변환 문제에서 최첨단 접근 방식으로 확고히 자리잡았습니다. 그 이후로 순환 언어 모델과 인코더-디코더 아키텍처의 경계를 넓히기 위한 수많은 노력이 계속되었습니다.\n\n## 순차적 처리의 문제점\n\n순환 모델들은 일반적으로 입력 및 출력 시퀀스의 심볼 위치를 따라 계산을 분해합니다. 위치를 계산 시간의 단계에 맞추면, 이전 숨겨진 상태 h<sub>t-1</sub>과 위치 t의 입력의 함수로서 숨겨진 상태 h<sub>t</sub>의 시퀀스를 생성합니다. 이러한 본질적으로 순차적인 특성은 훈련 예제 내에서 병렬화를 방해하며, 이는 더 긴 시퀀스 길이에서 메모리 제약이 예제 간 배치를 제한하기 때문에 중요해집니다.\n\n최근 연구들은 조건부 계산을 통해 계산 효율성에서 상당한 개선을 달성했으며, 일부 경우에는 모델 성능도 향상시켰습니다. 그러나 근본적인 계산 제약은 여전히 남아있습니다.', 2, 1),
 ('Model Architecture', '# Model Architecture\n\n## 인코더-디코더 구조\n\n대부분의 경쟁력 있는 신경 시퀀스 변환 모델들은 인코더-디코더 구조를 가지고 있습니다. 여기서 인코더는 심볼 표현의 입력 시퀀스 (x<sub>1</sub>, ..., x<sub>n</sub>)을 연속 표현의 시퀀스 z = (z<sub>1</sub>, ..., z<sub>n</sub>)에 매핑합니다. z가 주어지면, 디코더는 한 번에 하나의 요소씩 심볼의 출력 시퀀스 (y<sub>1</sub>, ..., y<sub>m</sub>)을 생성합니다. 각 단계에서 모델은 자동 회귀적이며, 다음을 생성할 때 이전에 생성된 심볼들을 추가 입력으로 소비합니다.\n\n## Transformer의 핵심 구성 요소\n\n**Transformer**는 인코더와 디코더 모두에 대해 스택된 자기 어텐션과 포인트별 완전 연결 계층을 사용하여 이 전체 아키텍처를 따릅니다.\n\n<img src="https://miro.medium.com/max/1400/1*BHzGVskWGS_3jEcYYi6miQ.png" alt="Transformer Architecture" style="max-width: 100%; height: auto; margin: 20px 0;" />', 3, 1),
@@ -83,37 +110,38 @@ INSERT INTO paper_content (content_title, content, `order`, paper_id) VALUES
 ('Training', '# Training\n\n## 사전 훈련\n\n우리는 ImageNet 1000클래스 경쟁 데이터셋에서 컨볼루션 계층들을 사전 훈련합니다. 사전 훈련을 위해 우리는 그림 3의 처음 20개 컨볼루션 계층과 그 뒤에 평균 풀링 계층과 완전 연결 계층을 사용합니다. 우리는 이 네트워크를 약 일주일간 훈련하고 ImageNet 2012 검증 세트에서 단일 크롭 top-5 정확도 88%를 달성하며, 이는 Caffe의 Model Zoo의 GoogLeNet 모델들과 비교할 수 있습니다.\n\n## 탐지 훈련\n\n우리는 모든 훈련과 추론에 Darknet 프레임워크를 사용합니다. 그런 다음 모델을 탐지 수행을 위해 변환합니다. Ren et al.은 사전 훈련된 네트워크에 컨볼루션과 연결 계층을 모두 추가하면 성능이 향상될 수 있다는 것을 보여줍니다. 그들의 예를 따라, 우리는 무작위로 초기화된 가중치로 4개의 컨볼루션 계층과 2개의 완전 연결 계층을 추가합니다.\n\n**훈련 설정:**\n- **Pretraining**: ImageNet 1000-class (88% top-5 accuracy)\n- **Detection Training**: 448×448 resolution\n- **Framework**: Darknet\n- **Training Time**: ~1 week', 5, 5),
 ('Results', '# Results\n\n## PASCAL VOC 성능\n\n우리는 PASCAL VOC 2007 테스트 세트에서 YOLO를 실행하고 다른 실시간 탐지 시스템들과 비교합니다. YOLO는 실시간 성능으로 63.4% mAP를 얻습니다. 우리의 Fast YOLO는 테스트 세트에서 가장 빠른 방법으로, 초당 155 FPS로 실행하면서 52.7% mAP를 달성합니다.\n\n## 다양한 데이터셋에서의 성능\n\n우리는 또한 VOC 2012에서 YOLO를 훈련하고 테스트 세트에서 57.9% mAP를 달성하며, 이는 경쟁 방법들보다 높습니다. 전체 결과는 PASCAL VOC 리더보드에서 확인할 수 있습니다. 더 도전적인 객체 카테고리를 가진 새로운 COCO 데이터셋에서 YOLO는 초당 35 FPS로 실행하면서 19.8% mAP를 달성합니다.\n\n**주요 성과:**\n- **PASCAL VOC 2007**: 63.4% mAP (real-time)\n- **Fast YOLO**: 155 FPS, 52.7% mAP\n- **PASCAL VOC 2012**: 57.9% mAP\n- **COCO**: 19.8% mAP at 35 FPS', 6, 5);
 
--- RSS Feed 예시 데이터
-INSERT INTO rss_feeds (title, summary, writed_at, original_url, rss_url_id) VALUES
-('TechCrunch: 최신 AI 기술 동향', '인공지능 분야의 최신 기술 동향과 스타트업 소식을 다룹니다.', '2024-01-15 10:30:00', 'https://techcrunch.com/2024/01/15/ai-trends', 1),
-('CNN: 글로벌 기술 뉴스', '전 세계 기술 산업의 주요 뉴스와 분석을 제공합니다.', '2024-01-15 09:15:00', 'https://cnn.com/tech/global-news', 2),
-('Google Developers: Android 개발 팁', 'Android 앱 개발을 위한 실용적인 팁과 튜토리얼을 제공합니다.', '2024-01-15 14:20:00', 'https://youtube.com/watch?v=example', 3),
-('Ars Technica: 하드웨어 리뷰', '최신 하드웨어 제품에 대한 상세한 리뷰와 성능 분석을 제공합니다.', '2024-01-15 11:45:00', 'https://arstechnica.com/hardware-review', 4),
-('TED: 혁신적인 아이디어', '세계 각지의 혁신적인 아이디어와 영감을 주는 이야기를 다룹니다.', '2024-01-15 16:30:00', 'https://youtube.com/watch?v=ted-example', 5),
-('TechCrunch: 웹3 생태계 분석', '블록체인과 웹3 기술의 현재와 미래에 대한 심층 분석입니다.', '2024-01-14 15:20:00', 'https://techcrunch.com/2024/01/14/web3-ecosystem', 1),
-('CNN: 사이버 보안 위협', '최신 사이버 보안 위협과 대응 방안에 대한 전문가 의견을 다룹니다.', '2024-01-14 13:10:00', 'https://cnn.com/tech/cybersecurity', 2);
+-- RSS Feed 예시 데이터 (Oracle에서는 각각 삽입)
+INSERT INTO RSS_FEEDS (TITLE, SUMMARY, WRITED_AT, ORIGINAL_URL, RSS_URL_ID) VALUES ('TechCrunch: 최신 AI 기술 동향', '인공지능 분야의 최신 기술 동향과 스타트업 소식을 다룹니다.', TO_TIMESTAMP('2024-01-15 10:30:00', 'YYYY-MM-DD HH24:MI:SS'), 'https://techcrunch.com/2024/01/15/ai-trends', 1);
+INSERT INTO RSS_FEEDS (TITLE, SUMMARY, WRITED_AT, ORIGINAL_URL, RSS_URL_ID) VALUES ('CNN: 글로벌 기술 뉴스', '전 세계 기술 산업의 주요 뉴스와 분석을 제공합니다.', TO_TIMESTAMP('2024-01-15 09:15:00', 'YYYY-MM-DD HH24:MI:SS'), 'https://cnn.com/tech/global-news', 2);
+INSERT INTO RSS_FEEDS (TITLE, SUMMARY, WRITED_AT, ORIGINAL_URL, RSS_URL_ID) VALUES ('Google Developers: Android 개발 팁', 'Android 앱 개발을 위한 실용적인 팁과 튜토리얼을 제공합니다.', TO_TIMESTAMP('2024-01-15 14:20:00', 'YYYY-MM-DD HH24:MI:SS'), 'https://youtube.com/watch?v=example', 3);
+INSERT INTO RSS_FEEDS (TITLE, SUMMARY, WRITED_AT, ORIGINAL_URL, RSS_URL_ID) VALUES ('Ars Technica: 하드웨어 리뷰', '최신 하드웨어 제품에 대한 상세한 리뷰와 성능 분석을 제공합니다.', TO_TIMESTAMP('2024-01-15 11:45:00', 'YYYY-MM-DD HH24:MI:SS'), 'https://arstechnica.com/hardware-review', 4);
+INSERT INTO RSS_FEEDS (TITLE, SUMMARY, WRITED_AT, ORIGINAL_URL, RSS_URL_ID) VALUES ('TED: 혁신적인 아이디어', '세계 각지의 혁신적인 아이디어와 영감을 주는 이야기를 다룹니다.', TO_TIMESTAMP('2024-01-15 16:30:00', 'YYYY-MM-DD HH24:MI:SS'), 'https://youtube.com/watch?v=ted-example', 5);
+INSERT INTO RSS_FEEDS (TITLE, SUMMARY, WRITED_AT, ORIGINAL_URL, RSS_URL_ID) VALUES ('TechCrunch: 웹3 생태계 분석', '블록체인과 웹3 기술의 현재와 미래에 대한 심층 분석입니다.', TO_TIMESTAMP('2024-01-14 15:20:00', 'YYYY-MM-DD HH24:MI:SS'), 'https://techcrunch.com/2024/01/14/web3-ecosystem', 1);
+INSERT INTO RSS_FEEDS (TITLE, SUMMARY, WRITED_AT, ORIGINAL_URL, RSS_URL_ID) VALUES ('CNN: 사이버 보안 위협', '최신 사이버 보안 위협과 대응 방안에 대한 전문가 의견을 다룹니다.', TO_TIMESTAMP('2024-01-14 13:10:00', 'YYYY-MM-DD HH24:MI:SS'), 'https://cnn.com/tech/cybersecurity', 2);
 
 -- User Library 예시 데이터 (사용자가 논문을 라이브러리에 추가)
-INSERT INTO user_library (user_id, paper_id) VALUES
-(1, 1), -- 테스트 사용자가 "Attention Is All You Need" 추가
-(1, 3), -- 테스트 사용자가 "ResNet" 추가
-(1, 2), -- 테스트 사용자가 "BERT" 추가
-(1, 4), -- 테스트 사용자가 "GAN" 추가
-(1, 5); -- 테스트 사용자가 "YOLO" 추가
+INSERT INTO USER_LIBRARY (USER_ID, PAPER_ID) VALUES (1, 1); -- 테스트 사용자가 "Attention Is All You Need" 추가
+INSERT INTO USER_LIBRARY (USER_ID, PAPER_ID) VALUES (1, 3); -- 테스트 사용자가 "ResNet" 추가
+INSERT INTO USER_LIBRARY (USER_ID, PAPER_ID) VALUES (1, 2); -- 테스트 사용자가 "BERT" 추가
+INSERT INTO USER_LIBRARY (USER_ID, PAPER_ID) VALUES (1, 4); -- 테스트 사용자가 "GAN" 추가
+INSERT INTO USER_LIBRARY (USER_ID, PAPER_ID) VALUES (1, 5); -- 테스트 사용자가 "YOLO" 추가
 
 
-SELECT 'Users' as table_name, COUNT(*) as count FROM users
+-- 데이터 확인 쿼리 (Oracle 버전)
+SELECT 'Users' AS TABLE_NAME, COUNT(*) AS COUNT FROM USERS
 UNION ALL
-SELECT 'RSS URLs', COUNT(*) FROM rss_urls
+SELECT 'RSS URLs', COUNT(*) FROM RSS_URLS
 UNION ALL
-SELECT 'RSS Feeds', COUNT(*) FROM rss_feeds
+SELECT 'RSS Feeds', COUNT(*) FROM RSS_FEEDS
 UNION ALL
-SELECT 'Papers', COUNT(*) FROM papers
+SELECT 'Papers', COUNT(*) FROM PAPERS
 UNION ALL
-SELECT 'Paper Categories', COUNT(*) FROM cs_paper_categories
+SELECT 'Paper Categories', COUNT(*) FROM CS_PAPER_CATEGORIES
 UNION ALL
-SELECT 'Paper-Category Relations', COUNT(*) FROM cs_paper_category_relations
+SELECT 'Paper-Category Relations', COUNT(*) FROM CS_PAPER_CATEGORY_RELATIONS
 UNION ALL
-SELECT 'Paper Content', COUNT(*) FROM paper_content
+SELECT 'Paper Content', COUNT(*) FROM PAPER_CONTENT
 UNION ALL
-SELECT 'User Library', COUNT(*) FROM user_library;
+SELECT 'User Library', COUNT(*) FROM USER_LIBRARY
+UNION ALL
+SELECT 'User Interests', COUNT(*) FROM USER_INTERESTS;
