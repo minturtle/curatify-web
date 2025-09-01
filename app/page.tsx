@@ -1,12 +1,25 @@
 import PaperList from '@/components/papers/PaperList';
 import PaginationSSR from '@/components/ui/pagination-ssr';
 import { getPapers } from '@/lib/paper/paperService';
+import { getUserAuthStatus } from '@/lib/auth/userService';
+import { AuthRequiredModal } from '@/components/auth/AuthRequiredModal';
+import { ApprovalRequiredModal } from '@/components/auth/ApprovalRequiredModal';
 
 interface HomePageProps {
   searchParams: { page?: string };
 }
 
 export default async function Home({ searchParams }: HomePageProps) {
+  // 인증/인가 상태 확인
+  const authStatus = await getUserAuthStatus();
+  
+  if (!authStatus.authenticate_status) {
+    return <AuthRequiredModal redirectTo="/auth" />;
+  }
+  
+  if (!authStatus.authorize_status) {
+    return <ApprovalRequiredModal userName={authStatus.user?.name} />;
+  }
   // URL 파라미터에서 페이지 번호 추출 (기본값: 1)
   const currentPage = parseInt((await searchParams).page ?? '1', 10);
 
