@@ -12,7 +12,7 @@ import { getUserAuthStatus } from '@/lib/auth/userService';
 import { AuthRequiredModal } from '@/components/auth/AuthRequiredModal';
 import { ApprovalRequiredModal } from '@/components/auth/ApprovalRequiredModal';
 interface RSSPageProps {
-  searchParams: { page?: string };
+  searchParams: Promise<{ page?: string }>;
 }
 
 export default async function RSSPage({ searchParams }: RSSPageProps) {

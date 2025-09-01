@@ -6,7 +6,7 @@ import { AuthRequiredModal } from '@/components/auth/AuthRequiredModal';
 import { ApprovalRequiredModal } from '@/components/auth/ApprovalRequiredModal';
 
 interface HomePageProps {
-  searchParams: { page?: string };
+  searchParams: Promise<{ page?: string }>;
 }
 
 export default async function Home({ searchParams }: HomePageProps) {

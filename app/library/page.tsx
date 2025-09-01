@@ -12,9 +12,9 @@ import { AuthRequiredModal } from '@/components/auth/AuthRequiredModal';
 import { ApprovalRequiredModal } from '@/components/auth/ApprovalRequiredModal';
 
 interface LibraryPageProps {
-  searchParams: {
+  searchParams: Promise<{
     page?: string;
-  };
+  }>;
 }
 
 export default async function LibraryPage({ searchParams }: LibraryPageProps) {
