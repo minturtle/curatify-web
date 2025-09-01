@@ -20,9 +20,9 @@ import { AuthRequiredModal } from '@/components/auth/AuthRequiredModal';
 import { ApprovalRequiredModal } from '@/components/auth/ApprovalRequiredModal';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 /**
@@ -30,7 +30,8 @@ interface PageProps {
  */
 export async function generateMetadata({ params }: PageProps) {
   try {
-    const paperDetail = await getPaperDetail(parseInt(params.id));
+    const { id } = await params;
+    const paperDetail = await getPaperDetail(parseInt(id));
 
     if (!paperDetail) {
       return {
@@ -77,7 +78,8 @@ export default async function PaperDetailPage({ params }: PageProps) {
   }
 
   try {
-    const paperId = parseInt(params.id);
+    const { id } = await params;
+    const paperId = parseInt(id);
 
     if (isNaN(paperId)) {
       notFound();
