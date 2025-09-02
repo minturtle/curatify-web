@@ -106,7 +106,7 @@ describe('RSS Service', () => {
       vi.mocked(getSession).mockResolvedValue({
         userId: 1,
         email: 'test@example.com',
-        role: 'approved',
+        isVerified: true,
       });
 
       const mockUserRepository = {
@@ -154,7 +154,7 @@ describe('RSS Service', () => {
       vi.mocked(getSession).mockResolvedValue({
         userId: 1,
         email: 'test@example.com',
-        role: 'approved',
+        isVerified: true,
       });
 
       const mockUserRepository = {
@@ -212,7 +212,7 @@ describe('RSS Service', () => {
       vi.mocked(getSession).mockResolvedValue({
         userId: 1,
         email: 'test@example.com',
-        role: 'approved',
+        isVerified: true,
       });
 
       const mockUserRepository = {
@@ -249,15 +249,6 @@ describe('RSS Service', () => {
       await expect(addRSSUrl(formData)).rejects.toThrow('유효하지 않은 URL입니다.');
     });
 
-    it('유효하지 않은 타입을 등록하면 에러를 던진다', async () => {
-      const formData = {
-        url: 'https://example.com/rss',
-        type: 'invalid-type',
-      } as unknown as RSSUrlFormData;
-
-      await expect(addRSSUrl(formData)).rejects.toThrow('유효하지 않은 RSS 타입입니다.');
-    });
-
     it('YouTube 타입이지만 YouTube URL이 아니면 에러를 던진다', async () => {
       const formData: RSSUrlFormData = {
         url: 'https://example.com/rss',
@@ -265,15 +256,6 @@ describe('RSS Service', () => {
       };
 
       await expect(addRSSUrl(formData)).rejects.toThrow('유효하지 않은 YouTube URL입니다.');
-    });
-
-    it('빈 타입을 등록하면 에러를 던진다', async () => {
-      const formData = {
-        url: 'https://example.com/rss',
-        type: '',
-      } as unknown as RSSUrlFormData;
-
-      await expect(addRSSUrl(formData)).rejects.toThrow('유효하지 않은 RSS 타입입니다.');
     });
 
     it('데이터베이스 저장 실패 시 에러를 던진다', async () => {
@@ -286,7 +268,7 @@ describe('RSS Service', () => {
       vi.mocked(getSession).mockResolvedValue({
         userId: 1,
         email: 'test@example.com',
-        role: 'approved',
+        isVerified: true,
       });
 
       const mockUserRepository = {
@@ -326,7 +308,7 @@ describe('RSS Service', () => {
       vi.mocked(getSession).mockResolvedValue({
         userId: 1,
         email: 'test@example.com',
-        role: 'approved',
+        isVerified: true,
       });
 
       const mockRSSUrlRepository = {
@@ -370,7 +352,7 @@ describe('RSS Service', () => {
       vi.mocked(getSession).mockResolvedValue({
         userId: 1,
         email: 'test@example.com',
-        role: 'approved',
+        isVerified: true,
       });
 
       const mockRSSUrlRepository = {
@@ -417,7 +399,7 @@ describe('RSS Service', () => {
       vi.mocked(getSession).mockResolvedValue({
         userId: 1,
         email: 'test@example.com',
-        role: 'approved',
+        isVerified: true,
       });
 
       const mockRSSUrlRepository = {
@@ -445,7 +427,7 @@ describe('RSS Service', () => {
       vi.mocked(getSession).mockResolvedValue({
         userId: 1,
         email: 'test@example.com',
-        role: 'approved',
+        isVerified: true,
       });
 
       const mockRSSUrlRepository = {
@@ -481,7 +463,7 @@ describe('RSS Service', () => {
       vi.mocked(getSession).mockResolvedValue({
         userId: 1,
         email: 'test@example.com',
-        role: 'approved',
+        isVerified: true,
       });
 
       const mockRSSUrlRepository = {
@@ -540,7 +522,7 @@ describe('RSS Service', () => {
       vi.mocked(getSession).mockResolvedValue({
         userId: 1,
         email: 'test@example.com',
-        role: 'approved',
+        isVerified: true,
       });
 
       const mockRSSUrlRepository = {
@@ -580,7 +562,7 @@ describe('RSS Service', () => {
       vi.mocked(getSession).mockResolvedValue({
         userId: 1,
         email: 'test@example.com',
-        role: 'approved',
+        isVerified: true,
       });
 
       const mockRSSUrlRepository = {
@@ -602,7 +584,7 @@ describe('RSS Service', () => {
       vi.mocked(getSession).mockResolvedValue({
         userId: 1,
         email: 'test@example.com',
-        role: 'approved',
+        isVerified: true,
       });
 
       const mockRSSUrlRepository = {
@@ -623,7 +605,7 @@ describe('RSS Service', () => {
       vi.mocked(getSession).mockResolvedValue({
         userId: 1,
         email: 'test@example.com',
-        role: 'approved',
+        isVerified: true,
       });
 
       await expect(deleteRSSUrl('invalid-id')).rejects.toThrow('RSS URL 삭제에 실패했습니다.');

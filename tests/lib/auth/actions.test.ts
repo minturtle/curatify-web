@@ -37,16 +37,16 @@ describe('Auth Actions', () => {
       mockFormData.append('password', 'password123');
 
       const mockUser: UserWithPassword = {
-        id: '123',
+        id: 123,
         email: 'test@example.com',
         name: 'Test User',
         password: 'password123',
         isVerified: false,
       };
       const mockSession: SessionData = {
-        userId: '123',
+        userId: 123,
         email: 'test@example.com',
-        role: 'not_approved',
+        isVerified: false,
       };
 
       vi.mocked(getSession).mockResolvedValue(null);
@@ -88,7 +88,7 @@ describe('Auth Actions', () => {
       mockFormData.append('confirmPassword', 'password123');
 
       const mockNewUser: UserData = {
-        id: '123',
+        id: 123,
         email: 'test@example.com',
         name: 'Test User',
         isVerified: false,
@@ -132,7 +132,7 @@ describe('Auth Actions', () => {
       mockFormData.append('confirmPassword', 'password123');
 
       const mockExistingUser: UserWithPassword = {
-        id: '123',
+        id: 123,
         email: 'existing@example.com',
         name: 'Existing User',
         password: 'password123',
