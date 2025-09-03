@@ -1,5 +1,12 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+// ContentBlock 인터페이스 정의
+export interface IContentBlock {
+  contentTitle: string;
+  content: string;
+  order: number;
+}
+
 // Paper 인터페이스 정의
 export interface IPaper extends Document {
   title: string;
@@ -9,6 +16,7 @@ export interface IPaper extends Document {
   abstract: string;
   summary?: string;
   categories?: string[];
+  contentBlocks: IContentBlock[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,6 +31,13 @@ const PaperSchema = new Schema(
     abstract: String,
     summary: String,
     categories: [String],
+    contentBlocks: [
+      {
+        contentTitle: String,
+        content: String,
+        order: Number,
+      },
+    ],
   },
   {
     timestamps: true,

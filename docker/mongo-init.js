@@ -11,9 +11,9 @@ db.createUser({
   roles: [
     {
       role: 'readWrite',
-      db: 'curatify'
-    }
-  ]
+      db: 'curatify',
+    },
+  ],
 });
 
 // 컬렉션 생성 (MongoDB는 자동으로 생성되지만 명시적으로 생성)
@@ -27,26 +27,26 @@ db.createCollection('user_libraries');
 db.createCollection('user_interests');
 
 // 인덱스 생성
-db.users.createIndex({ "email": 1 }, { unique: true });
-db.users.createIndex({ "createdAt": 1 });
+db.users.createIndex({ email: 1 }, { unique: true });
+db.users.createIndex({ createdAt: 1 });
 
-db.papers.createIndex({ "title": "text", "abstract": "text" });
-db.papers.createIndex({ "createdAt": 1 });
-db.papers.createIndex({ "updateDate": 1 });
+db.papers.createIndex({ title: 'text', abstract: 'text' });
+db.papers.createIndex({ createdAt: 1 });
+db.papers.createIndex({ updateDate: 1 });
 
-db.rss_urls.createIndex({ "userId": 1 });
-db.rss_urls.createIndex({ "type": 1 });
-db.rss_urls.createIndex({ "deletedAt": 1 });
+db.rss_urls.createIndex({ userId: 1 });
+db.rss_urls.createIndex({ type: 1 });
+db.rss_urls.createIndex({ deletedAt: 1 });
 
-db.rss_feeds.createIndex({ "rssUrlId": 1 });
-db.rss_feeds.createIndex({ "writedAt": 1 });
+db.rss_feeds.createIndex({ rssUrlId: 1 });
+db.rss_feeds.createIndex({ writedAt: 1 });
 
-db.paper_categories.createIndex({ "name": 1 });
+db.paper_categories.createIndex({ name: 1 });
 
-db.user_libraries.createIndex({ "userId": 1, "paperId": 1 }, { unique: true });
-db.user_libraries.createIndex({ "userId": 1 });
+db.user_libraries.createIndex({ userId: 1, paperId: 1 }, { unique: true });
+db.user_libraries.createIndex({ userId: 1 });
 
-db.user_interests.createIndex({ "userId": 1, "categoryId": 1 }, { unique: true });
+db.user_interests.createIndex({ userId: 1, categoryId: 1 }, { unique: true });
 
 console.log('MongoDB 초기화 완료');
 console.log('- 데이터베이스: curatify');

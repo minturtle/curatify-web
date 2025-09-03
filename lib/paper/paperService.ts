@@ -11,11 +11,10 @@ import { getUserAuthStatus } from '@/lib/auth/userService';
 import {
   Paper as PaperModel,
   type IPaper,
-  PaperContent as PaperContentModel,
-  type IPaperContent,
   UserLibrary as UserLibraryModel,
   type IUserLibrary,
 } from '@/lib/database/entities';
+import type { IContentBlock } from '@/lib/database/entities/Paper';
 
 /**
  * IPaper를 Paper 타입으로 변환하는 함수
@@ -79,30 +78,30 @@ async function userLibraryEntityToDto(entity: IUserLibrary): Promise<UserLibrary
 }
 
 /**
- * IPaperContent를 PaperContentBlock 타입으로 변환하는 함수
+ * IContentBlock을 PaperContentBlock 타입으로 변환하는 함수
  *
- * @param {IPaperContent} entity - 변환할 PaperContent 문서
+ * @param {IContentBlock} contentBlock - 변환할 ContentBlock
+ * @param {number} index - 인덱스 (ID 대신 사용)
  * @returns {PaperContentBlock} 변환된 PaperContentBlock 타입
  * @private
  */
-function paperContentEntityToBlock(entity: IPaperContent): PaperContentBlock {
+function contentBlockToBlock(contentBlock: IContentBlock, index: number): PaperContentBlock {
   return {
-    id: (entity._id as mongoose.Types.ObjectId).toString(),
-    title: entity.contentTitle,
-    content: entity.content,
-    order: entity.order,
+    id: index.toString(),
+    title: contentBlock.contentTitle,
+    content: contentBlock.content,
+    order: contentBlock.order,
   };
 }
 
 /**
- * IPaper와 IPaperContent 배열을 PaperDetail 타입으로 변환하는 함수
+ * IPaper를 PaperDetail 타입으로 변환하는 함수
  *
  * @param {IPaper} paper - Paper 문서
- * @param {IPaperContent[]} paperContents - PaperContent 문서 배열
  * @returns {PaperDetail} 변환된 PaperDetail 타입
  * @private
  */
-function paperAndContentsToDetail(paper: IPaper, paperContents: IPaperContent[]): PaperDetail {
+function paperToDetail(paper: IPaper): PaperDetail {
   // authors를 배열로 파싱
   let authors: string[] = [];
   try {
@@ -110,9 +109,10 @@ function paperAndContentsToDetail(paper: IPaper, paperContents: IPaperContent[])
   } catch {
     authors = paper.authors ? paper.authors.split(',').map((a: string) => a.trim()) : [];
   }
-
-  // PaperContent를 PaperContentBlock 배열로 변환 (이미 DB에서 정렬됨)
-  const contentBlocks = paperContents.map(paperContentEntityToBlock);
+  // contentBlocks를 PaperContentBlock 배열로 변환 (order로 정렬)
+  const contentBlocks = paper.contentBlocks
+    .sort((a, b) => a.order - b.order)
+    .map((contentBlock, index) => contentBlockToBlock(contentBlock, index));
 
   return {
     paperContentId: (paper._id as mongoose.Types.ObjectId).toString(),
@@ -284,22 +284,15 @@ export async function getPaperDetail(paperId: string): Promise<PaperDetail | nul
   try {
     await ensureDatabaseConnection();
 
-    // 관련된 PaperContent들을 order 순으로 정렬하여 조회 (Paper 정보와 함께)
-    const paperContents = await PaperContentModel.find({
-      paper: paperId,
-    })
-      .populate('paper', 'title authors abstract url updateDate createdAt')
-      .sort({ order: 1 });
-
-    // populate된 첫 번째 PaperContent에서 Paper 정보 추출
-    const paper = paperContents[0].paper;
-    if (!paper || typeof paper === 'string' || !('title' in paper)) {
-      console.error(`논문 정보를 찾을 수 없습니다: ${paperId}`);
+    // Paper를 직접 조회 (contentBlocks 포함)
+    const paper = await PaperModel.findById(paperId);
+    if (!paper) {
+      console.error(`논문을 찾을 수 없습니다: ${paperId}`);
       return null;
     }
 
-    // Paper와 PaperContent를 PaperDetail로 변환
-    return paperAndContentsToDetail(paper as IPaper, paperContents);
+    // Paper를 PaperDetail로 변환
+    return paperToDetail(paper);
   } catch (error) {
     console.error('논문 상세 정보 조회 중 오류 발생:', error);
     throw new Error('논문 상세 정보 조회에 실패했습니다');

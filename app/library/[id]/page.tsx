@@ -18,6 +18,7 @@ import TableOfContents from '@/components/library/TableOfContents';
 import { getUserAuthStatus } from '@/lib/auth/userService';
 import { AuthRequiredModal } from '@/components/auth/AuthRequiredModal';
 import { ApprovalRequiredModal } from '@/components/auth/ApprovalRequiredModal';
+import { PaperContentBlock } from '@/lib/types/paper';
 
 interface PageProps {
   params: Promise<{
@@ -31,7 +32,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps) {
   try {
     const { id } = await params;
-    const paperDetail = await getPaperDetail(parseInt(id));
+    const paperDetail = await getPaperDetail(id);
 
     if (!paperDetail) {
       return {
@@ -68,24 +69,19 @@ export async function generateMetadata({ params }: PageProps) {
 export default async function PaperDetailPage({ params }: PageProps) {
   // 인증/인가 상태 확인
   const authStatus = await getUserAuthStatus();
-  
+
   if (!authStatus.authenticate_status) {
     return <AuthRequiredModal redirectTo="/auth" />;
   }
-  
+
   if (!authStatus.authorize_status) {
     return <ApprovalRequiredModal userName={authStatus.user?.name} />;
   }
 
   try {
     const { id } = await params;
-    const paperId = parseInt(id);
 
-    if (isNaN(paperId)) {
-      notFound();
-    }
-
-    const paperDetail = await getPaperDetail(paperId);
+    const paperDetail = await getPaperDetail(id);
 
     if (!paperDetail) {
       notFound();
@@ -105,7 +101,7 @@ export default async function PaperDetailPage({ params }: PageProps) {
             <Users className="w-4 h-4 text-gray-500" />
             <span className="text-sm text-gray-600">저자:</span>
             <div className="flex flex-wrap gap-1">
-              {paperDetail.authors.map((author, index) => (
+              {paperDetail.authors.map((author: string, index: number) => (
                 <Badge key={index} variant="secondary" className="text-xs">
                   {author}
                 </Badge>
@@ -121,7 +117,7 @@ export default async function PaperDetailPage({ params }: PageProps) {
             </div>
             <div className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
-              <span>발행일: {paperDetail.publishedAt.toLocaleDateString('ko-KR')}</span>
+              <span>발행일: {paperDetail.publishedAt?.toLocaleDateString('ko-KR')}</span>
             </div>
           </div>
 
@@ -150,7 +146,7 @@ export default async function PaperDetailPage({ params }: PageProps) {
             <Card className="mb-6">
               <CardContent className="pt-6">
                 <div className="prose prose-lg max-w-none">
-                  {paperDetail.content.map((contentBlock) => (
+                  {paperDetail.content.map((contentBlock: PaperContentBlock) => (
                     <div key={contentBlock.id} id={`section-${contentBlock.id}`} className="mb-12">
                       <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
                         {contentBlock.content}
@@ -192,7 +188,7 @@ export default async function PaperDetailPage({ params }: PageProps) {
               <div>
                 <span className="font-semibold text-gray-700">발행일:</span>
                 <span className="ml-2 text-gray-600">
-                  {paperDetail.publishedAt.toLocaleDateString('ko-KR', {
+                  {paperDetail.publishedAt?.toLocaleDateString('ko-KR', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',

@@ -4,13 +4,7 @@ import React from 'react';
 import ScrollSpy from 'react-scrollspy-navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { List } from 'lucide-react';
-
-interface PaperContentBlock {
-  id: number;
-  title: string;
-  content: string;
-  order: number;
-}
+import { PaperContentBlock } from '@/lib/types/paper';
 
 interface TableOfContentsProps {
   content: PaperContentBlock[];

@@ -15,7 +15,7 @@ const UserLibrarySchema = new Schema(
   },
   {
     timestamps: { createdAt: true, updatedAt: false },
-    collection: 'user_library',
+    collection: 'user_libraries',
   }
 );
 
