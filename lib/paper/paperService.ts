@@ -15,8 +15,6 @@ import {
   type IPaperContent,
   UserLibrary as UserLibraryModel,
   type IUserLibrary,
-  PaperCategory as PaperCategoryModel,
-  type IPaperCategory,
 } from '@/lib/database/entities';
 
 /**
@@ -27,14 +25,7 @@ import {
  * @private
  */
 async function entityToDto(entity: IPaper): Promise<Paper> {
-  // categories 관계에서 카테고리 이름들을 가져옴
-  let categories: string[] = [];
-  if (entity.categoryIds && entity.categoryIds.length > 0) {
-    const categoryEntities = await PaperCategoryModel.find({
-      _id: { $in: entity.categoryIds },
-    });
-    categories = categoryEntities.map((cat: IPaperCategory) => cat.name);
-  }
+  const categories: string[] = entity.categories || [];
 
   // authors를 배열로 파싱 (콤마 구분 또는 JSON 형태로 저장되어 있다고 가정)
   let authors: string[] = [];
@@ -160,11 +151,7 @@ export async function getPapers(
     const totalPages = Math.ceil(totalCount / pageSize);
 
     // 논문 목록 조회 (최신순으로 정렬)
-    const entities = await PaperModel.find()
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(pageSize)
-      .populate('categoryIds', 'name');
+    const entities = await PaperModel.find().sort({ createdAt: -1 }).skip(skip).limit(pageSize);
 
     // 엔티티를 DTO로 변환
     const papers = await Promise.all(entities.map(entityToDto));
@@ -297,20 +284,22 @@ export async function getPaperDetail(paperId: string): Promise<PaperDetail | nul
   try {
     await ensureDatabaseConnection();
 
-    // 논문 정보 조회
-    const paper = await PaperModel.findById(paperId);
-    if (!paper) {
-      console.error(`논문을 찾을 수 없습니다: ${paperId}`);
+    // 관련된 PaperContent들을 order 순으로 정렬하여 조회 (Paper 정보와 함께)
+    const paperContents = await PaperContentModel.find({
+      paper: paperId,
+    })
+      .populate('paper', 'title authors abstract url updateDate createdAt')
+      .sort({ order: 1 });
+
+    // populate된 첫 번째 PaperContent에서 Paper 정보 추출
+    const paper = paperContents[0].paper;
+    if (!paper || typeof paper === 'string' || !('title' in paper)) {
+      console.error(`논문 정보를 찾을 수 없습니다: ${paperId}`);
       return null;
     }
 
-    // 관련된 PaperContent들을 order 순으로 정렬하여 조회
-    const paperContents = await PaperContentModel.find({
-      paperId: paper._id,
-    }).sort({ order: 1 });
-
     // Paper와 PaperContent를 PaperDetail로 변환
-    return paperAndContentsToDetail(paper, paperContents);
+    return paperAndContentsToDetail(paper as IPaper, paperContents);
   } catch (error) {
     console.error('논문 상세 정보 조회 중 오류 발생:', error);
     throw new Error('논문 상세 정보 조회에 실패했습니다');

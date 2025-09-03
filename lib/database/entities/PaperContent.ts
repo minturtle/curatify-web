@@ -5,7 +5,17 @@ export interface IPaperContent extends Document {
   contentTitle: string;
   content: string;
   order: number;
-  paperId: mongoose.Types.ObjectId;
+  paper:
+    | mongoose.Types.ObjectId
+    | {
+        _id: mongoose.Types.ObjectId;
+        title: string;
+        authors?: string;
+        abstract?: string;
+        url?: string;
+        updateDate?: Date;
+        createdAt: Date;
+      };
   createdAt: Date;
 }
 
@@ -15,7 +25,11 @@ const PaperContentSchema = new Schema(
     contentTitle: String,
     content: String,
     order: Number,
-    paperId: Schema.Types.ObjectId,
+    paper: {
+      type: Schema.Types.ObjectId,
+      ref: 'Paper',
+      required: true,
+    },
   },
   {
     timestamps: { createdAt: true, updatedAt: false },

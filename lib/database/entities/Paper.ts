@@ -8,7 +8,7 @@ export interface IPaper extends Document {
   url?: string;
   abstract: string;
   summary?: string;
-  categoryIds?: mongoose.Types.ObjectId[];
+  categories?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,7 +22,7 @@ const PaperSchema = new Schema(
     url: String,
     abstract: String,
     summary: String,
-    categoryIds: [Schema.Types.ObjectId],
+    categories: [String],
   },
   {
     timestamps: true,
