@@ -6,7 +6,7 @@ import { z } from 'zod';
  */
 
 export interface SessionData {
-  userId?: number;
+  userId?: string;
   email?: string;
   isVerified?: boolean;
 }
@@ -15,7 +15,7 @@ export interface SessionData {
  * 사용자 정보
  */
 export interface UserData {
-  id: number;
+  id: string;
   email: string;
   name: string;
   isVerified: boolean;
@@ -62,7 +62,7 @@ export type ActionError = {
  * 사용자 인증/인가 종합 상태
  */
 export type UserAuthStatus = {
-  authenticate_status: boolean;  // 로그인 여부
-  authorize_status: boolean;     // 관리자 승인 여부  
+  authenticate_status: boolean; // 로그인 여부
+  authorize_status: boolean; // 관리자 승인 여부
   user: UserData | null;
 };

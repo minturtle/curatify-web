@@ -1,7 +1,8 @@
 import { UserData, UserWithPassword, UserAuthStatus } from '@/lib/types/auth';
 import bcrypt from 'bcrypt';
+import mongoose from 'mongoose';
 import { ensureDatabaseConnection } from '@/lib/database/connection';
-import { getUserRepository } from '@/lib/database/repositories';
+import { User as UserModel, type IUser } from '@/lib/database/entities';
 
 /**
  * 이메일 주소로 사용자를 검색합니다.
@@ -21,16 +22,15 @@ import { getUserRepository } from '@/lib/database/repositories';
 export async function findUserByEmail(email: string): Promise<UserWithPassword | null> {
   try {
     await ensureDatabaseConnection();
-    const userRepository = getUserRepository();
-    const user = await userRepository.findOne({ where: { email } });
+    const user = await UserModel.findOne({ email });
 
     if (!user) return null;
 
-    // User 엔티티를 UserWithPassword 타입으로 변환
+    // IUser를 UserWithPassword 타입으로 변환
     return {
-      id: user.id,
+      id: (user._id as mongoose.Types.ObjectId).toString(),
       email: user.email,
-      name: user.name,
+      name: user.name || '',
       password: user.password,
       isVerified: user.isVerified,
     };
@@ -49,25 +49,29 @@ export async function findUserByEmail(email: string): Promise<UserWithPassword |
  *
  * @example
  * ```typescript
- * const user = await findUserById(1)
+ * const user = await findUserById('507f1f77bcf86cd799439011')
  * if (user) {
  *   console.log(`사용자: ${user.name} (${user.email})`)
  * }
  * ```
  */
-export async function findUserById(id: number): Promise<UserData | null> {
+export async function findUserById(id: string): Promise<UserData | null> {
   try {
     await ensureDatabaseConnection();
-    const userRepository = getUserRepository();
-    const user = await userRepository.findOne({ where: { id: id } });
+
+    // MongoDB ObjectId 유효성 검사
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return null;
+    }
+
+    const user = await UserModel.findById(id);
 
     if (!user) return null;
 
-    // 비밀번호는 제외하고 반환
     return {
-      id: user.id,
+      id: (user._id as mongoose.Types.ObjectId).toString(),
       email: user.email,
-      name: user.name,
+      name: user.name || '',
       isVerified: user.isVerified,
     };
   } catch (error) {
@@ -100,16 +104,15 @@ export async function createUser(
 ): Promise<UserData> {
   try {
     await ensureDatabaseConnection();
-    const userRepository = getUserRepository();
 
     // 이메일 중복 확인
-    const existingUser = await userRepository.findOne({ where: { email: userData.email } });
+    const existingUser = await UserModel.findOne({ email: userData.email });
     if (existingUser) {
       throw new Error('이미 존재하는 이메일입니다');
     }
 
-    // 새 사용자 엔티티 생성
-    const newUser = userRepository.create({
+    // 새 사용자 문서 생성
+    const newUser = new UserModel({
       email: userData.email,
       name: userData.name,
       password: userData.password, // 이미 해시된 비밀번호
@@ -117,13 +120,13 @@ export async function createUser(
     });
 
     // 데이터베이스에 저장
-    const savedUser = await userRepository.save(newUser);
+    const savedUser = await newUser.save();
 
     // 비밀번호는 제외하고 반환
     return {
-      id: savedUser.id,
+      id: (savedUser._id as mongoose.Types.ObjectId).toString(),
       email: savedUser.email,
-      name: savedUser.name,
+      name: savedUser.name || '',
       isVerified: savedUser.isVerified,
     };
   } catch (error) {
@@ -225,7 +228,7 @@ export async function getCurrentUser(): Promise<UserData | null> {
  * @example
  * ```typescript
  * const authStatus = await getUserAuthStatus()
- * 
+ *
  * if (!authStatus.authenticate_status) {
  *   // 로그인하지 않은 사용자 -> 로그인 페이지로
  * } else if (!authStatus.authorize_status) {
@@ -245,19 +248,19 @@ export async function getUserAuthStatus(): Promise<UserAuthStatus> {
       return {
         authenticate_status: false,
         authorize_status: false,
-        user: null
+        user: null,
       };
     }
 
     // DB에서 사용자 정보 조회
     const user = await findUserById(session.userId);
-    
+
     // DB에 사용자가 없는 경우 - 인증은 되었지만 사용자 정보 없음
     if (!user) {
       return {
         authenticate_status: true,
         authorize_status: false,
-        user: null
+        user: null,
       };
     }
 
@@ -265,14 +268,14 @@ export async function getUserAuthStatus(): Promise<UserAuthStatus> {
     return {
       authenticate_status: true,
       authorize_status: user.isVerified,
-      user: user
+      user: user,
     };
   } catch (error) {
     console.error('사용자 인증/인가 상태 확인 중 오류 발생:', error);
     return {
       authenticate_status: false,
       authorize_status: false,
-      user: null
+      user: null,
     };
   }
 }
