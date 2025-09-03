@@ -1,7 +1,8 @@
 import { UserInterestsType, UserInterestsSchema } from '@/lib/types/user';
 import { ensureDatabaseConnection } from '@/lib/database/connection';
-import { getUserRepository, getUserInterestsRepository } from '@/lib/database/repositories';
-import { getSession } from '@/lib/auth/session';
+import mongoose from 'mongoose';
+import { UserInterests as UserInterestsModel, type IUserInterests } from '@/lib/database/entities';
+import { getUserAuthStatus } from '../auth/userService';
 
 /**
  * 현재 사용자의 관심사를 조회합니다.
@@ -17,29 +18,25 @@ import { getSession } from '@/lib/auth/session';
  */
 export async function findUserInterests(): Promise<UserInterestsType[]> {
   try {
-    // 세션에서 사용자 ID 가져오기
-    const session = await getSession();
-    if (!session) {
+    await ensureDatabaseConnection();
+
+    const currentUser = await getUserAuthStatus();
+
+    if (!currentUser.authenticate_status) {
       throw new Error('로그인이 필요합니다');
     }
-
-    await ensureDatabaseConnection();
-    const userRepository = getUserRepository();
-
-    // 사용자와 관심사를 함께 조회
-    const user = await userRepository.findOne({
-      where: { id: session.userId },
-      relations: ['interests'],
-    });
-
-    if (!user) {
-      throw new Error('사용자를 찾을 수 없습니다');
+    if (!currentUser.authorize_status) {
+      throw new Error('사용자 권한이 없습니다');
     }
 
+    // 사용자 관심사를 직접 조회
+    const interests = await UserInterestsModel.find({
+      userId: currentUser.user?.id,
+    }).sort({ createdAt: -1 });
+
     // UserInterestsType 형태로 변환하여 반환
-    const interests = await user.interests;
-    return interests.map((interest) => ({
-      interestsId: interest.id,
+    return interests.map((interest: IUserInterests) => ({
+      interestsId: (interest._id as mongoose.Types.ObjectId).toString(),
       content: interest.content,
     }));
   } catch (error) {
@@ -69,40 +66,36 @@ export async function findUserInterests(): Promise<UserInterestsType[]> {
  */
 export async function addUserInterest(content: string): Promise<UserInterestsType> {
   try {
-    // 세션에서 사용자 ID 가져오기
-    const session = await getSession();
-    if (!session) {
+    await ensureDatabaseConnection();
+
+    const currentUser = await getUserAuthStatus();
+
+    if (!currentUser.authenticate_status) {
       throw new Error('로그인이 필요합니다');
+    }
+
+    if (!currentUser.authorize_status) {
+      throw new Error('사용자 권한이 없습니다');
     }
 
     // 입력 데이터 검증
     const validatedData = UserInterestsSchema.parse({
-      userId: session.userId,
+      userId: currentUser.user?.id,
       content,
     });
 
-    await ensureDatabaseConnection();
-    const userRepository = getUserRepository();
-
-    // 사용자 존재 확인
-    const user = await userRepository.findOne({ where: { id: session.userId } });
-    if (!user) {
-      throw new Error('사용자를 찾을 수 없습니다');
-    }
-
     // 새로운 관심사 생성
-    const interestRepository = getUserInterestsRepository();
-    const newInterest = interestRepository.create({
+    const newInterest = new UserInterestsModel({
       userId: validatedData.userId,
       content: validatedData.content,
     });
 
     // 데이터베이스에 저장
-    const savedInterest = await interestRepository.save(newInterest);
+    const savedInterest = await newInterest.save();
 
     // UserInterestsType 형태로 반환
     return {
-      interestsId: savedInterest.id,
+      interestsId: (savedInterest._id as mongoose.Types.ObjectId).toString(),
       content: savedInterest.content,
     };
   } catch (error) {
@@ -124,47 +117,48 @@ export async function addUserInterest(content: string): Promise<UserInterestsTyp
 /**
  * 사용자 관심사를 수정합니다.
  *
- * @param {number} interestsId - 수정할 관심사의 ID
+ * @param {string} interestsId - 수정할 관심사의 ID
  * @param {string} content - 새로운 관심사 내용
  * @returns {Promise<UserInterestsType>} 수정된 관심사 정보
  * @description 현재 세션의 사용자 ID를 사용하여 기존 관심사를 수정합니다.
  *
  * @example
  * ```typescript
- * const updatedInterest = await updateUserInterest(1, '머신러닝')
+ * const updatedInterest = await updateUserInterest('507f1f77bcf86cd799439011', '머신러닝')
  * console.log(`관심사 수정됨: ${updatedInterest.content}`)
  * ```
  */
 export async function updateUserInterest(
-  interestsId: number,
+  interestsId: string,
   content: string
 ): Promise<UserInterestsType> {
   try {
-    // 세션에서 사용자 ID 가져오기
-    const session = await getSession();
-    if (!session) {
+    await ensureDatabaseConnection();
+    const currentUser = await getUserAuthStatus();
+
+    if (!currentUser.authenticate_status) {
       throw new Error('로그인이 필요합니다');
+    }
+
+    if (!currentUser.authorize_status) {
+      throw new Error('사용자 권한이 없습니다');
     }
 
     // 입력 데이터 검증
     const validatedData = UserInterestsSchema.parse({
-      userId: session.userId,
+      userId: currentUser.user?.id,
       content,
     });
 
-    await ensureDatabaseConnection();
-    const userRepository = getUserRepository();
-
-    // 사용자 존재 확인
-    const user = await userRepository.findOne({ where: { id: session.userId } });
-    if (!user) {
-      throw new Error('사용자를 찾을 수 없습니다');
+    // ObjectId 유효성 검사
+    if (!mongoose.Types.ObjectId.isValid(interestsId)) {
+      throw new Error('유효하지 않은 관심사 ID입니다');
     }
 
     // 관심사 존재 확인 및 소유권 확인
-    const interestRepository = getUserInterestsRepository();
-    const existingInterest = await interestRepository.findOne({
-      where: { id: interestsId, userId: session.userId },
+    const existingInterest = await UserInterestsModel.findOne({
+      _id: interestsId,
+      userId: currentUser.user?.id,
     });
 
     if (!existingInterest) {
@@ -173,11 +167,11 @@ export async function updateUserInterest(
 
     // 관심사 수정
     existingInterest.content = validatedData.content;
-    const updatedInterest = await interestRepository.save(existingInterest);
+    const updatedInterest = await existingInterest.save();
 
     // UserInterestsType 형태로 반환
     return {
-      interestsId: updatedInterest.id,
+      interestsId: (updatedInterest._id as mongoose.Types.ObjectId).toString(),
       content: updatedInterest.content,
     };
   } catch (error) {
@@ -186,7 +180,8 @@ export async function updateUserInterest(
       error instanceof Error &&
       (error.message === '사용자를 찾을 수 없습니다' ||
         error.message === '로그인이 필요합니다' ||
-        error.message === '관심사를 찾을 수 없습니다')
+        error.message === '관심사를 찾을 수 없습니다' ||
+        error.message === '유효하지 않은 관심사 ID입니다')
     ) {
       throw error;
     }
@@ -201,37 +196,38 @@ export async function updateUserInterest(
 /**
  * 사용자 관심사를 제거합니다.
  *
- * @param {number} interestsId - 제거할 관심사의 ID
+ * @param {string} interestsId - 제거할 관심사의 ID
  * @returns {Promise<void>} 제거 완료를 의미하는 Promise
  * @description 현재 세션의 사용자 ID를 사용하여 기존 관심사를 제거합니다.
  *
  * @example
  * ```typescript
- * await removeUserInterest(1)
+ * await removeUserInterest('507f1f77bcf86cd799439011')
  * console.log('관심사가 제거되었습니다')
  * ```
  */
-export async function removeUserInterest(interestsId: number): Promise<void> {
+export async function removeUserInterest(interestsId: string): Promise<void> {
   try {
-    // 세션에서 사용자 ID 가져오기
-    const session = await getSession();
-    if (!session) {
+    await ensureDatabaseConnection();
+
+    const currentUser = await getUserAuthStatus();
+    if (!currentUser.authenticate_status) {
       throw new Error('로그인이 필요합니다');
     }
 
-    await ensureDatabaseConnection();
-    const userRepository = getUserRepository();
+    if (!currentUser.authorize_status) {
+      throw new Error('사용자 권한이 없습니다');
+    }
 
-    // 사용자 존재 확인
-    const user = await userRepository.findOne({ where: { id: session.userId } });
-    if (!user) {
-      throw new Error('사용자를 찾을 수 없습니다');
+    // ObjectId 유효성 검사
+    if (!mongoose.Types.ObjectId.isValid(interestsId)) {
+      throw new Error('유효하지 않은 관심사 ID입니다');
     }
 
     // 관심사 존재 확인 및 소유권 확인
-    const interestRepository = getUserInterestsRepository();
-    const existingInterest = await interestRepository.findOne({
-      where: { id: interestsId, userId: session.userId },
+    const existingInterest = await UserInterestsModel.findOne({
+      _id: interestsId,
+      userId: currentUser.user?.id,
     });
 
     if (!existingInterest) {
@@ -239,14 +235,15 @@ export async function removeUserInterest(interestsId: number): Promise<void> {
     }
 
     // 관심사 제거
-    await interestRepository.remove(existingInterest);
+    await UserInterestsModel.findByIdAndDelete(interestsId);
   } catch (error) {
     console.error('사용자 관심사 제거 중 오류 발생:', error);
     if (
       error instanceof Error &&
       (error.message === '사용자를 찾을 수 없습니다' ||
         error.message === '로그인이 필요합니다' ||
-        error.message === '관심사를 찾을 수 없습니다')
+        error.message === '관심사를 찾을 수 없습니다' ||
+        error.message === '유효하지 않은 관심사 ID입니다')
     ) {
       throw error;
     }

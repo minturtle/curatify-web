@@ -5,17 +5,17 @@
  * @author Minseok kim
  */
 
-import { RSSFeed, RSSUrl, RSSUrlFormData, PaginatedRSSFeeds, RSSType } from '@/lib/types/rss';
+import { RSSFeed, RSSUrl, RSSUrlFormData, PaginatedRSSFeeds, type RSSType } from '@/lib/types/rss';
 import { ensureDatabaseConnection } from '@/lib/database/connection';
-import {
-  getRSSUrlRepository,
-  getUserRepository,
-  getRSSFeedRepository,
-} from '@/lib/database/repositories';
-import { RSSUrl as RSSUrlEntity } from '@/lib/database/entities/RSSUrl';
 import { publishJson } from '@/lib/redis/client';
-import { getSession } from '@/lib/auth/session';
-import { In } from 'typeorm';
+import mongoose from 'mongoose';
+import {
+  RSSUrl as RSSUrlModel,
+  type IRSSUrl,
+  RSSFeed as RSSFeedModel,
+  type IRSSFeed,
+} from '@/lib/database/entities';
+import { getUserAuthStatus } from '../auth/userService';
 
 /**
  * RSS 피드 등록
@@ -31,38 +31,33 @@ export async function addRSSUrl(formData: RSSUrlFormData) {
     throw new Error('유효하지 않은 YouTube URL입니다.');
   }
 
-  // 세션에서 사용자 ID 가져오기
-  const session = await getSession();
-  if (!session || !session.userId) {
-    throw new Error('로그인이 필요합니다.');
-  }
-
   try {
     // 데이터베이스 연결 확인
     await ensureDatabaseConnection();
 
-    // RSSUrl 엔티티 가져오기
-    const RSSUrlRepository = getRSSUrlRepository();
-    const UserRepository = getUserRepository();
-
-    const user = await UserRepository.findOne({ where: { id: session.userId } });
-    if (!user) {
-      throw new Error('사용자를 찾을 수 없습니다.');
+    const currentUser = await getUserAuthStatus();
+    if (!currentUser.authenticate_status) {
+      throw new Error('로그인이 필요합니다.');
+    }
+    if (!currentUser.authorize_status) {
+      throw new Error('사용자 권한이 없습니다.');
     }
 
-    const rssUrl = new RSSUrlEntity();
-    rssUrl.url = formData.url;
-    rssUrl.type = formData.type === 'youtube' ? 'youtube' : 'normal';
-    rssUrl.user = user;
+    // 새 RSS URL 생성
+    const rssUrl = new RSSUrlModel({
+      url: formData.url,
+      type: formData.type === 'youtube' ? 'youtube' : 'normal',
+      userId: currentUser.user?.id,
+    });
 
-    const savedRssUrl = await RSSUrlRepository.save(rssUrl);
+    const savedRssUrl = await rssUrl.save();
 
     // Redis 채널에 RSS URL + RSS Type + 사용자 ID publish
     const publishData = {
       url: formData.url,
       type: formData.type,
-      userId: session.userId,
-      rssUrlId: savedRssUrl.id,
+      userId: currentUser.user?.id,
+      rssUrlId: (savedRssUrl._id as mongoose.Types.ObjectId).toString(),
     };
 
     await publishJson('rss:update_feeds', publishData);
@@ -82,27 +77,22 @@ export async function getRSSFeeds(
   limit: number = 10
 ): Promise<PaginatedRSSFeeds> {
   try {
-    // 세션에서 사용자 ID 가져오기
-    const session = await getSession();
-    if (!session || !session.userId) {
-      throw new Error('로그인이 필요합니다.');
-    }
-
     // 데이터베이스 연결 확인
     await ensureDatabaseConnection();
 
-    // RSSFeed repository 가져오기
-    const RSSFeedRepository = getRSSFeedRepository();
+    const currentUser = await getUserAuthStatus();
+    if (!currentUser.authenticate_status) {
+      throw new Error('로그인이 필요합니다.');
+    }
+    if (!currentUser.authorize_status) {
+      throw new Error('사용자 권한이 없습니다.');
+    }
+    // 현재 사용자의 RSS URL ID 목록 조회
+    const userRSSUrls = await RSSUrlModel.find({
+      userId: currentUser.user?.id,
+    }).select('_id');
 
-    // 현재 사용자의 RSS URL ID 목록 조회 (삭제된 것 포함 - 기존 피드 유지)
-    const RSSUrlRepository = getRSSUrlRepository();
-    const userRSSUrls = await RSSUrlRepository.find({
-      where: { user: { id: session.userId } },
-      select: ['id'],
-      withDeleted: true, // 삭제된 RSS URL도 포함하여 기존 피드 유지
-    });
-
-    const userRSSUrlIds = userRSSUrls.map((url) => url.id);
+    const userRSSUrlIds = userRSSUrls.map((url: IRSSUrl) => url._id);
 
     // 사용자의 RSS URL이 없는 경우 빈 결과 반환
     if (userRSSUrlIds.length === 0) {
@@ -114,8 +104,8 @@ export async function getRSSFeeds(
     }
 
     // 전체 아이템 수 조회 (현재 사용자만)
-    const totalItems = await RSSFeedRepository.count({
-      where: { rssUrl: { id: In(userRSSUrlIds) } },
+    const totalItems = await RSSFeedModel.countDocuments({
+      rssUrlId: { $in: userRSSUrlIds },
     });
 
     // 페이지네이션 계산
@@ -123,36 +113,50 @@ export async function getRSSFeeds(
     const totalPages = Math.ceil(totalItems / limit);
 
     // RSS 피드 조회 (최신순 정렬, 현재 사용자만)
-    const feeds = await RSSFeedRepository.find({
-      where: { rssUrl: { id: In(userRSSUrlIds) } },
-      order: {
-        writedAt: 'DESC',
-        createdAt: 'DESC',
-      },
-      skip,
-      take: limit,
-      relations: ['rssUrl'],
-    });
+    const feeds = await RSSFeedModel.find({
+      rssUrlId: { $in: userRSSUrlIds },
+    })
+      .sort({ writedAt: -1, createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate('rssUrlId', 'url type');
 
     // 타입 변환 (DB 엔티티 → 타입 정의)
-    const items: RSSFeed[] = await Promise.all(
-      feeds.map(async (feed) => ({
-        id: feed.id.toString(),
-        title: feed.title,
-        summary: feed.summary || undefined,
-        writedAt: feed.writedAt,
-        originalUrl: feed.originalUrl || undefined,
-        createdAt: feed.createdAt,
-        updatedAt: feed.updatedAt,
-        rssUrl: feed.rssUrl
+    const items: RSSFeed[] = feeds.map((feed: IRSSFeed) => ({
+      id: (feed._id as mongoose.Types.ObjectId).toString(),
+      title: feed.title,
+      summary: feed.summary || undefined,
+      writedAt: feed.writedAt,
+      originalUrl: feed.originalUrl || undefined,
+      createdAt: feed.createdAt,
+      updatedAt: feed.updatedAt,
+      rssUrl:
+        feed.rssUrlId && typeof feed.rssUrlId === 'object' && '_id' in feed.rssUrlId
           ? ({
-              id: (await feed.rssUrl).id.toString(),
-              url: (await feed.rssUrl).url,
-              type: (await feed.rssUrl).type as RSSType,
+              id: (
+                feed.rssUrlId as unknown as {
+                  _id: mongoose.Types.ObjectId;
+                  url: string;
+                  type: string;
+                }
+              )._id.toString(),
+              url: (
+                feed.rssUrlId as unknown as {
+                  _id: mongoose.Types.ObjectId;
+                  url: string;
+                  type: string;
+                }
+              ).url,
+              type: (
+                feed.rssUrlId as unknown as {
+                  _id: mongoose.Types.ObjectId;
+                  url: string;
+                  type: string;
+                }
+              ).type as RSSType,
             } as RSSUrl)
           : undefined,
-      }))
-    );
+    }));
 
     return {
       items,
@@ -175,30 +179,28 @@ export async function getRSSFeeds(
  */
 export async function getRSSUrls(): Promise<RSSUrl[]> {
   try {
-    // 세션에서 사용자 ID 가져오기
-    const session = await getSession();
-    if (!session || !session.userId) {
-      throw new Error('로그인이 필요합니다.');
-    }
-
     // 데이터베이스 연결 확인
     await ensureDatabaseConnection();
 
-    // RSSUrl repository 가져오기
-    const RSSUrlRepository = getRSSUrlRepository();
+    const currentUser = await getUserAuthStatus();
+    if (!currentUser.authenticate_status) {
+      throw new Error('로그인이 필요합니다.');
+    }
+    if (!currentUser.authorize_status) {
+      throw new Error('사용자 권한이 없습니다.');
+    }
 
-    // 현재 사용자의 RSS URL 목록 조회 (삭제되지 않은 것만)
-    const rssUrls = await RSSUrlRepository.find({
-      where: { user: { id: session.userId } },
-      order: {
-        createdAt: 'DESC',
-      },
-      withDeleted: false, // 소프트 삭제된 레코드 제외
-    });
+    // 현재 사용자의 RSS URL 목록 조회
+    const rssUrls = await RSSUrlModel.find({
+      userId: currentUser.user?.id,
+    })
+      .sort({ createdAt: -1 })
+      .where('deletedAt')
+      .equals(null); // 삭제되지 않은 것만
 
     // 타입 변환 (DB 엔티티 → 타입 정의)
-    const items: RSSUrl[] = rssUrls.map((rssUrl) => ({
-      id: rssUrl.id.toString(),
+    const items: RSSUrl[] = rssUrls.map((rssUrl: IRSSUrl) => ({
+      id: (rssUrl._id as mongoose.Types.ObjectId).toString(),
       url: rssUrl.url,
       type: rssUrl.type === 'youtube' ? 'youtube' : 'normal',
     }));
@@ -220,32 +222,35 @@ export async function getRSSUrls(): Promise<RSSUrl[]> {
  */
 export async function deleteRSSUrl(rssUrlId: string): Promise<void> {
   try {
-    // 세션에서 사용자 ID 가져오기
-    const session = await getSession();
-    if (!session || !session.userId) {
-      throw new Error('로그인이 필요합니다.');
-    }
-
     // 데이터베이스 연결 확인
     await ensureDatabaseConnection();
 
-    // RSSUrl repository 가져오기
-    const RSSUrlRepository = getRSSUrlRepository();
+    const currentUser = await getUserAuthStatus();
+    if (!currentUser.authenticate_status) {
+      throw new Error('로그인이 필요합니다.');
+    }
+    if (!currentUser.authorize_status) {
+      throw new Error('사용자 권한이 없습니다.');
+    }
+
+    // ObjectId 유효성 검사
+    if (!mongoose.Types.ObjectId.isValid(rssUrlId)) {
+      throw new Error('유효하지 않은 RSS URL ID입니다.');
+    }
 
     // RSS URL 조회 (현재 사용자의 것만)
-    const rssUrl = await RSSUrlRepository.findOne({
-      where: {
-        id: parseInt(rssUrlId),
-        user: { id: session.userId },
-      },
+    const rssUrl = await RSSUrlModel.findOne({
+      _id: rssUrlId,
+      userId: currentUser.user?.id,
     });
 
     if (!rssUrl) {
       throw new Error('RSS URL을 찾을 수 없습니다.');
     }
 
-    // 소프트 삭제 실행
-    await RSSUrlRepository.softDelete(rssUrl.id);
+    // 소프트 삭제 실행 (deletedAt 필드 설정)
+    rssUrl.deletedAt = new Date();
+    await rssUrl.save();
   } catch (error) {
     // 로그인 관련 에러는 원본 메시지 유지
     if (error instanceof Error && error.message === '로그인이 필요합니다.') {
