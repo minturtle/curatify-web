@@ -55,7 +55,6 @@ export async function loginAction(_: unknown, formData: FormData): Promise<Actio
     if (!user) {
       return { message: '아이디/비밀번호가 일치하지 않습니다' };
     }
-
     // 비밀번호 검증
     const isValidPassword = await verifyPassword(validatedPassword, user.password);
     if (!isValidPassword) {

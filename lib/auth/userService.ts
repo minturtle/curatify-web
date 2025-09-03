@@ -23,10 +23,8 @@ export async function findUserByEmail(email: string): Promise<UserWithPassword |
   try {
     await ensureDatabaseConnection();
     const user = await UserModel.findOne({ email });
-
     if (!user) return null;
 
-    // IUser를 UserWithPassword 타입으로 변환
     return {
       id: (user._id as mongoose.Types.ObjectId).toString(),
       email: user.email,

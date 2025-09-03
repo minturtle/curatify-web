@@ -2,9 +2,6 @@ import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 import { findUserById } from '@/lib/auth/userService';
 
-// 동적 렌더링 강제 설정
-export const dynamic = 'force-dynamic';
-
 /**
  * 인증 상태 확인 API 엔드포인트
  *

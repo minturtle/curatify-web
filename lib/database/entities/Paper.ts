@@ -1,4 +1,4 @@
-import mongoose, { Document } from 'mongoose';
+import mongoose, { Document, Schema } from 'mongoose';
 
 // Paper 인터페이스 정의
 export interface IPaper extends Document {
@@ -13,6 +13,22 @@ export interface IPaper extends Document {
   updatedAt: Date;
 }
 
+// 최소한의 스키마 정의 (인덱스나 제약조건 없이)
+const PaperSchema = new Schema(
+  {
+    title: String,
+    authors: String,
+    updateDate: Date,
+    url: String,
+    abstract: String,
+    summary: String,
+    categoryIds: [Schema.Types.ObjectId],
+  },
+  {
+    timestamps: true,
+    collection: 'papers',
+  }
+);
+
 // 모델이 이미 존재하는지 확인한 후 생성
-export const Paper =
-  mongoose.models.Paper || mongoose.model<IPaper>('Paper', new mongoose.Schema({}));
+export const Paper = mongoose.models.Paper || mongoose.model<IPaper>('Paper', PaperSchema);
