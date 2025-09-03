@@ -6,7 +6,7 @@ export interface IRSSFeed extends Document {
   summary?: string;
   writedAt: Date;
   originalUrl?: string;
-  rssUrlId: mongoose.Types.ObjectId;
+  rssUrl: mongoose.Types.ObjectId | { _id: mongoose.Types.ObjectId; name?: string; url?: string };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -18,7 +18,11 @@ const RSSFeedSchema = new Schema(
     summary: String,
     writedAt: Date,
     originalUrl: String,
-    rssUrlId: Schema.Types.ObjectId,
+    rssUrl: {
+      type: Schema.Types.ObjectId,
+      ref: 'RSSUrl',
+      required: true,
+    },
   },
   {
     timestamps: true,

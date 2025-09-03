@@ -105,7 +105,7 @@ export async function getRSSFeeds(
 
     // 전체 아이템 수 조회 (현재 사용자만)
     const totalItems = await RSSFeedModel.countDocuments({
-      rssUrlId: { $in: userRSSUrlIds },
+      rssUrl: { $in: userRSSUrlIds },
     });
 
     // 페이지네이션 계산
@@ -114,12 +114,12 @@ export async function getRSSFeeds(
 
     // RSS 피드 조회 (최신순 정렬, 현재 사용자만)
     const feeds = await RSSFeedModel.find({
-      rssUrlId: { $in: userRSSUrlIds },
+      rssUrl: { $in: userRSSUrlIds },
     })
       .sort({ writedAt: -1, createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('rssUrlId', 'url type');
+      .populate('rssUrl', 'url type');
 
     // 타입 변환 (DB 엔티티 → 타입 정의)
     const items: RSSFeed[] = feeds.map((feed: IRSSFeed) => ({
@@ -131,24 +131,24 @@ export async function getRSSFeeds(
       createdAt: feed.createdAt,
       updatedAt: feed.updatedAt,
       rssUrl:
-        feed.rssUrlId && typeof feed.rssUrlId === 'object' && '_id' in feed.rssUrlId
+        feed.rssUrl && typeof feed.rssUrl === 'object' && '_id' in feed.rssUrl
           ? ({
               id: (
-                feed.rssUrlId as unknown as {
+                feed.rssUrl as unknown as {
                   _id: mongoose.Types.ObjectId;
                   url: string;
                   type: string;
                 }
               )._id.toString(),
               url: (
-                feed.rssUrlId as unknown as {
+                feed.rssUrl as unknown as {
                   _id: mongoose.Types.ObjectId;
                   url: string;
                   type: string;
                 }
               ).url,
               type: (
-                feed.rssUrlId as unknown as {
+                feed.rssUrl as unknown as {
                   _id: mongoose.Types.ObjectId;
                   url: string;
                   type: string;
