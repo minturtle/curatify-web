@@ -110,7 +110,7 @@ export async function updateUserInterestAction(
 ): Promise<ActionState> {
   try {
     // 폼 데이터에서 값 추출
-    const interestsId = parseInt(formData.get('interestsId') as string, 10);
+    const interestsId = formData.get('interestsId') as string;
     const content = formData.get('content') as string;
 
     // 입력 데이터 검증
@@ -161,7 +161,7 @@ export async function removeUserInterestAction(
 ): Promise<ActionState> {
   try {
     // 폼 데이터에서 interestsId 추출
-    const interestsId = parseInt(formData.get('interestsId') as string, 10);
+    const interestsId = formData.get('interestsId') as string;
 
     // 입력 데이터 검증
     const validatedFields = RemoveInterestSchema.safeParse({ interestsId });
@@ -253,7 +253,7 @@ export async function addUserInterestJsonAction(
  */
 export async function removeUserInterestJsonAction(
   prevState: ActionState,
-  interestsId: number
+  interestsId: string
 ): Promise<ActionState> {
   try {
     // 입력 데이터 검증

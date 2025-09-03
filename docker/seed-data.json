@@ -67,7 +67,7 @@
       "_id": { "$oid": "507f1f77bcf86cd799439041" },
       "type": "normal",
       "url": "https://rss.example.com/ai-news",
-      "userId": { "$oid": "507f1f77bcf86cd799439011" },
+      "userId": { "$oid": "68b844e3b475e31b2d0d2b51" },
       "createdAt": { "$date": "2024-01-01T00:00:00.000Z" },
       "updatedAt": { "$date": "2024-01-01T00:00:00.000Z" },
       "deletedAt": null
@@ -76,7 +76,7 @@
       "_id": { "$oid": "507f1f77bcf86cd799439042" },
       "type": "youtube",
       "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC123456789",
-      "userId": { "$oid": "507f1f77bcf86cd799439011" },
+      "userId": { "$oid": "68b844e3b475e31b2d0d2b51" },
       "createdAt": { "$date": "2024-01-01T00:00:00.000Z" },
       "updatedAt": { "$date": "2024-01-01T00:00:00.000Z" },
       "deletedAt": null
