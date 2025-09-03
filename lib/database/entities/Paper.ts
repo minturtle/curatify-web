@@ -10,7 +10,7 @@ export interface IContentBlock {
 // Paper 인터페이스 정의
 export interface IPaper extends Document {
   title: string;
-  authors?: string;
+  authors?: string[];
   updateDate?: Date;
   url?: string;
   abstract: string;
@@ -25,7 +25,7 @@ export interface IPaper extends Document {
 const PaperSchema = new Schema(
   {
     title: String,
-    authors: String,
+    authors: [String],
     updateDate: Date,
     url: String,
     abstract: String,

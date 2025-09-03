@@ -26,20 +26,11 @@ import type { IContentBlock } from '@/lib/database/entities/Paper';
 async function entityToDto(entity: IPaper): Promise<Paper> {
   const categories: string[] = entity.categories || [];
 
-  // authors를 배열로 파싱 (콤마 구분 또는 JSON 형태로 저장되어 있다고 가정)
-  let authors: string[] = [];
-  try {
-    authors = entity.authors ? JSON.parse(entity.authors) : [];
-  } catch {
-    // JSON 파싱 실패 시 콤마로 분리
-    authors = entity.authors ? entity.authors.split(',').map((a: string) => a.trim()) : [];
-  }
-
   return {
     id: (entity._id as mongoose.Types.ObjectId).toString(),
     title: entity.title,
     summary: entity.summary || entity.abstract || '',
-    authors,
+    authors: entity.authors || [],
     link: entity.url || '',
     lastUpdate: entity.updateDate
       ? entity.updateDate.toISOString().split('T')[0]
@@ -61,18 +52,10 @@ async function userLibraryEntityToDto(entity: IUserLibrary): Promise<UserLibrary
     throw new Error('논문을 찾을 수 없습니다.');
   }
 
-  // authors를 배열로 파싱
-  let authors: string[] = [];
-  try {
-    authors = paper.authors ? JSON.parse(paper.authors) : [];
-  } catch {
-    authors = paper.authors ? paper.authors.split(',').map((a: string) => a.trim()) : [];
-  }
-
   return {
     paperContentId: (entity.paperId as mongoose.Types.ObjectId).toString(),
     title: paper.title,
-    authors,
+    authors: paper.authors || [],
     createdAt: entity.createdAt,
   };
 }
@@ -102,13 +85,6 @@ function contentBlockToBlock(contentBlock: IContentBlock, index: number): PaperC
  * @private
  */
 function paperToDetail(paper: IPaper): PaperDetail {
-  // authors를 배열로 파싱
-  let authors: string[] = [];
-  try {
-    authors = paper.authors ? JSON.parse(paper.authors) : [];
-  } catch {
-    authors = paper.authors ? paper.authors.split(',').map((a: string) => a.trim()) : [];
-  }
   // contentBlocks를 PaperContentBlock 배열로 변환 (order로 정렬)
   const contentBlocks = paper.contentBlocks
     .sort((a, b) => a.order - b.order)
@@ -117,7 +93,7 @@ function paperToDetail(paper: IPaper): PaperDetail {
   return {
     paperContentId: (paper._id as mongoose.Types.ObjectId).toString(),
     title: paper.title,
-    authors,
+    authors: paper.authors || [],
     content: contentBlocks,
     createdAt: paper.createdAt,
     publishedAt: paper.updateDate,
