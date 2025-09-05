@@ -29,9 +29,9 @@ Root/
 ├── hooks/                        # 커스텀 React Hooks
 ├── lib/                          # 유틸리티 및 설정
 │   ├── database/                 # 데이터베이스 관련
-│   │   ├── config.ts             # 환경별 DB 설정
-│   │   ├── ormconfig.ts          # TypeORM 설정
-│   │   ├── entities/             # 데이터베이스 엔티티
+│   │   ├── config.ts             # MongoDB 설정 및 연결 관리
+│   │   ├── connection.ts         # MongoDB 연결 관리
+│   │   ├── entities/             # MongoDB 스키마
 │   │   │   ├── User.ts
 │   │   │   ├── Paper.ts
 │   │   │   ├── RSSFeed.ts
@@ -73,13 +73,15 @@ Root/
 ## 환경별 설정
 
 ### 개발환경 (Development)
-- **데이터베이스**: MySQL
+
+- **데이터베이스**: MongoDB (로컬)
 - **캐시/세션**: Redis
-- **자동 동기화**: 비활성화
+- **자동 동기화**: 활성화
 - **로깅**: 활성화
 
 ### 운영환경 (Production)
-- **데이터베이스**: Oracle
+
+- **데이터베이스**: MongoDB (클라우드)
 - **캐시/세션**: Redis
 - **자동 동기화**: 비활성화
 - **로깅**: 비활성화
@@ -87,6 +89,7 @@ Root/
 ## 설치 및 설정
 
 ### 1. 의존성 설치
+
 ```bash
 npm install
 ```
@@ -94,64 +97,90 @@ npm install
 ### 2. 환경변수 설정
 
 #### 개발환경
-```bash
-cp env.development.example .env.local
-```
 
-`.env.local` 파일을 편집하여 개발환경 설정을 완료하세요:
-```env
-NODE_ENV=development
-DB_HOST=localhost
-DB_PORT=3306
-DB_USERNAME=root
-DB_PASSWORD=your_password
-DB_NAME=curatify_dev
+`.env.local` 파일을 생성하고 다음 내용을 추가하세요:
+
+```bash
+# MongoDB 설정
+MONGODB_URI=mongodb://admin:adminpassword@localhost:27017/curatify?authSource=admin
+
+# Redis 설정
 REDIS_URL=redis://localhost:6379
+
+# 환경 설정
+NODE_ENV=development
 ```
 
 #### 운영환경
+
 ```bash
-cp env.production.example .env.local
-```
+# MongoDB 설정 (클라우드)
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/curatify
 
-`.env.local` 파일을 편집하여 운영환경 설정을 완료하세요:
-```env
+# Redis 설정
+REDIS_URL=redis://your-redis-url:6379
+
+# 환경 설정
 NODE_ENV=production
-DB_HOST=your_oracle_host
-DB_PORT=1521
-DB_USERNAME=your_oracle_username
-DB_PASSWORD=your_oracle_password
-DB_SID=XE
-DB_SERVICE_NAME=your_service_name
-REDIS_URL=redis://your_redis_host:6379
 ```
 
-### 3. 데이터베이스 설정
+### 3. Docker 컨테이너 실행
 
-#### 개발환경 (MySQL)
-1. MySQL 서버 설치 및 실행
-2. 데이터베이스 생성:
-```sql
-CREATE DATABASE curatify_dev;
+```bash
+cd docker
+docker-compose up -d
 ```
 
-#### 운영환경 (Oracle)
-1. Oracle 데이터베이스 서버 설정
-2. 사용자 및 권한 설정
-3. 서비스 이름 또는 SID 설정
+### 4. 애플리케이션 실행
 
-### 4. Redis 설정
-1. Redis 서버 설치 및 실행
-2. Redis 연결 URL 설정
+```bash
+npm run dev
+```
+
+## 데이터베이스 마이그레이션
+
+### Oracle → MongoDB 마이그레이션 완료
+
+프로젝트가 Oracle 데이터베이스에서 MongoDB로 성공적으로 마이그레이션되었습니다.
+
+#### 주요 변경사항:
+
+- **TypeORM → Mongoose**: ORM을 TypeORM에서 Mongoose로 변경
+- **Oracle → MongoDB**: 관계형 데이터베이스에서 NoSQL 데이터베이스로 변경
+- **연결 관리**: MongoDB 연결 풀링 및 이벤트 리스너 추가
+- **환경 변수**: `MONGODB_URI` 환경 변수 사용
+
+#### 새로운 기능:
+
+- MongoDB 연결 상태 모니터링
+- 자동 재연결 및 연결 풀 관리
+- 프로세스 종료 시 자동 연결 정리
+- 개발/운영 환경별 최적화된 설정
+
+#### 사용법:
+
+```typescript
+import { ensureDatabaseConnection, isDatabaseConnected } from '@/lib/database/connection';
+
+// 데이터베이스 연결 확인
+await ensureDatabaseConnection();
+
+// 연결 상태 확인
+if (isDatabaseConnected()) {
+  // 데이터베이스 작업 수행
+}
+```
 
 ## 실행
 
 ### 개발 서버
+
 ```bash
 npm run dev
 ```
 
 ### 빌드
+
 ```bash
 # 개발환경 빌드
 npm run build:dev
@@ -161,6 +190,7 @@ npm run build:prod
 ```
 
 ### 서버 시작
+
 ```bash
 # 개발환경 서버
 npm run start:dev
@@ -169,9 +199,8 @@ npm run start:dev
 npm run start:prod
 ```
 
-
-
 ## 테스트
+
 ```bash
 # 테스트 실행
 npm run test

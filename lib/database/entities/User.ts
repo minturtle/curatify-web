@@ -1,44 +1,28 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  OneToMany,
-} from 'typeorm';
-import type { RSSUrl } from './RSSUrl';
-import type { UserLibrary } from './UserLibrary';
-import type { UserInterests } from './UserInterests';
+import mongoose, { Document, Schema } from 'mongoose';
 
-@Entity('USERS')
-export class User {
-  @PrimaryGeneratedColumn({ name: 'ID' })
-  id!: number;
-
-  @Column({ type: 'varchar', unique: true, name: 'EMAIL' })
-  email!: string;
-
-  @Column({ type: 'varchar', name: 'PASSWORD' })
-  password!: string;
-
-  @Column({ type: 'varchar', nullable: true, name: 'NAME' })
-  name!: string;
-
-  @Column({ type: 'number', default: 0, name: 'IS_VERIFIED', transformer: { to: (value: boolean) => value ? 1 : 0, from: (value: number) => value === 1 } })
-  isVerified!: boolean;
-
-  @CreateDateColumn({ name: 'CREATED_AT' })
-  createdAt!: Date;
-
-  @UpdateDateColumn({ name: 'UPDATED_AT' })
-  updatedAt!: Date;
-
-  @OneToMany('RSSUrl', 'user')
-  rssUrls!: Promise<RSSUrl[]>;
-
-  @OneToMany('UserLibrary', 'user')
-  userLibraries!: Promise<UserLibrary[]>;
-
-  @OneToMany('UserInterests', 'user')
-  interests!: Promise<UserInterests[]>;
+// User 인터페이스 정의
+export interface IUser extends Document {
+  email: string;
+  password: string;
+  name?: string;
+  isVerified: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
+
+// 최소한의 스키마 정의 (인덱스나 제약조건 없이)
+const UserSchema = new Schema(
+  {
+    email: String,
+    password: String,
+    name: String,
+    isVerified: Boolean,
+  },
+  {
+    timestamps: true,
+    collection: 'users',
+  }
+);
+
+// 모델이 이미 존재하는지 확인한 후 생성
+export const User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);

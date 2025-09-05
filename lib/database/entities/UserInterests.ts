@@ -1,32 +1,26 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
-import { User } from './User';
+import mongoose, { Document, Schema } from 'mongoose';
 
-@Entity('USER_INTERESTS')
-export class UserInterests {
-  @PrimaryGeneratedColumn({ name: 'ID' })
-  id!: number;
-
-  @Column({ name: 'USER_ID' })
-  userId!: number;
-
-  @Column({ type: 'varchar', length: 300, name: 'CONTENT' })
-  content!: string;
-
-  @CreateDateColumn({ name: 'CREATED_AT' })
-  createdAt!: Date;
-
-  @UpdateDateColumn({ name: 'UPDATED_AT' })
-  updatedAt!: Date;
-
-  @ManyToOne(() => User, (user) => user.interests, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'USER_ID' })
-  user!: User;
+// UserInterests 인터페이스 정의
+export interface IUserInterests extends Document {
+  userId: mongoose.Types.ObjectId;
+  content: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
+
+// 최소한의 스키마 정의 (인덱스나 제약조건 없이)
+const UserInterestsSchema = new Schema(
+  {
+    userId: Schema.Types.ObjectId,
+    content: String,
+  },
+  {
+    timestamps: true,
+    collection: 'user_interests',
+  }
+);
+
+// 모델이 이미 존재하는지 확인한 후 생성
+export const UserInterests =
+  mongoose.models.UserInterests ||
+  mongoose.model<IUserInterests>('UserInterests', UserInterestsSchema);

@@ -6,12 +6,12 @@
 import { z } from 'zod';
 
 export interface UserInterestsType {
-  interestsId: number;
+  interestsId: string; // MongoDB ObjectId를 문자열로
   content: string;
 }
 
 export const UserInterestsSchema = z.object({
-  userId: z.number(),
+  userId: z.string().min(1, '사용자 ID는 필수입니다'), // MongoDB ObjectId를 문자열로
   content: z.string().max(300, '관심사는 300자 이하여야 합니다'),
 });
 
@@ -21,10 +21,10 @@ export const AddInterestSchema = z.object({
 });
 
 export const UpdateInterestSchema = z.object({
-  interestsId: z.number().positive('유효한 관심사 ID를 입력해주세요'),
+  interestsId: z.string().min(1, '유효한 관심사 ID를 입력해주세요'), // MongoDB ObjectId를 문자열로
   content: UserInterestsSchema.shape.content,
 });
 
 export const RemoveInterestSchema = z.object({
-  interestsId: z.number().positive('유효한 관심사 ID를 입력해주세요'),
+  interestsId: z.string().min(1, '유효한 관심사 ID를 입력해주세요'), // MongoDB ObjectId를 문자열로
 });

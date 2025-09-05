@@ -6,7 +6,7 @@
 import { z } from 'zod';
 
 export interface Paper {
-  id: number;
+  id: string; // MongoDB ObjectId를 문자열로
   title: string;
   summary: string;
   authors: string[];
@@ -23,7 +23,7 @@ export interface PaperListProps {
  * 논문 심층 분석 등록을 위한 Zod 스키마
  */
 export const RegisterPaperSchema = z.object({
-  paperId: z.coerce.number().int().positive('논문 ID는 양의 정수여야 합니다.'),
+  paperId: z.string().min(1, '논문 ID는 필수입니다.'),
 });
 
 export type RegisterPaperInput = z.infer<typeof RegisterPaperSchema>;
@@ -38,24 +38,24 @@ export interface RegisterPaperActionResult {
 }
 
 export interface UserLibrary {
-  paperContentId: number;
+  paperContentId: string; // MongoDB ObjectId를 문자열로
   title: string;
   authors: string[];
   createdAt: Date;
 }
 
 export interface PaperDetail {
-  paperContentId: number;
+  paperContentId: string; // MongoDB ObjectId를 문자열로
   title: string;
   authors: string[];
   content: PaperContentBlock[];
   createdAt: Date;
-  publishedAt: Date;
+  publishedAt?: Date; // optional로 변경
   url: string;
 }
 
 export interface PaperContentBlock {
-  id: number;
+  id: string; // MongoDB ObjectId를 문자열로
   title: string;
   content: string;
   order: number;

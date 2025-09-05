@@ -1,37 +1,24 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  ManyToOne,
-  JoinColumn,
-  Index,
-} from 'typeorm';
-import type { User } from './User';
-import type { Paper } from './Paper';
+import mongoose, { Document, Schema } from 'mongoose';
 
-@Entity('USER_LIBRARY')
-@Index('idx_user_id', ['userId'])
-@Index('idx_paper_id', ['paperId'])
-@Index('idx_created_at', ['createdAt'])
-export class UserLibrary {
-  @PrimaryGeneratedColumn({ name: 'ID' })
-  id!: number;
-
-  @Column({ name: 'USER_ID' })
-  userId!: number;
-
-  @Column({ name: 'PAPER_ID' })
-  paperId!: number;
-
-  @CreateDateColumn({ name: 'CREATED_AT' })
-  createdAt!: Date;
-
-  @ManyToOne('User', 'userLibraries')
-  @JoinColumn({ name: 'USER_ID' })
-  user!: Promise<User>;
-
-  @ManyToOne('Paper', 'userLibraries')
-  @JoinColumn({ name: 'PAPER_ID' })
-  paper!: Promise<Paper>;
+// UserLibrary 인터페이스 정의
+export interface IUserLibrary extends Document {
+  userId: mongoose.Types.ObjectId;
+  paperId: mongoose.Types.ObjectId;
+  createdAt: Date;
 }
+
+// 최소한의 스키마 정의 (인덱스나 제약조건 없이)
+const UserLibrarySchema = new Schema(
+  {
+    userId: Schema.Types.ObjectId,
+    paperId: Schema.Types.ObjectId,
+  },
+  {
+    timestamps: { createdAt: true, updatedAt: false },
+    collection: 'user_libraries',
+  }
+);
+
+// 모델이 이미 존재하는지 확인한 후 생성
+export const UserLibrary =
+  mongoose.models.UserLibrary || mongoose.model<IUserLibrary>('UserLibrary', UserLibrarySchema);

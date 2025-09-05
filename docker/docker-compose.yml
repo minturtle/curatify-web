@@ -1,23 +1,22 @@
 version: '3.8'
 
 services:
-  oracle:
-    image: doctorkirk/oracle-19c
-    container_name: curatify_oracle
+  mongodb:
+    image: mongo:7.0
+    container_name: curatify_mongodb
     restart: unless-stopped
     environment:
-      ORACLE_PWD: rootpassword
-      ORACLE_CHARACTERSET: AL32UTF8
-      NLS_LANG: AMERICAN_AMERICA.AL32UTF8
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: adminpassword
+      MONGO_INITDB_DATABASE: curatify
     ports:
-      - '1521:1521'
-      - '5500:5500'
+      - '27017:27017'
     volumes:
-      - oracle_data:/opt/oracle/oradata
-      - ./init.sql:/opt/oracle/scripts/setup/01-init.sql
-      - ./seed-data.sql:/opt/oracle/scripts/setup/02-seed-data.sql
+      - mongodb_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     networks:
       - curatify_network
+    command: mongod --auth
 
   redis:
     image: redis:7-alpine
@@ -32,7 +31,7 @@ services:
       - curatify_network
 
 volumes:
-  oracle_data:
+  mongodb_data:
     driver: local
   redis_data:
     driver: local

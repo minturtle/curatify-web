@@ -5,6 +5,9 @@ import { getUserAuthStatus } from '@/lib/auth/userService';
 import { AuthRequiredModal } from '@/components/auth/AuthRequiredModal';
 import { ApprovalRequiredModal } from '@/components/auth/ApprovalRequiredModal';
 
+// 동적 렌더링 강제 설정
+export const dynamic = 'force-dynamic';
+
 interface HomePageProps {
   searchParams: Promise<{ page?: string }>;
 }
@@ -12,11 +15,11 @@ interface HomePageProps {
 export default async function Home({ searchParams }: HomePageProps) {
   // 인증/인가 상태 확인
   const authStatus = await getUserAuthStatus();
-  
+
   if (!authStatus.authenticate_status) {
     return <AuthRequiredModal redirectTo="/auth" />;
   }
-  
+
   if (!authStatus.authorize_status) {
     return <ApprovalRequiredModal userName={authStatus.user?.name} />;
   }

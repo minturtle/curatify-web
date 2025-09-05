@@ -1,0 +1,121 @@
+{
+  "users": [
+    {
+      "_id": {
+        "$oid": "68b844e3b475e31b2d0d2b51"
+      },
+      "email": "tester@test.com",
+      "password": "$2b$12$oBHCIbXXbzkqEe/PgaHuOui6GvnIBa2WnLwMo07GowfpzcXPl2znS",
+      "name": "김민석",
+      "isVerified": true,
+      "createdAt": {
+        "$date": "2025-09-03T13:38:43.525Z"
+      },
+      "updatedAt": {
+        "$date": "2025-09-03T13:38:43.525Z"
+      },
+      "__v": 0
+    }
+  ],
+  "papers": [
+    {
+      "_id": { "$oid": "507f1f77bcf86cd799439021" },
+      "title": "MongoDB를 활용한 대용량 데이터 처리 시스템",
+      "authors": ["김철수", "이영희", "박민수"],
+      "updateDate": { "$date": "2024-01-15T00:00:00.000Z" },
+      "url": "https://example.com/paper1",
+      "abstract": "이 논문은 MongoDB를 활용하여 대용량 데이터를 효율적으로 처리하는 시스템을 제안합니다...",
+      "summary": "MongoDB 기반 대용량 데이터 처리 시스템 설계 및 구현",
+      "categories": ["데이터베이스", "MongoDB", "대용량데이터"],
+      "contentBlocks": [
+        {
+          "contentTitle": "서론",
+          "content": "본 논문에서는 MongoDB를 활용한 대용량 데이터 처리 시스템에 대해 다룹니다...",
+          "order": 1
+        },
+        {
+          "contentTitle": "시스템 설계",
+          "content": "시스템은 다음과 같은 구조로 설계되었습니다...",
+          "order": 2
+        }
+      ],
+      "createdAt": { "$date": "2024-01-01T00:00:00.000Z" },
+      "updatedAt": { "$date": "2024-01-01T00:00:00.000Z" }
+    },
+    {
+      "_id": { "$oid": "507f1f77bcf86cd799439022" },
+      "title": "NoSQL 데이터베이스의 성능 최적화 기법",
+      "authors": ["최지훈", "정수진"],
+      "updateDate": { "$date": "2024-01-10T00:00:00.000Z" },
+      "url": "https://example.com/paper2",
+      "abstract": "NoSQL 데이터베이스의 성능을 최적화하기 위한 다양한 기법들을 분석하고 비교합니다...",
+      "summary": "NoSQL DB 성능 최적화 기법 분석 및 비교",
+      "categories": ["데이터베이스", "NoSQL", "성능최적화"],
+      "contentBlocks": [
+        {
+          "contentTitle": "서론",
+          "content": "NoSQL 데이터베이스의 성능 최적화에 대한 연구 배경과 목적을 설명합니다...",
+          "order": 1
+        }
+      ],
+      "createdAt": { "$date": "2024-01-01T00:00:00.000Z" },
+      "updatedAt": { "$date": "2024-01-01T00:00:00.000Z" }
+    }
+  ],
+  "rss_urls": [
+    {
+      "_id": { "$oid": "507f1f77bcf86cd799439041" },
+      "type": "normal",
+      "url": "https://rss.example.com/ai-news",
+      "userId": { "$oid": "68b844e3b475e31b2d0d2b51" },
+      "createdAt": { "$date": "2024-01-01T00:00:00.000Z" },
+      "updatedAt": { "$date": "2024-01-01T00:00:00.000Z" },
+      "deletedAt": null
+    },
+    {
+      "_id": { "$oid": "507f1f77bcf86cd799439042" },
+      "type": "youtube",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC123456789",
+      "userId": { "$oid": "68b844e3b475e31b2d0d2b51" },
+      "createdAt": { "$date": "2024-01-01T00:00:00.000Z" },
+      "updatedAt": { "$date": "2024-01-01T00:00:00.000Z" },
+      "deletedAt": null
+    }
+  ],
+  "rss_feeds": [
+    {
+      "_id": { "$oid": "507f1f77bcf86cd799439051" },
+      "title": "AI 기술의 최신 동향",
+      "summary": "인공지능 분야의 최신 연구 동향과 기술 발전에 대한 요약...",
+      "writedAt": { "$date": "2024-01-20T00:00:00.000Z" },
+      "originalUrl": "https://example.com/ai-trends",
+      "rssUrl": { "$oid": "507f1f77bcf86cd799439041" },
+      "createdAt": { "$date": "2024-01-01T00:00:00.000Z" },
+      "updatedAt": { "$date": "2024-01-01T00:00:00.000Z" }
+    }
+  ],
+  "user_library": [
+    {
+      "_id": { "$oid": "507f1f77bcf86cd799439061" },
+      "userId": { "$oid": "68b844e3b475e31b2d0d2b51" },
+      "paperId": { "$oid": "507f1f77bcf86cd799439021" },
+      "createdAt": { "$date": "2024-01-01T00:00:00.000Z" }
+    }
+  ],
+  "user_interests": [
+    {
+      "_id": { "$oid": "507f1f77bcf86cd799439071" },
+      "userId": { "$oid": "507f1f77bcf86cd799439011" },
+      "content": "인공지능",
+      "createdAt": { "$date": "2024-01-01T00:00:00.000Z" },
+      "updatedAt": { "$date": "2024-01-01T00:00:00.000Z" }
+    },
+    {
+      "_id": { "$oid": "507f1f77bcf86cd799439072" },
+      "userId": { "$oid": "507f1f77bcf86cd799439011" },
+      "content": "데이터베이스",
+      "createdAt": { "$date": "2024-01-01T00:00:00.000Z" },
+      "updatedAt": { "$date": "2024-01-01T00:00:00.000Z" }
+    }
+  ]
+}

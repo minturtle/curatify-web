@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { initializeDatabase, closeDatabase } from './database/ormconfig';
+import { initializeDatabase, closeDatabase } from './database/config';
 import { initializeRedis, closeRedis } from './redis/client';
 
 let isInitialized = false;
@@ -49,12 +49,14 @@ export const closeApp = async () => {
 process.on('SIGINT', async () => {
   console.log('\nSIGINT 신호를 받았습니다. 애플리케이션을 종료합니다...');
   await closeApp();
+  await closeRedis();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
   console.log('\nSIGTERM 신호를 받았습니다. 애플리케이션을 종료합니다...');
   await closeApp();
+  await closeRedis();
   process.exit(0);
 });
 
