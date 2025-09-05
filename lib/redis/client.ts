@@ -1,4 +1,4 @@
-import Redis from 'ioredis';
+import Redis, { RedisOptions } from 'ioredis';
 import { getRedisConfig } from '../database/config';
 
 // Redis 클라이언트 인스턴스
@@ -8,14 +8,25 @@ let redisClient: Redis | null = null;
 const createRedisClient = (): Redis => {
   const config = getRedisConfig();
 
-  return new Redis(config.url, {
+  const redisOptions: RedisOptions = {
     lazyConnect: false, // 즉시 연결 시도
     keepAlive: config.keepAlive,
     connectTimeout: config.connectTimeout,
     commandTimeout: config.commandTimeout,
     enableOfflineQueue: true, // 오프라인 큐 활성화
     maxRetriesPerRequest: 3,
-  });
+  };
+
+  // Redis 인증 정보가 있는 경우 추가
+  if (config.username) {
+    redisOptions.username = config.username;
+  }
+
+  if (config.password) {
+    redisOptions.password = config.password;
+  }
+
+  return new Redis(config.url, redisOptions);
 };
 
 // Redis 클라이언트 초기화

@@ -7,6 +7,19 @@ export interface MongoDBConfig {
   options: ConnectOptions;
 }
 
+// Redis 설정 타입
+export interface RedisConfig {
+  url: string;
+  maxRetriesPerRequest: number;
+  lazyConnect: boolean;
+  keepAlive: number;
+  connectTimeout: number;
+  commandTimeout: number;
+  enableOfflineQueue: boolean;
+  username?: string;
+  password?: string;
+}
+
 // 환경별 데이터베이스 설정
 export const getDatabaseConfig = (): MongoDBConfig => {
   const isDevelopment = process.env.NODE_ENV === 'development';
@@ -43,8 +56,8 @@ export const getDatabaseConfig = (): MongoDBConfig => {
 };
 
 // Redis 설정
-export const getRedisConfig = () => {
-  return {
+export const getRedisConfig = (): RedisConfig => {
+  const config: RedisConfig = {
     url: process.env.REDIS_URL || 'redis://localhost:6379',
     maxRetriesPerRequest: 3,
     lazyConnect: true,
@@ -53,6 +66,17 @@ export const getRedisConfig = () => {
     commandTimeout: 5000,
     enableOfflineQueue: false,
   };
+
+  // Redis 인증 정보가 있는 경우 추가
+  if (process.env.REDIS_USERNAME) {
+    config.username = process.env.REDIS_USERNAME;
+  }
+
+  if (process.env.REDIS_PASSWORD) {
+    config.password = process.env.REDIS_PASSWORD;
+  }
+
+  return config;
 };
 
 // MongoDB 연결 초기화
