@@ -41,16 +41,7 @@ export const getDatabaseConfig = (): MongoDBConfig => {
     // 운영환경 (MongoDB)
     return {
       uri: process.env.MONGODB_URI!,
-      options: {
-        maxPoolSize: 20,
-        serverSelectionTimeoutMS: 10000,
-        socketTimeoutMS: 45000,
-        bufferCommands: false,
-        autoIndex: false,
-        autoCreate: false,
-        retryWrites: true,
-        w: 'majority',
-      },
+      options: { },
     };
   }
 };
