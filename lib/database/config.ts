@@ -27,7 +27,7 @@ export const getDatabaseConfig = (): MongoDBConfig => {
   if (isDevelopment) {
     // 개발환경 (MongoDB)
     return {
-      uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/curify_dev',
+      uri: process.env.MONGODB_URI!,
       options: {
         maxPoolSize: 10,
         serverSelectionTimeoutMS: 5000,
@@ -40,7 +40,7 @@ export const getDatabaseConfig = (): MongoDBConfig => {
   } else {
     // 운영환경 (MongoDB)
     return {
-      uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/curify_prod',
+      uri: process.env.MONGODB_URI!,
       options: {
         maxPoolSize: 20,
         serverSelectionTimeoutMS: 10000,
@@ -58,7 +58,7 @@ export const getDatabaseConfig = (): MongoDBConfig => {
 // Redis 설정
 export const getRedisConfig = (): RedisConfig => {
   const config: RedisConfig = {
-    url: process.env.REDIS_URL || 'redis://localhost:6379',
+    url: process.env.REDIS_URL!,
     maxRetriesPerRequest: 3,
     lazyConnect: true,
     keepAlive: 30000,
