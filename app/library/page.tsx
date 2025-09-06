@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { getUserLibrary } from '@/lib/paper/paperService';
-import PaginationSSR from '@/components/ui/pagination-ssr';
+import CustomPagination from '@/components/ui/custom-pagination';
 import LibraryList from '@/components/library/LibraryList';
 import { getUserAuthStatus } from '@/lib/auth/userService';
 import { AuthRequiredModal } from '@/components/auth/AuthRequiredModal';
@@ -55,7 +55,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
         </div>
 
         {/* 페이지네이션 */}
-        <PaginationSSR currentPage={page} totalPages={totalPages} />
+        <CustomPagination currentPage={page} totalPages={totalPages} />
       </div>
     );
   } catch (error) {

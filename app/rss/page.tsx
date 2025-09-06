@@ -18,11 +18,11 @@ interface RSSPageProps {
 export default async function RSSPage({ searchParams }: RSSPageProps) {
   // 인증/인가 상태 확인
   const authStatus = await getUserAuthStatus();
-  
+
   if (!authStatus.authenticate_status) {
     return <AuthRequiredModal redirectTo="/auth" />;
   }
-  
+
   if (!authStatus.authorize_status) {
     return <ApprovalRequiredModal userName={authStatus.user?.name} />;
   }

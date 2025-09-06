@@ -6,7 +6,7 @@
 import React from 'react';
 import { getPapers } from '@/lib/paper/paperService';
 import PaperCard from './PaperCard';
-import PaginationSSR from '@/components/ui/pagination-ssr';
+import CustomPagination from '@/components/ui/custom-pagination';
 
 interface PaperListProps {
   searchParams: {
@@ -53,7 +53,7 @@ export default async function PaperList({ searchParams }: PaperListProps) {
       </div>
 
       {/* 페이지네이션 */}
-      <PaginationSSR currentPage={currentPage} totalPages={totalPages} />
+      <CustomPagination currentPage={currentPage} totalPages={totalPages} />
     </div>
   );
 }

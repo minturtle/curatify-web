@@ -3,20 +3,28 @@
  * @author Minseok kim
  */
 
+'use client';
+
 import React from 'react';
 import { Pagination, PaginationContent, PaginationItem } from '@/components/ui/pagination';
 import Link from 'next/link';
+import { useSearchParams, usePathname } from 'next/navigation';
 
 interface PaginationSSRProps {
   currentPage: number;
   totalPages: number;
 }
 
-export default function PaginationSSR({ currentPage, totalPages }: PaginationSSRProps) {
+export default function CustomPagination({ currentPage, totalPages }: PaginationSSRProps) {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
   if (totalPages <= 1) return null;
 
   const createPageUrl = (page: number) => {
-    return `?page=${page}`;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', page.toString());
+    return `${pathname}?${params.toString()}`;
   };
 
   // 페이지 범위 계산 함수
