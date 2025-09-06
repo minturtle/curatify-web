@@ -11,6 +11,7 @@ import { getUserAuthStatus } from '@/lib/auth/userService';
 import {
   Paper as PaperModel,
   type IPaper,
+  PaperCategory as PaperCategoryModel,
   UserLibrary as UserLibraryModel,
   type IUserLibrary,
 } from '@/lib/database/entities';
@@ -105,11 +106,17 @@ function paperToDetail(paper: IPaper): PaperDetail {
  * 논문 목록을 가져오는 함수 (SSR용)
  * @param page 현재 페이지 (1부터 시작)
  * @param pageSize 페이지당 항목 수
+ * @param searchQuery 검색 쿼리 (논문 제목)
+ * @param category 카테고리 필터
  * @returns 논문 목록과 페이지네이션 정보
  */
 export async function getPapers(
   page: number = 1,
-  pageSize: number = 10
+  pageSize: number = 10,
+  searchQuery?: string,
+  categories?: string,
+  publicationYear?: string,
+  sortBy?: string
 ): Promise<{
   papers: Paper[];
   currentPage: number;
@@ -119,15 +126,68 @@ export async function getPapers(
   try {
     await ensureDatabaseConnection();
 
+    // 검색 조건 구성
+    const filter: Record<string, unknown> = {};
+
+    if (searchQuery && searchQuery.trim()) {
+      filter.title = { $regex: searchQuery.trim(), $options: 'i' };
+    }
+
+    if (categories && categories.trim()) {
+      // 다중 카테고리 필터링
+      const categoryList = categories
+        .split(',')
+        .map((cat) => cat.trim())
+        .filter((cat) => cat);
+      if (categoryList.length > 0) {
+        filter.categories = { $in: categoryList };
+      }
+    }
+
+    // 발행년도 필터
+    if (publicationYear && publicationYear !== 'all') {
+      if (publicationYear === 'older') {
+        filter.updateDate = { $lt: new Date('2020-01-01') };
+      } else {
+        const year = parseInt(publicationYear);
+        if (!isNaN(year)) {
+          const startDate = new Date(`${year}-01-01`);
+          const endDate = new Date(`${year + 1}-01-01`);
+          filter.updateDate = { $gte: startDate, $lt: endDate };
+        }
+      }
+    }
+
+    // 정렬 옵션 설정
+    let sortOption: Record<string, 1 | -1> = { createdAt: -1 }; // 기본값: 최신순
+    if (sortBy) {
+      switch (sortBy) {
+        case 'oldest':
+          sortOption = { createdAt: 1 };
+          break;
+        case 'title':
+          sortOption = { title: 1 };
+          break;
+        case 'relevance':
+          // 관련성 정렬은 검색 쿼리가 있을 때만 적용
+          if (searchQuery && searchQuery.trim()) {
+            sortOption = { title: 1 }; // 임시로 제목순 정렬
+          }
+          break;
+        default:
+          sortOption = { createdAt: -1 };
+      }
+    }
+
     // 전체 개수 조회
-    const totalCount = await PaperModel.countDocuments();
+    const totalCount = await PaperModel.countDocuments(filter);
 
     // 페이지네이션 계산
     const skip = (page - 1) * pageSize;
     const totalPages = Math.ceil(totalCount / pageSize);
 
-    // 논문 목록 조회 (최신순으로 정렬)
-    const entities = await PaperModel.find().sort({ createdAt: -1 }).skip(skip).limit(pageSize);
+    // 논문 목록 조회
+    const entities = await PaperModel.find(filter).sort(sortOption).skip(skip).limit(pageSize);
 
     // 엔티티를 DTO로 변환
     const papers = await Promise.all(entities.map(entityToDto));
@@ -272,5 +332,26 @@ export async function getPaperDetail(paperId: string): Promise<PaperDetail | nul
   } catch (error) {
     console.error('논문 상세 정보 조회 중 오류 발생:', error);
     throw new Error('논문 상세 정보 조회에 실패했습니다');
+  }
+}
+
+/**
+ * 모든 카테고리 목록을 가져오는 함수
+ * @returns 카테고리 목록 (code와 description 포함)
+ */
+export async function getCategories(): Promise<{ code: string; description: string }[]> {
+  try {
+    await ensureDatabaseConnection();
+
+    // PaperCategory 컬렉션에서 모든 카테고리 조회
+    const categories = await PaperCategoryModel.find({}).sort({ code: 1 });
+
+    return categories.map((category) => ({
+      code: category.code,
+      description: category.description,
+    }));
+  } catch (error) {
+    console.error('카테고리 목록 조회 중 오류 발생:', error);
+    return [];
   }
 }
