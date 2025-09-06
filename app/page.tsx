@@ -1,7 +1,8 @@
+import { Suspense } from 'react';
 import PaperList from '@/components/papers/PaperList';
+import PaperListSkeleton from '@/components/papers/PaperListSkeleton';
 import PaperSearch from '@/components/papers/PaperSearch';
-import PaginationSSR from '@/components/ui/pagination-ssr';
-import { getPapers, getCategories } from '@/lib/paper/paperService';
+import { getCategories } from '@/lib/paper/paperService';
 import { getUserAuthStatus } from '@/lib/auth/userService';
 import { AuthRequiredModal } from '@/components/auth/AuthRequiredModal';
 import { ApprovalRequiredModal } from '@/components/auth/ApprovalRequiredModal';
@@ -32,17 +33,9 @@ export default async function Home({ searchParams }: HomePageProps) {
   }
   // URL 파라미터에서 검색 조건 추출
   const params = await searchParams;
-  const currentPage = parseInt(params.page ?? '1', 10);
-  const searchQuery = params.search;
-  const categories = params.categories;
-  const publicationYear = params.year;
-  const sortBy = params.sort;
 
-  // 카테고리 목록과 논문 데이터를 병렬로 가져오기
-  const [categoryList, { papers, totalPages }] = await Promise.all([
-    getCategories(),
-    getPapers(currentPage, 3, searchQuery, categories, publicationYear, sortBy),
-  ]);
+  // 카테고리 목록 가져오기
+  const categoryList = await getCategories();
 
   return (
     <div>
@@ -56,9 +49,11 @@ export default async function Home({ searchParams }: HomePageProps) {
           {/* 검색 컴포넌트 */}
           <PaperSearch categories={categoryList} />
 
-          <PaperList papers={papers} />
+          {/* 논문 리스트 */}
+          <Suspense fallback={<PaperListSkeleton />}>
+            <PaperList searchParams={params} />
+          </Suspense>
         </div>
-        <PaginationSSR currentPage={currentPage} totalPages={totalPages} />
       </main>
     </div>
   );

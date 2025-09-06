@@ -4,10 +4,38 @@
  */
 
 import React from 'react';
-import { PaperListProps } from '@/lib/types/paper';
+import { getPapers } from '@/lib/paper/paperService';
 import PaperCard from './PaperCard';
+import PaginationSSR from '@/components/ui/pagination-ssr';
 
-export default function PaperList({ papers }: PaperListProps) {
+interface PaperListProps {
+  searchParams: {
+    page?: string;
+    search?: string;
+    categories?: string;
+    year?: string;
+    sort?: string;
+  };
+}
+
+export default async function PaperList({ searchParams }: PaperListProps) {
+  // URL 파라미터에서 검색 조건 추출
+  const currentPage = parseInt(searchParams.page ?? '1', 10);
+  const searchQuery = searchParams.search;
+  const categories = searchParams.categories;
+  const publicationYear = searchParams.year;
+  const sortBy = searchParams.sort;
+
+  // 논문 데이터 가져오기
+  const { papers, totalPages } = await getPapers(
+    currentPage,
+    5,
+    searchQuery,
+    categories,
+    publicationYear,
+    sortBy
+  );
+
   return (
     <div className="space-y-6 mb-6">
       {/* 논문 리스트 */}
@@ -23,6 +51,9 @@ export default function PaperList({ papers }: PaperListProps) {
           </div>
         )}
       </div>
+
+      {/* 페이지네이션 */}
+      <PaginationSSR currentPage={currentPage} totalPages={totalPages} />
     </div>
   );
 }
