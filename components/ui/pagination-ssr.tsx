@@ -19,6 +19,29 @@ export default function PaginationSSR({ currentPage, totalPages }: PaginationSSR
     return `?page=${page}`;
   };
 
+  // 페이지 범위 계산 함수
+  const getPageRange = () => {
+    // 현재 페이지를 중심으로 앞뒤 1개씩, 총 3개 표시
+    let startPage = Math.max(1, currentPage - 1);
+    let endPage = Math.min(totalPages, currentPage + 1);
+
+    // 처음 2페이지에서는 2개만 표시
+    if (currentPage <= 2) {
+      startPage = 1;
+      endPage = Math.min(2, totalPages);
+    }
+
+    // 마지막 2페이지에서는 2개만 표시
+    if (currentPage >= totalPages - 1) {
+      startPage = Math.max(1, totalPages - 1);
+      endPage = totalPages;
+    }
+
+    return { startPage, endPage };
+  };
+
+  const { startPage, endPage } = getPageRange();
+
   return (
     <Pagination>
       <PaginationContent>
@@ -53,7 +76,29 @@ export default function PaginationSSR({ currentPage, totalPages }: PaginationSSR
           )}
         </PaginationItem>
 
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+        {/* 첫 페이지가 1이 아니면 1과 ... 표시 */}
+        {startPage > 1 && (
+          <>
+            <PaginationItem>
+              <Link
+                href={createPageUrl(1)}
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 size-9"
+              >
+                1
+              </Link>
+            </PaginationItem>
+            {startPage > 2 && (
+              <PaginationItem>
+                <span className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium size-9">
+                  ...
+                </span>
+              </PaginationItem>
+            )}
+          </>
+        )}
+
+        {/* 페이지 범위 표시 */}
+        {Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map((page) => (
           <PaginationItem key={page}>
             <Link
               href={createPageUrl(page)}
@@ -67,6 +112,27 @@ export default function PaginationSSR({ currentPage, totalPages }: PaginationSSR
             </Link>
           </PaginationItem>
         ))}
+
+        {/* 마지막 페이지가 끝이 아니면 ...과 마지막 페이지 표시 */}
+        {endPage < totalPages && (
+          <>
+            {endPage < totalPages - 1 && (
+              <PaginationItem>
+                <span className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium size-9">
+                  ...
+                </span>
+              </PaginationItem>
+            )}
+            <PaginationItem>
+              <Link
+                href={createPageUrl(totalPages)}
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 size-9"
+              >
+                {totalPages}
+              </Link>
+            </PaginationItem>
+          </>
+        )}
 
         <PaginationItem>
           {currentPage === totalPages ? (
