@@ -33,9 +33,9 @@ async function entityToDto(entity: IPaper): Promise<Paper> {
     summary: entity.summary || entity.abstract || '',
     authors: entity.authors || [],
     link: entity.url || '',
-    lastUpdate: entity.updateDate
-      ? entity.updateDate.toISOString().split('T')[0]
-      : entity.createdAt.toISOString().split('T')[0],
+    lastUpdate:
+      entity.lastPublishDate?.toISOString().split('T')[0] ||
+      entity.createdAt.toISOString().split('T')[0],
     categories,
   };
 }
@@ -97,7 +97,7 @@ function paperToDetail(paper: IPaper): PaperDetail {
     authors: paper.authors || [],
     content: contentBlocks,
     createdAt: paper.createdAt,
-    publishedAt: paper.updateDate,
+    publishedAt: paper.lastPublishDate,
     url: paper.url || '',
   };
 }
@@ -147,13 +147,13 @@ export async function getPapers(
     // 발행년도 필터
     if (publicationYear && publicationYear !== 'all') {
       if (publicationYear === 'older') {
-        filter.updateDate = { $lt: new Date('2020-01-01') };
+        filter.lastPublishDate = { $lt: new Date('2020-01-01') };
       } else {
         const year = parseInt(publicationYear);
         if (!isNaN(year)) {
           const startDate = new Date(`${year}-01-01`);
           const endDate = new Date(`${year + 1}-01-01`);
-          filter.updateDate = { $gte: startDate, $lt: endDate };
+          filter.lastPublishDate = { $gte: startDate, $lt: endDate };
         }
       }
     }

@@ -11,7 +11,7 @@ export interface IContentBlock {
 export interface IPaper extends Document {
   title: string;
   authors?: string[];
-  updateDate?: Date;
+  lastPublishDate?: Date;
   url?: string;
   abstract: string;
   summary?: string;
@@ -26,7 +26,7 @@ const PaperSchema = new Schema(
   {
     title: String,
     authors: [String],
-    updateDate: Date,
+    lastPublishDate: Date,
     url: String,
     abstract: String,
     summary: String,
