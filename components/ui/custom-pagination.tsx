@@ -33,15 +33,15 @@ export default function CustomPagination({ currentPage, totalPages }: Pagination
     let startPage = Math.max(1, currentPage - 1);
     let endPage = Math.min(totalPages, currentPage + 1);
 
-    // 처음 2페이지에서는 2개만 표시
+    // 처음 2페이지에서는 최대 3개까지 표시 (1, 2, 3)
     if (currentPage <= 2) {
       startPage = 1;
-      endPage = Math.min(2, totalPages);
+      endPage = Math.min(3, totalPages);
     }
 
-    // 마지막 2페이지에서는 2개만 표시
+    // 마지막 2페이지에서는 최대 3개까지 표시
     if (currentPage >= totalPages - 1) {
-      startPage = Math.max(1, totalPages - 1);
+      startPage = Math.max(1, totalPages - 2);
       endPage = totalPages;
     }
 
