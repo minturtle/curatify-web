@@ -1,6 +1,7 @@
 import PaperList from '@/components/papers/PaperList';
+import PaperSearch from '@/components/papers/PaperSearch';
 import PaginationSSR from '@/components/ui/pagination-ssr';
-import { getPapers } from '@/lib/paper/paperService';
+import { getPapers, getCategories } from '@/lib/paper/paperService';
 import { getUserAuthStatus } from '@/lib/auth/userService';
 import { AuthRequiredModal } from '@/components/auth/AuthRequiredModal';
 import { ApprovalRequiredModal } from '@/components/auth/ApprovalRequiredModal';
@@ -9,7 +10,13 @@ import { ApprovalRequiredModal } from '@/components/auth/ApprovalRequiredModal';
 export const dynamic = 'force-dynamic';
 
 interface HomePageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    search?: string;
+    categories?: string;
+    year?: string;
+    sort?: string;
+  }>;
 }
 
 export default async function Home({ searchParams }: HomePageProps) {
@@ -23,11 +30,19 @@ export default async function Home({ searchParams }: HomePageProps) {
   if (!authStatus.authorize_status) {
     return <ApprovalRequiredModal userName={authStatus.user?.name} />;
   }
-  // URL 파라미터에서 페이지 번호 추출 (기본값: 1)
-  const currentPage = parseInt((await searchParams).page ?? '1', 10);
+  // URL 파라미터에서 검색 조건 추출
+  const params = await searchParams;
+  const currentPage = parseInt(params.page ?? '1', 10);
+  const searchQuery = params.search;
+  const categories = params.categories;
+  const publicationYear = params.year;
+  const sortBy = params.sort;
 
-  // Service에서 논문 데이터 가져오기
-  const { papers, totalPages } = await getPapers(currentPage, 3);
+  // 카테고리 목록과 논문 데이터를 병렬로 가져오기
+  const [categoryList, { papers, totalPages }] = await Promise.all([
+    getCategories(),
+    getPapers(currentPage, 3, searchQuery, categories, publicationYear, sortBy),
+  ]);
 
   return (
     <div>
@@ -35,10 +50,12 @@ export default async function Home({ searchParams }: HomePageProps) {
         <div className="mb-8 md:px-10 max-w-6xl mx-auto">
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900">Reseach Paper Abstracts</h2>
-            <p className="text-gray-600">
-              관심 분야에 맞춰 AI가 큐레이션한 논문 요약을 만나보세요.
-            </p>
+            <p className="text-gray-600">AI가 요약한 초록을 빠르게 확인해보세요.</p>
           </div>
+
+          {/* 검색 컴포넌트 */}
+          <PaperSearch categories={categoryList} />
+
           <PaperList papers={papers} />
         </div>
         <PaginationSSR currentPage={currentPage} totalPages={totalPages} />
