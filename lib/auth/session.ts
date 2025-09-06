@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { SessionData, UserData } from '@/lib/types/auth';
 
 const sessionOptions = {
-  password: process.env.SESSION_PASSWORD || 'complex_password_at_least_32_characters_long',
+  password: process.env.SESSION_PASSWORD!,
   cookieName: 'curatify-session',
   cookieOptions: {
     secure: process.env.NODE_ENV === 'production',
