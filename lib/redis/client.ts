@@ -71,7 +71,7 @@ export const closeRedis = async (): Promise<void> => {
 };
 
 /**
- * Redis Stream에 JSON 객체를 발행합니다.
+ * Redis Queue에 JSON 객체를 발행합니다.
  * @param channel - 발행할 스트림 이름
  * @param data - 발행할 JSON 데이터
  */
@@ -79,7 +79,7 @@ export const publishJson = async <T>(channel: string, data: T): Promise<void> =>
   const client = await getRedisClient();
   const message = JSON.stringify(data);
 
-  // Redis Stream에 메시지 추가
-  await client.xadd(channel, '*', 'data', message);
+  // Redis Queue에 메시지 추가
+  await client.rpush(channel, message);
   return;
 };
