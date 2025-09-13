@@ -1,6 +1,4 @@
-import { Suspense } from 'react';
 import PaperList from '@/components/papers/PaperList';
-import PaperListSkeleton from '@/components/papers/PaperListSkeleton';
 import PaperSearch from '@/components/papers/PaperSearch';
 import { getCategories } from '@/lib/paper/paperService';
 import { getUserAuthStatus } from '@/lib/auth/userService';
@@ -10,17 +8,7 @@ import { ApprovalRequiredModal } from '@/components/auth/ApprovalRequiredModal';
 // 동적 렌더링 강제 설정
 export const dynamic = 'force-dynamic';
 
-interface HomePageProps {
-  searchParams: Promise<{
-    page?: string;
-    search?: string;
-    categories?: string;
-    year?: string;
-    sort?: string;
-  }>;
-}
-
-export default async function Home({ searchParams }: HomePageProps) {
+export default async function Home() {
   // 인증/인가 상태 확인
   const authStatus = await getUserAuthStatus();
 
@@ -31,8 +19,6 @@ export default async function Home({ searchParams }: HomePageProps) {
   if (!authStatus.authorize_status) {
     return <ApprovalRequiredModal userName={authStatus.user?.name} />;
   }
-  // URL 파라미터에서 검색 조건 추출
-  const params = await searchParams;
 
   // 카테고리 목록 가져오기
   const categoryList = await getCategories();
@@ -50,9 +36,7 @@ export default async function Home({ searchParams }: HomePageProps) {
           <PaperSearch categories={categoryList} />
 
           {/* 논문 리스트 */}
-          <Suspense fallback={<PaperListSkeleton />}>
-            <PaperList searchParams={params} />
-          </Suspense>
+          <PaperList />
         </div>
       </main>
     </div>
