@@ -1,6 +1,6 @@
 'use server';
 
-import { registerPaper } from './paperService';
+import { registerPaper, registerPaperAbstract } from './paperService';
 import { RegisterPaperSchema, RegisterPaperActionResult } from '@/lib/types/paper';
 import { revalidatePath } from 'next/cache';
 
@@ -17,7 +17,6 @@ export async function registerPaperForAnalysis(
 ): Promise<RegisterPaperActionResult> {
   // FormData에서 데이터 추출
   const paperId = formData.get('paperId') as string;
-
   // Zod를 사용한 서버 측 검증
   const validatedFields = RegisterPaperSchema.safeParse({
     paperId,
@@ -35,20 +34,19 @@ export async function registerPaperForAnalysis(
 
   try {
     // 논문 등록 실행
-    const result = await registerPaper(validatedPaperId);
-
+    const result = await registerPaperAbstract(validatedPaperId);
     if (result) {
       revalidatePath('/');
       return {
         success: true,
-        message: '논문이 심층 분석을 위해 성공적으로 등록되었습니다.',
-      };
-    } else {
-      return {
-        success: false,
-        error: '논문 등록에 실패했습니다. 논문을 찾을 수 없거나 처리 중 오류가 발생했습니다.',
+        message: '논문 초록 분석이 성공적으로 등록되었습니다.',
       };
     }
+
+    return {
+      success: false,
+      error: '논문 등록에 실패했습니다. 논문을 찾을 수 없거나 처리 중 오류가 발생했습니다.',
+    };
   } catch (error) {
     console.error('논문 심층 분석 등록 중 오류 발생:', error);
     return {
