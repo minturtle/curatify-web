@@ -301,7 +301,7 @@ export async function registerPaper(paperId: string): Promise<boolean> {
       );
     } catch (redisError) {
       console.error('Redis 메시지 발행 중 오류 발생:', redisError);
-      // Redis 오류가 있어도 논문 등록은 성공으로 처리
+      return false;
     }
 
     return true;
@@ -311,6 +311,44 @@ export async function registerPaper(paperId: string): Promise<boolean> {
   }
 }
 
+/**
+ * 논문 초록을 등록하는 함수
+ * @param paperArxivId 등록할 논문의 ArXiv ID
+ * @returns 등록 성공 여부
+ */
+export async function registerPaperAbstract(paperArxivId: string): Promise<boolean> {
+  try {
+    const currentUser = await getUserAuthStatus();
+
+    if (!currentUser.authenticate_status) {
+      throw new Error('사용자 인증에 실패했습니다.');
+    }
+
+    if (!currentUser.authorize_status) {
+      throw new Error('사용자 권한이 없습니다.');
+    }
+
+
+        // Redis 채널에 메시지 발행
+      try {
+        await publishJson('paper:abstract', {
+          user_id: currentUser.user?.id,
+          paper_id: paperArxivId,
+        });
+        console.log(
+          `논문 초록 분석 등록: ${paperArxivId} (사용자: ${currentUser.user?.email})`
+        );
+      } catch (redisError) {
+        console.error('Redis 메시지 발행 중 오류 발생:', redisError);
+        return false;
+      }
+
+    return true;
+  } catch (error) {
+    console.error('논문 초록 등록 중 오류 발생:', error);
+    return false;
+  }
+}
 /**
  * 논문 상세 정보를 조회하는 함수
  * @param paperId 논문 ID

@@ -19,14 +19,29 @@ export interface PaperListProps {
   papers: Paper[];
 }
 
-/**
- * 논문 심층 분석 등록을 위한 Zod 스키마
- */
+
 export const RegisterPaperSchema = z.object({
   paperId: z.string().min(1, '논문 ID는 필수입니다.'),
 });
 
-export type RegisterPaperInput = z.infer<typeof RegisterPaperSchema>;
+/**
+ * ArXiv ID 형식 검증을 위한 정규식
+ * 형식: YYMM.NNNNN 또는 YYMM.NNNNNvN
+ * 예: 2301.00001, 2301.00001v1
+ */
+const ARXIV_ID_REGEX = /^\d{4}\.\d{5}(v\d+)?$/;
+
+/**
+ * 논문 심층 분석 등록을 위한 Zod 스키마
+ */
+export const RegisterPaperAbstractSchema = z.object({
+  paperId: z
+    .string()
+    .min(1, 'ArXiv ID는 필수입니다.')
+    .regex(ARXIV_ID_REGEX, '올바른 ArXiv ID 형식이 아닙니다. (예: 2301.00001 또는 2301.00001v1)'),
+});
+
+export type RegisterPaperInput = z.infer<typeof RegisterPaperAbstractSchema>;
 
 /**
  * 논문 심층 분석 등록 결과 타입
