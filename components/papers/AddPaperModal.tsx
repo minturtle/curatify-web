@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { registerPaperForAnalysis } from '@/lib/paper/actions';
+import { registerPaperAbstractAction } from '@/lib/paper/actions';
 import { RegisterPaperActionResult } from '@/lib/types/paper';
 import { PlusIcon, Loader2Icon } from 'lucide-react';
 
@@ -27,7 +27,7 @@ export default function AddPaperModal({ children, onSuccess }: AddPaperModalProp
   
   // useActionState를 사용하여 서버 액션 상태 관리
   const [state, formAction, isPending] = useActionState<RegisterPaperActionResult, FormData>(
-    registerPaperForAnalysis,
+    registerPaperAbstractAction,
     { success: false }
   );
 
@@ -39,12 +39,19 @@ export default function AddPaperModal({ children, onSuccess }: AddPaperModalProp
     }
   };
 
-  // 성공 시 모달 닫기 및 콜백 실행
+  // 성공 시 3초 후 모달 닫기 및 콜백 실행
   React.useEffect(() => {
     if (state.success) {
       setPaperId('');
-      setOpen(false);
-      onSuccess?.();
+      
+      // 3초 후 모달 닫기
+      const timer = setTimeout(() => {
+        setOpen(false);
+        onSuccess?.();
+      }, 3000);
+      
+      // 컴포넌트 언마운트 시 타이머 정리
+      return () => clearTimeout(timer);
     }
   }, [state.success, onSuccess]);
 

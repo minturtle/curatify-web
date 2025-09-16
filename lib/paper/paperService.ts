@@ -336,7 +336,7 @@ export async function registerPaperAbstract(paperArxivId: string): Promise<boole
           paper_id: paperArxivId,
         });
         console.log(
-          `논문 초록 분석 등록: ${paperArxivId} (사용자: ${currentUser.user?.id})`
+          `논문 초록 분석 등록: ${paperArxivId} (사용자: ${currentUser.user?.email})`
         );
       } catch (redisError) {
         console.error('Redis 메시지 발행 중 오류 발생:', redisError);
