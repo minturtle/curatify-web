@@ -14,6 +14,7 @@ import {
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Search, ChevronDown, RotateCcw, ChevronUp } from 'lucide-react';
+import AddPaperModal from './AddPaperModal';
 
 interface PaperSearchProps {
   categories?: { code: string; description: string }[];
@@ -92,21 +93,29 @@ export default function PaperSearch({ categories = [] }: PaperSearchProps) {
           </div>
 
           {/* 검색 버튼들 */}
-          <div className="flex gap-3">
-            <Button onClick={handleSearch} className="flex items-center gap-2">
-              <Search className="h-4 w-4" />
-              검색
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
-              className="flex items-center gap-2"
-            >
-              고급 검색
-              <ChevronDown
-                className={`h-4 w-4 transition-transform ${showAdvancedSearch ? 'rotate-180' : ''}`}
-              />
-            </Button>
+          <div className="flex justify-between items-center gap-3 flex-wrap">
+            <div className="flex gap-3">
+              <Button onClick={handleSearch} className="flex items-center gap-2 cursor-pointer">
+                <Search className="h-4 w-4" />
+                검색
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                고급 검색
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${showAdvancedSearch ? 'rotate-180' : ''}`}
+                />
+              </Button>
+            </div>
+            <AddPaperModal 
+              onSuccess={() => {
+                // 논문 등록 성공 시 페이지 새로고침
+                window.location.reload();
+              }}
+            />
           </div>
         </div>
       </Card>
