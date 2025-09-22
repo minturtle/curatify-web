@@ -12,9 +12,10 @@ export async function GET(request: NextRequest) {
     const categories = searchParams.get('categories') ?? undefined;
     const year = searchParams.get('year') ?? undefined;
     const sort = searchParams.get('sort') ?? undefined;
+    const userOnly = searchParams.get('userOnly') === 'true';
 
     // 논문 데이터 가져오기
-    const result = await getPapers(page, limit, search, categories, year, sort);
+    const result = await getPapers(page, limit, search, categories, year, sort, userOnly);
 
     return NextResponse.json(result);
   } catch (error) {

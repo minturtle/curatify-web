@@ -39,6 +39,7 @@ export default function PaperList() {
   const categories = searchParams.get('categories');
   const publicationYear = searchParams.get('year');
   const sortBy = searchParams.get('sort');
+  const userOnly = searchParams.get('userOnly') === 'true';
 
   useEffect(() => {
     const fetchPapers = async () => {
@@ -56,6 +57,7 @@ export default function PaperList() {
         if (categories) params.append('categories', categories);
         if (publicationYear) params.append('year', publicationYear);
         if (sortBy) params.append('sort', sortBy);
+        if (userOnly) params.append('userOnly', 'true');
 
         const response = await fetch(`/api/papers?${params.toString()}`);
 
@@ -73,7 +75,7 @@ export default function PaperList() {
     };
 
     fetchPapers();
-  }, [currentPage, searchQuery, categories, publicationYear, sortBy]);
+  }, [currentPage, searchQuery, categories, publicationYear, sortBy, userOnly]);
 
   // 로딩 중일 때 스켈레톤 표시
   if (loading) {
