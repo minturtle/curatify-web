@@ -159,11 +159,11 @@ export async function getPapers(
     }
 
     // 정렬 옵션 설정
-    let sortOption: Record<string, 1 | -1> = { lastPublishDate: -1 }; // 기본값: 최신순
+    let sortOption: Record<string, 1 | -1> = { lastPublishDate: -1, createdAt: -1 }; // 기본값: 최신순
     if (sortBy) {
       switch (sortBy) {
         case 'oldest':
-          sortOption = { lastPublishDate: 1 };
+          sortOption = { lastPublishDate: 1, createdAt: 1 };
           break;
         case 'title':
           sortOption = { title: 1 };
@@ -175,7 +175,7 @@ export async function getPapers(
           }
           break;
         default:
-          sortOption = { lastPublishDate: -1 };
+          sortOption = { lastPublishDate: -1, createdAt: -1 };
       }
     }
 
