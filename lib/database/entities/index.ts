@@ -6,6 +6,7 @@ export { RSSUrl, type IRSSUrl } from './RSSUrl';
 export { RSSFeed, type IRSSFeed } from './RSSFeed';
 export { UserLibrary, type IUserLibrary } from './UserLibrary';
 export { UserInterests, type IUserInterests } from './UserInterests';
+export { UserPaperAbstracts, type IUserPaperAbstracts } from './UserPaperAbstracts';
 
 // 모든 모델을 배열로 export (초기화 시 사용)
 export const models = [
@@ -16,4 +17,5 @@ export const models = [
   'RSSFeed',
   'UserLibrary',
   'UserInterests',
+  'UserPaperAbstracts',
 ] as const;

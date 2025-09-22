@@ -28,6 +28,7 @@ export default function PaperSearch({ categories = [] }: PaperSearchProps) {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [publicationYear, setPublicationYear] = useState(searchParams.get('year') || 'all');
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
+  const [userOnly, setUserOnly] = useState(searchParams.get('userOnly') === 'true');
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
 
   const handleSearch = () => {
@@ -47,6 +48,10 @@ export default function PaperSearch({ categories = [] }: PaperSearchProps) {
 
     if (sortBy && sortBy !== 'newest') {
       params.set('sort', sortBy);
+    }
+
+    if (userOnly) {
+      params.set('userOnly', 'true');
     }
 
     // 페이지를 1로 리셋
@@ -69,6 +74,7 @@ export default function PaperSearch({ categories = [] }: PaperSearchProps) {
     setSelectedCategories([]);
     setPublicationYear('all');
     setSortBy('newest');
+    setUserOnly(false);
     router.push('/');
   };
 
@@ -90,6 +96,21 @@ export default function PaperSearch({ categories = [] }: PaperSearchProps) {
               onKeyDown={handleKeyPress}
               className="pl-10 pr-4 py-3 text-base"
             />
+          </div>
+
+          {/* 내가 추가한 논문만 보기 체크박스 */}
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="userOnly"
+              checked={userOnly}
+              onCheckedChange={(checked: boolean) => setUserOnly(checked)}
+            />
+            <label
+              htmlFor="userOnly"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              내가 추가한 논문만 보기
+            </label>
           </div>
 
           {/* 검색 버튼들 */}

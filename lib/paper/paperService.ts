@@ -14,6 +14,8 @@ import {
   PaperCategory as PaperCategoryModel,
   UserLibrary as UserLibraryModel,
   type IUserLibrary,
+  UserPaperAbstracts as UserPaperAbstractsModel,
+  type IUserPaperAbstracts,
 } from '@/lib/database/entities';
 import type { IContentBlock } from '@/lib/database/entities/Paper';
 
@@ -108,6 +110,9 @@ function paperToDetail(paper: IPaper): PaperDetail {
  * @param pageSize 페이지당 항목 수
  * @param searchQuery 검색 쿼리 (논문 제목)
  * @param category 카테고리 필터
+ * @param publicationYear 발행년도 필터
+ * @param sortBy 정렬 옵션
+ * @param filterByUserOnly 현재 사용자의 논문만 필터링할지 여부
  * @returns 논문 목록과 페이지네이션 정보
  */
 export async function getPapers(
@@ -116,7 +121,8 @@ export async function getPapers(
   searchQuery?: string,
   categories?: string,
   publicationYear?: string,
-  sortBy?: string
+  sortBy?: string,
+  filterByUserOnly: boolean = false
 ): Promise<{
   papers: Paper[];
   currentPage: number;
@@ -125,6 +131,20 @@ export async function getPapers(
 }> {
   try {
     await ensureDatabaseConnection();
+
+    // 사용자별 필터링이 필요한 경우 현재 사용자 정보 가져오기
+    let currentUser = null;
+    if (filterByUserOnly) {
+      currentUser = await getUserAuthStatus();
+      
+      if (!currentUser.authenticate_status) {
+        throw new Error('사용자 인증에 실패했습니다.');
+      }
+
+      if (!currentUser.authorize_status) {
+        throw new Error('사용자 권한이 없습니다.');
+      }
+    }
 
     // 검색 조건 구성
     const filter: Record<string, unknown> = {};
@@ -156,6 +176,29 @@ export async function getPapers(
           filter.lastPublishDate = { $gte: startDate, $lt: endDate };
         }
       }
+    }
+
+    // 사용자별 필터링
+    if (filterByUserOnly && currentUser?.user?.id) {
+      // user_paper_abstracts 컬렉션에서 현재 사용자의 논문 ID들 조회
+      const userPaperAbstracts = await UserPaperAbstractsModel.find({
+        user_id: new mongoose.Types.ObjectId(currentUser.user.id),
+      }).select('paper_id');
+
+      const userPaperIds = userPaperAbstracts.map((doc) => doc.paper_id);
+      
+      if (userPaperIds.length === 0) {
+        // 사용자가 등록한 논문이 없는 경우 빈 결과 반환
+        return {
+          papers: [],
+          currentPage: page,
+          totalPages: 0,
+          totalCount: 0,
+        };
+      }
+
+      // 논문 ID 필터 추가
+      filter._id = { $in: userPaperIds };
     }
 
     // 정렬 옵션 설정
