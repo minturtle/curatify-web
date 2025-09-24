@@ -5,6 +5,7 @@ import ScrollSpy from 'react-scrollspy-navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { List } from 'lucide-react';
 import { PaperContentBlock } from '@/lib/types/paper';
+import { getHeadingLevel } from '@/lib/utils/headingProcessor';
 
 interface TableOfContentsProps {
   content: PaperContentBlock[];
@@ -20,7 +21,38 @@ export default function TableOfContents({ content }: TableOfContentsProps) {
   if (content.length <= 1) {
     return null;
   }
-  console.log(content);
+
+  // 헤딩 레벨에 따른 들여쓰기 계산 함수
+  const getIndentClass = (title: string) => {
+    const pattern = /^([a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)*)\s+(.+)$/;
+    const match = title.match(pattern);
+
+    if (match) {
+      const [, identifierPart] = match;
+      const level = getHeadingLevel(identifierPart);
+
+      // 레벨에 따른 들여쓰기 클래스 반환
+      switch (level) {
+        case 1:
+          return 'pl-0';
+        case 2:
+          return 'pl-4';
+        case 3:
+          return 'pl-8';
+        case 4:
+          return 'pl-12';
+        case 5:
+          return 'pl-16';
+        case 6:
+          return 'pl-20';
+        default:
+          return 'pl-0';
+      }
+    }
+
+    return 'pl-0';
+  };
+
   return (
     <div className="sticky top-4 z-10 mb-6">
       <Card className="max-h-[calc(100vh-2rem)] overflow-y-auto">
@@ -31,14 +63,14 @@ export default function TableOfContents({ content }: TableOfContentsProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4">
-          <ScrollSpy activeClass="text-blue-600 font-semibold" offsetTop={120}>
+          <ScrollSpy activeClass="nav-active" offsetTop={120}>
             <nav>
               <ul className="space-y-2">
                 {content.map((contentBlock) => (
                   <li key={contentBlock.id}>
                     <a
                       href={`#section-${contentBlock.id}`}
-                      className="text-gray-600 hover:text-blue-600 transition-colors duration-200 block py-2 px-3 rounded-md hover:bg-gray-50"
+                      className={`text-gray-600 hover:text-blue-600 transition-colors duration-200 block py-2 px-3 rounded-md hover:bg-gray-50 ${getIndentClass(contentBlock.title)}`}
                     >
                       {contentBlock.title}
                     </a>
