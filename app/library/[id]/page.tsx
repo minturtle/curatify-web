@@ -27,6 +27,26 @@ interface PageProps {
   }>;
 }
 
+// ReactMarkdown 컴포넌트 설정
+const markdownComponents = {
+  h1: ({ ...props }) => <h1 style={{ fontSize: '2rem', margin: '0.5em 0' }} {...props} />,
+  h2: ({ ...props }) => <h2 style={{ fontSize: '1.75rem', margin: '0.5em 0' }} {...props} />,
+  h3: ({ ...props }) => <h3 style={{ fontSize: '1.5rem', margin: '0.5em 0' }} {...props} />,
+  h4: ({ ...props }) => <h4 style={{ fontSize: '1.25rem', margin: '0.5em 0' }} {...props} />,
+  h5: ({ ...props }) => <h5 style={{ fontSize: '1.125rem', margin: '0.5em 0' }} {...props} />,
+  h6: ({ ...props }) => <h6 style={{ fontSize: '1rem', margin: '0.5em 0' }} {...props} />,
+  img: ({ ...props }) => (
+    <div className="flex justify-center my-4">
+      <img className="max-w-full h-auto rounded-lg" {...props} />
+    </div>
+  ),
+  table: ({ ...props }) => (
+    <div className="flex justify-center my-4 overflow-x-auto">
+      <table className="border-collapse border border-gray-300" {...props} />
+    </div>
+  ),
+};
+
 /**
  * 메타데이터 생성 함수
  */
@@ -146,14 +166,15 @@ export default async function PaperDetailPage({ params }: PageProps) {
           <div className="lg:col-span-3">
             <Card className="mb-6">
               <CardContent className="pt-6">
-                <div className="prose prose-lg max-w-none">
+                <div className="prose prose-lg break-words">
                   {paperDetail.content.map((contentBlock: PaperContentBlock) => (
                     <div key={contentBlock.id} id={`section-${contentBlock.id}`} className="mb-12">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-                        {processHeading(contentBlock.title)}
-                      </ReactMarkdown>
-                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-                        {contentBlock.content}
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[rehypeRaw]}
+                        components={markdownComponents}
+                      >
+                        {processHeading(contentBlock.title) + '\n' + contentBlock.content}
                       </ReactMarkdown>
                     </div>
                   ))}
@@ -163,7 +184,7 @@ export default async function PaperDetailPage({ params }: PageProps) {
           </div>
 
           {/* 목차 사이드바 */}
-          <div className="lg:col-span-1">
+          <div className="hidden lg:block lg:col-span-1">
             <TableOfContents content={paperDetail.content} />
           </div>
         </div>
