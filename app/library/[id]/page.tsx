@@ -19,6 +19,7 @@ import { getUserAuthStatus } from '@/lib/auth/userService';
 import { AuthRequiredModal } from '@/components/auth/AuthRequiredModal';
 import { ApprovalRequiredModal } from '@/components/auth/ApprovalRequiredModal';
 import { PaperContentBlock } from '@/lib/types/paper';
+import { processHeading } from '@/lib/utils/headingProcessor';
 
 interface PageProps {
   params: Promise<{
@@ -148,6 +149,9 @@ export default async function PaperDetailPage({ params }: PageProps) {
                 <div className="prose prose-lg max-w-none">
                   {paperDetail.content.map((contentBlock: PaperContentBlock) => (
                     <div key={contentBlock.id} id={`section-${contentBlock.id}`} className="mb-12">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                        {processHeading(contentBlock.title)}
+                      </ReactMarkdown>
                       <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
                         {contentBlock.content}
                       </ReactMarkdown>
